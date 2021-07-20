@@ -1,0 +1,119 @@
+package generator
+
+import (
+	"fmt"
+	"math/big"
+	"math/rand"
+	"reflect"
+
+	"github.com/steffnova/go-check/arbitrary"
+	"github.com/steffnova/go-check/constraints"
+)
+
+// Int64 returns Arbitrary generator that can be used to create Int64 generator. Range in which
+// int64 value is generated is defined by constraints [min, max] (min and max are included in range).
+//
+// If no constraints are provided default range for int64 is used [math.MinInt64, math.MaxInt64]. Even
+// though limits is a variadic argument only the first value is used for defining constraints
+func Int64(limits ...constraints.Int64) Arbitrary {
+	constraint := constraints.Int64Default()
+	if len(limits) > 0 {
+		constraint = limits[0]
+	}
+	return func(target reflect.Type) (Type, error) {
+		if target.Kind() != reflect.Int64 {
+			return Type{}, fmt.Errorf("target arbitrary's kind must be Int64. Got: %s", target.Kind())
+		}
+		return Type{
+			Type: reflect.TypeOf(int64(0)),
+			Generate: func(rand *rand.Rand) arbitrary.Type {
+				max := big.NewInt(int64(constraint.Max))
+				min := big.NewInt(int64(constraint.Min))
+
+				val := big.NewInt(0).Sub(max, min)
+				val = big.NewInt(0).Add(val, big.NewInt(1))
+				val = val.Rand(rand, val)
+				val = val.Add(val, min)
+
+				return arbitrary.Int64{
+					Constraint: constraint,
+					N:          val.Int64(),
+				}
+			},
+		}, nil
+	}
+}
+
+// Int32 returns Arbitrary generator that can be used to create Int32 generator. Range in which
+// int32 value is generated is defined by constraints [min, max] (min and max are included in range).
+//
+// If no constraints are provided default range for int32 is used [math.MinInt32, math.MaxInt32]. Even
+// though limits is a variadic argument only the first value is used for defining constraints
+func Int32(limits ...constraints.Int32) Arbitrary {
+	constraint := constraints.Int32Default()
+	if len(limits) > 0 {
+		constraint = limits[0]
+	}
+	return Int64(constraints.Int64{
+		Max: int64(constraint.Max),
+		Min: int64(constraint.Min),
+	}).Map(func(n int64) int32 {
+		return int32(n)
+	})
+}
+
+// Int16 returns Arbitrary generator that can be used to create Int16 generator. Range in which
+// int16 value is generated is defined by constraints [min, max] (min and max are included in range).
+//
+// If no constraints are provided default range for int16 is used [math.MinInt16, math.MaxInt16]. Even
+// though limits is a variadic argument only the first value is used for defining constraints
+func Int16(limits ...constraints.Int16) Arbitrary {
+	constraint := constraints.Int16Default()
+	if len(limits) > 0 {
+		constraint = limits[0]
+	}
+	return Int64(constraints.Int64{
+		Max: int64(constraint.Max),
+		Min: int64(constraint.Min),
+	}).Map(func(n int64) int16 {
+		return int16(n)
+	})
+}
+
+// Int8 returns Arbitrary generator that can be used to create Int8 generator. Range in which
+// int8 value is generated is defined by constraints [min, max] (min and max are included in range).
+//
+// If no constraints are provided default range for int8 is used [math.MinInt8, math.MaxInt8]. Even
+// though limits is a variadic argument only the first value is used for defining constraints
+func Int8(limits ...constraints.Int8) Arbitrary {
+	constraint := constraints.Int8Default()
+	if len(limits) > 0 {
+		constraint = limits[0]
+	}
+	return Int64(constraints.Int64{
+		Max: int64(constraint.Max),
+		Min: int64(constraint.Min),
+	}).Map(func(n int64) int8 {
+		return int8(n)
+	})
+}
+
+// Int returns Arbitrary generator that can be used to create Int generator. Range in which
+// int value is generated is defined by constraints [min, max] (min and max are included in range).
+//
+// If no constraints are provided default range for int is used [math.MinInt32, math.MaxInt32] for
+// 32bit architecture or [math.MinInt64, math.MaxInt64] for 64bit architecture. Even though limits
+// is a variadic argument only the first value is used for defining constraints
+func Int(limits ...constraints.Int) Arbitrary {
+	constraint := constraints.IntDefault()
+	if len(limits) > 0 {
+		constraint.Min, constraint.Max = limits[0].Min, limits[0].Max
+	}
+
+	return Int64(constraints.Int64{
+		Max: int64(constraint.Max),
+		Min: int64(constraint.Min),
+	}).Map(func(n int64) int {
+		return int(n)
+	})
+}
