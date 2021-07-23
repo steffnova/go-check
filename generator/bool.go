@@ -2,7 +2,7 @@ package generator
 
 import "github.com/steffnova/go-check/constraints"
 
-// Bool returns Arbitrary generator that can be used to create Bool generator
+// Bool returns Arbitrary that create bool Generator.
 func Bool() Arbitrary {
 	return Int64(constraints.Int64{
 		Min: 0,

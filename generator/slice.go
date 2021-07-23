@@ -9,37 +9,45 @@ import (
 	"github.com/steffnova/go-check/constraints"
 )
 
-func Slice(arb Arbitrary, constraint constraints.Length) Arbitrary {
-	return func(target reflect.Type) (Type, error) {
+// Slice returns Arbitrary that creates slice Generator. Slice's element values
+// are generate with Arbitrary provided in element parameter. Range in which Slice's
+// size generated is defined my limits parameter. Even though limits is a variadic
+// argument only the first value is used for defining constraints. Error is returned
+// if target's reflect.Kind is not Slice, if creation of Generator for slice's elements
+// fails or creation of Generator for slice's size fail.
+func Slice(element Arbitrary, limits ...constraints.Length) Arbitrary {
+	return func(target reflect.Type) (Generator, error) {
+		constraint := constraints.LengthDefault()
+		if len(limits) != 0 {
+			constraint = limits[0]
+		}
 		if target.Kind() != reflect.Slice {
-			return Type{}, fmt.Errorf("targets kind must be Slice. Got: %s", target.Kind())
+			return nil, fmt.Errorf("targets kind must be Slice. Got: %s", target.Kind())
 		}
 
-		generator, err := arb(target.Elem())
+		generateElement, err := element(target.Elem())
 		if err != nil {
-			return Type{}, fmt.Errorf("failed to create generator for slice elements: %s", err)
+			return nil, fmt.Errorf("failed to create generator for slice elements: %s", err)
 		}
 
-		intGenerator, err := Int(constraints.Int(constraint))(reflect.TypeOf(int(0)))
+		generateSize, err := Int(constraints.Int(constraint))(reflect.TypeOf(int(0)))
 		if err != nil {
-			return Type{}, fmt.Errorf("failed to create slice length generator: %s", err)
+			return nil, fmt.Errorf("failed to create slice length generator: %s", err)
 		}
 
-		return Type{
-			Type: reflect.SliceOf(generator.Type),
-			Generate: func(rand *rand.Rand) arbitrary.Type {
-				elements := make([]arbitrary.Type, intGenerator.Generate(rand).Value().Int())
-				for index := range elements {
-					arbType := generator.Generate(rand)
-					elements[index] = arbType
-				}
+		return func(rand *rand.Rand) arbitrary.Type {
+			elements := make([]arbitrary.Type, generateSize(rand).Value().Int())
+			for index := range elements {
+				arbType := generateElement(rand)
+				elements[index] = arbType
+			}
 
-				return arbitrary.Slice{
-					Constraint:  constraint,
-					ElementType: generator.Type,
-					Elements:    elements,
-				}
-			},
+			return arbitrary.Slice{
+				Constraint:  constraint,
+				ElementType: target.Elem(),
+				Elements:    elements,
+			}
+
 		}, nil
 	}
 

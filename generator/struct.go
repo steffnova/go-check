@@ -8,46 +8,45 @@ import (
 	"github.com/steffnova/go-check/arbitrary"
 )
 
-type StructField struct {
-	Name      string
-	Generator Arbitrary
-}
+// Struct is Arbitrary that creates struct Generator. Each of the struct's fields has Arbitrary
+// assigned implicitly or explictly. Arbitrary for struct fields can be provided explicitly by
+// adding it to fieldArbitraries, otherwise implicit Any() Arbitrary is assigned. Error is returned
+// if target's reflect.Kind is not Struct, or creation of Generator for any of the fields fails.
+func Struct(fieldArbitraries ...map[string]Arbitrary) Arbitrary {
+	fieldGenerators := map[string]Arbitrary{}
+	if len(fieldArbitraries) != 0 {
+		fieldGenerators = fieldArbitraries[0]
+	}
 
-func Struct(fieldGenerators ...StructField) Arbitrary {
-	return func(target reflect.Type) (Type, error) {
-		generatorMap := make(map[string]Type, len(fieldGenerators))
-		structFields := make([]reflect.StructField, len(fieldGenerators))
-		for index, field := range fieldGenerators {
-			generator, err := field.Generator(nil)
+	return func(target reflect.Type) (Generator, error) {
+		if target.Kind() != reflect.Struct {
+			return nil, fmt.Errorf("target must be a struct")
+		}
+		generators := make([]Generator, target.NumField())
+		for index := range generators {
+			field := target.Field(index)
+			generator, exists := fieldGenerators[field.Name]
+			if !exists {
+				generator = Any()
+			}
+			generate, err := generator(field.Type)
 			if err != nil {
-				return Type{}, fmt.Errorf("failed to create generator for field [%s]. %s", field.Name, err)
+				return nil, fmt.Errorf("failed to create generator for field: %s", field.Name)
 			}
-			if len(field.Name) == 0 {
-				return Type{}, fmt.Errorf("")
-			}
-			if _, exists := generatorMap[field.Name]; exists {
-				return Type{}, fmt.Errorf("field with name [%s] defined mutiple times", field.Name)
-			}
-			generatorMap[field.Name] = generator
-			structFields[index] = reflect.StructField{
-				Name: field.Name,
-				Type: generator.Type,
-			}
+			generators[index] = generate
 		}
 
-		return Type{
-			Type: reflect.StructOf(structFields),
-			Generate: func(rand *rand.Rand) arbitrary.Type {
-				fields := make([]arbitrary.StructField, len(fieldGenerators))
-				for index, structField := range fieldGenerators {
-					fields[index] = arbitrary.StructField{
-						Name: structField.Name,
-						Type: generatorMap[structField.Name].Generate(rand),
-					}
+		return func(rand *rand.Rand) arbitrary.Type {
+			fields := make([]arbitrary.StructField, target.NumField())
+			for index := range fields {
+				fields[index] = arbitrary.StructField{
+					Name: target.Field(index).Name,
+					Type: generators[index](rand),
 				}
-
-				return arbitrary.Struct{Fields: fields}
-			},
+			}
+			return arbitrary.Struct{
+				Fields: fields,
+			}
 		}, nil
 	}
 }

@@ -1,8 +1,9 @@
 package arbitrary
 
 import (
-	"github.com/steffnova/go-check/constraints"
 	"reflect"
+
+	"github.com/steffnova/go-check/constraints"
 )
 
 type KeyValue struct {
@@ -11,7 +12,7 @@ type KeyValue struct {
 }
 
 type Map struct {
-	Constraint constraints.Int
+	Constraint constraints.Length
 	Key        reflect.Type
 	Val        reflect.Type
 	Pairs      []KeyValue

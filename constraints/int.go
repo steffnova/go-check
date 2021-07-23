@@ -18,9 +18,9 @@ type Int struct {
 //
 // Spec definition: https://golang.org/ref/spec#Numeric_types
 //
-// For 32bit architecture Int{Min: math.MinInt32, Max: math.MaxInt32}
+// - For 32bit architecture Int{Min: math.MinInt32, Max: math.MaxInt32}
 //
-// For 64bit architecture Int{Min: math.MinInt64, Max: math.MaxInt64}
+// - For 64bit architecture Int{Min: math.MinInt64, Max: math.MaxInt64}
 func IntDefault() Int {
 	if strconv.IntSize == 32 {
 		return Int{

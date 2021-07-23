@@ -8,30 +8,34 @@ import (
 	"github.com/steffnova/go-check/arbitrary"
 )
 
-// Ptr returns Arbitrary generator that can be used to create Ptr<Type> generator. Type to wich pointer
-// points is defined by generator retrieved from arb parameter.
+// Ptr is Arbitrary that creates pointer Generator. Type to which pointer
+// points is defined by arb paramter. Arbitrary fails to create pointer
+// Generator if target's reflect.Kind is not Ptr, or arb fails to generate
+// Generator for value pointer points to.
 func Ptr(arb Arbitrary) Arbitrary {
-	return func(target reflect.Type) (Type, error) {
+	return func(target reflect.Type) (Generator, error) {
 		if target.Kind() != reflect.Ptr {
-			return Type{}, fmt.Errorf("target's kind must be Ptr. Got: %s", target.Kind())
+			return nil, fmt.Errorf("target's kind must be Ptr. Got: %s", target.Kind())
 		}
-		generator, err := arb(target.Elem())
+		generateValue, err := arb(target.Elem())
 		if err != nil {
-			return Type{}, fmt.Errorf("failed to create base generator. %s", err)
+			return nil, fmt.Errorf("failed to create base generator. %s", err)
 		}
-		boolGenerator, err := Bool()(reflect.TypeOf(false))
+		generateBool, err := Bool()(reflect.TypeOf(false))
 		if err != nil {
-			return Type{}, fmt.Errorf("failed to generate bool generator. %s", err)
+			return nil, fmt.Errorf("failed to generate bool generator. %s", err)
 		}
 
-		return Type{
-			Type: reflect.PtrTo(generator.Type),
-			Generate: func(rand *rand.Rand) arbitrary.Type {
-				return arbitrary.Ptr{
-					IsNull: boolGenerator.Generate(rand).Value().Bool(),
-					Type:   generator.Generate(rand),
-				}
-			},
+		return func(rand *rand.Rand) arbitrary.Type {
+			isNull := generateBool(rand).Value().Bool()
+			t := arbitrary.Type(nil)
+			if !isNull {
+				t = generateValue(rand)
+			}
+			return arbitrary.Ptr{
+				IsNull: isNull,
+				Type:   t,
+			}
 		}, nil
 	}
 }

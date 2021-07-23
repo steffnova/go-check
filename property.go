@@ -32,7 +32,7 @@ type property func() (run, error)
 
 func Property(predicate interface{}, arbGenerators ...generator.Arbitrary) property {
 	return func() (run, error) {
-		generators := make([]generator.Type, len(arbGenerators))
+		generators := make([]generator.Generator, len(arbGenerators))
 
 		switch val := reflect.ValueOf(predicate); {
 		case val.Kind() != reflect.Func:
@@ -45,21 +45,21 @@ func Property(predicate interface{}, arbGenerators ...generator.Arbitrary) prope
 			return nil, fmt.Errorf("predicate's output parameter type must be error")
 		default:
 			for index, arbGenerator := range arbGenerators {
-				generator, err := arbGenerator(val.Type().In(index))
+				generate, err := arbGenerator(val.Type().In(index))
 				if err != nil {
 					return nil, fmt.Errorf("failed to create type generator at index [%d]. %s", index, err)
 				}
-				if !generator.Type.ConvertibleTo(val.Type().In(index)) {
-					return nil, fmt.Errorf("generator's arbitrary type (%s) can't be assigned to predicate's input type (%s)", generator.Type, val.Type().In(index))
-				}
-				generators[index] = generator
+				// if !generator.Type.ConvertibleTo(val.Type().In(index)) {
+				// 	return nil, fmt.Errorf("generator's arbitrary type (%s) can't be assigned to predicate's input type (%s)", generator.Type, val.Type().In(index))
+				// }
+				generators[index] = generate
 			}
 		}
 
 		return func(r *rand.Rand) error {
 			inputs := make([]reflect.Value, len(generators))
-			for index, generator := range generators {
-				inputs[index] = generator.Generate(r).Value()
+			for index, generate := range generators {
+				inputs[index] = generate(r).Value()
 			}
 
 			outputs := reflect.ValueOf(predicate).Call(inputs)

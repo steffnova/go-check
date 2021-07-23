@@ -16,42 +16,43 @@ func hash(values []reflect.Value) []int64 {
 	return hashes
 }
 
+// Func is Arbitrary that creates function Generator. Generator returns pure
+// functions (for same input, same output will be returned). outputs parameter
+// is variadic parameter that specifies Arbitrary that will be used to create
+// Generator for each output parameter. Arbitrary returned by Func will fail to
+// create Generator if: target's reflect.Kind is not a function, lenght of outputs
+// variadic parameter doesn't match the number of target's function outputs, any
+// of the output Arbitraries fails to create it's generator.
 func Func(outputs ...Arbitrary) Arbitrary {
-	return func(target reflect.Type) (Type, error) {
+	return func(target reflect.Type) (Generator, error) {
 		if target.Kind() != reflect.Func {
-			return Type{}, fmt.Errorf("funcPtr must be a pointer to function")
+			return nil, fmt.Errorf("funcPtr must be a pointer to function")
 		}
 		if len(outputs) != target.NumOut() {
-			return Type{}, fmt.Errorf("invalid number of output parameters")
+			return nil, fmt.Errorf("invalid number of output parameters")
 		}
-		generators := make([]Type, len(outputs))
+		generators := make([]Generator, len(outputs))
 		for index, arb := range outputs {
 			generator, err := arb(target.Out(index))
 			if err != nil {
-				return Type{}, fmt.Errorf("failed to create generator for output[%d]. %s", index, err)
-			}
-			if target.Out(index) != generator.Type {
-				return Type{}, fmt.Errorf("output type at index [%d] doesn't match it's generator type", index)
+				return nil, fmt.Errorf("failed to create generator for output[%d]. %s", index, err)
 			}
 			generators[index] = generator
 		}
-		return Type{
-			Type: target,
-			Generate: func(_ *rand.Rand) arbitrary.Type {
-				return arbitrary.Func{
-					Fn: reflect.MakeFunc(target, func(inputs []reflect.Value) []reflect.Value {
-						seeds := hash(inputs)
+		return func(r *rand.Rand) arbitrary.Type {
+			return arbitrary.Func{
+				Fn: reflect.MakeFunc(target, func(inputs []reflect.Value) []reflect.Value {
+					seeds := hash(inputs)
 
-						outputs := make([]reflect.Value, target.NumOut())
-						for index, generator := range generators {
-							r := rand.New(rand.NewSource(seeds[index]))
-							outputs[index] = generator.Generate(r).Value()
-						}
+					outputs := make([]reflect.Value, target.NumOut())
+					for index, generate := range generators {
+						r := rand.New(rand.NewSource(seeds[index]))
+						outputs[index] = generate(r).Value()
+					}
 
-						return outputs
-					}),
-				}
-			},
+					return outputs
+				}),
+			}
 		}, nil
 	}
 }
