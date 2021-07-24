@@ -7,7 +7,7 @@ func Bool() Arbitrary {
 	return Int64(constraints.Int64{
 		Min: 0,
 		Max: 1,
-	}).Map(func(n int64) (bool, error) {
-		return n == 0, nil
+	}).Map(func(n int64) bool {
+		return n == 0
 	})
 }

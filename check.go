@@ -26,13 +26,13 @@ func Check(t *testing.T, property property, config ...Config) {
 	}
 	r := rand.New(rand.NewSource(configuration.Seed))
 
-	run, err := property()
+	run, err := property(r)
 	if err != nil {
 		t.Fatalf("failed to run property. %s", err)
 	}
 
 	for i := int64(0); i < configuration.Iterations; i++ {
-		if err := run(r); err != nil {
+		if err := run(); err != nil {
 			t.Fatalf("\nCheck failed with seed: %d. \n%s", configuration.Seed, err)
 		}
 	}

@@ -17,15 +17,15 @@ import (
 // if target's reflect.Kind is not Map, fails to create map's key and value
 // Generator or if creation of map's size fails.
 func Map(key, value Arbitrary, limits ...constraints.Length) Arbitrary {
-	return func(target reflect.Type) (Generator, error) {
+	return func(target reflect.Type, r *rand.Rand) (Generator, error) {
 		constraint := constraints.LengthDefault()
 		if len(limits) != 0 {
 			constraint = limits[0]
 		}
 
-		generateKey, keyErr := key(target.Key())
-		generateValue, valueErr := value(target.Elem())
-		generateSize, sizeErr := Int(constraints.Int(constraint))(reflect.TypeOf(int(0)))
+		generateKey, keyErr := key(target.Key(), r)
+		generateValue, valueErr := value(target.Elem(), r)
+		generateSize, sizeErr := Int(constraints.Int(constraint))(reflect.TypeOf(int(0)), r)
 
 		switch {
 		case keyErr != nil:

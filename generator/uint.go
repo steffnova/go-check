@@ -21,7 +21,7 @@ func Uint64(limits ...constraints.Uint64) Arbitrary {
 	if len(limits) > 0 {
 		constraint = limits[0]
 	}
-	return func(target reflect.Type) (Generator, error) {
+	return func(target reflect.Type, r *rand.Rand) (Generator, error) {
 		if target.Kind() != reflect.Uint64 {
 			return nil, fmt.Errorf("target arbitrary's kind must be Uint64. Got: %s", target.Kind())
 		}
@@ -37,7 +37,7 @@ func Uint64(limits ...constraints.Uint64) Arbitrary {
 			diff := big.NewInt(0).Sub(max, min)
 			diff = diff.Add(diff, big.NewInt(1))
 
-			n := diff.Rand(rand, diff)
+			n := diff.Rand(r, diff)
 			n = n.Add(diff, min)
 
 			return arbitrary.Uint64{

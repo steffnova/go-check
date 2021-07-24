@@ -24,7 +24,7 @@ func hash(values []reflect.Value) []int64 {
 // variadic parameter doesn't match the number of target's function outputs, any
 // of the output Arbitraries fails to create it's generator.
 func Func(outputs ...Arbitrary) Arbitrary {
-	return func(target reflect.Type) (Generator, error) {
+	return func(target reflect.Type, r *rand.Rand) (Generator, error) {
 		if target.Kind() != reflect.Func {
 			return nil, fmt.Errorf("funcPtr must be a pointer to function")
 		}
@@ -33,13 +33,13 @@ func Func(outputs ...Arbitrary) Arbitrary {
 		}
 		generators := make([]Generator, len(outputs))
 		for index, arb := range outputs {
-			generator, err := arb(target.Out(index))
+			generator, err := arb(target.Out(index), r)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create generator for output[%d]. %s", index, err)
 			}
 			generators[index] = generator
 		}
-		return func(r *rand.Rand) arbitrary.Type {
+		return func(_ *rand.Rand) arbitrary.Type {
 			return arbitrary.Func{
 				Fn: reflect.MakeFunc(target, func(inputs []reflect.Value) []reflect.Value {
 					seeds := hash(inputs)

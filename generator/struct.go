@@ -18,7 +18,7 @@ func Struct(fieldArbitraries ...map[string]Arbitrary) Arbitrary {
 		fieldGenerators = fieldArbitraries[0]
 	}
 
-	return func(target reflect.Type) (Generator, error) {
+	return func(target reflect.Type, r *rand.Rand) (Generator, error) {
 		if target.Kind() != reflect.Struct {
 			return nil, fmt.Errorf("target must be a struct")
 		}
@@ -29,9 +29,9 @@ func Struct(fieldArbitraries ...map[string]Arbitrary) Arbitrary {
 			if !exists {
 				generator = Any()
 			}
-			generate, err := generator(field.Type)
+			generate, err := generator(field.Type, r)
 			if err != nil {
-				return nil, fmt.Errorf("failed to create generator for field: %s", field.Name)
+				return nil, fmt.Errorf("failed to create generator for field: %s. %s", field.Name, err)
 			}
 			generators[index] = generate
 		}

@@ -16,7 +16,7 @@ import (
 // if target's reflect.Kind is not Slice, if creation of Generator for slice's elements
 // fails or creation of Generator for slice's size fail.
 func Slice(element Arbitrary, limits ...constraints.Length) Arbitrary {
-	return func(target reflect.Type) (Generator, error) {
+	return func(target reflect.Type, r *rand.Rand) (Generator, error) {
 		constraint := constraints.LengthDefault()
 		if len(limits) != 0 {
 			constraint = limits[0]
@@ -25,12 +25,12 @@ func Slice(element Arbitrary, limits ...constraints.Length) Arbitrary {
 			return nil, fmt.Errorf("targets kind must be Slice. Got: %s", target.Kind())
 		}
 
-		generateElement, err := element(target.Elem())
+		generateElement, err := element(target.Elem(), r)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create generator for slice elements: %s", err)
 		}
 
-		generateSize, err := Int(constraints.Int(constraint))(reflect.TypeOf(int(0)))
+		generateSize, err := Int(constraints.Int(constraint))(reflect.TypeOf(int(0)), r)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create slice length generator: %s", err)
 		}

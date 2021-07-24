@@ -14,14 +14,14 @@ type Generator func(rand *rand.Rand) arbitrary.Type
 
 // Arbitrary is Generator creator. It tries to create Generator
 // for type specified by target parameter.
-type Arbitrary func(target reflect.Type) (Generator, error)
+type Arbitrary func(target reflect.Type, r *rand.Rand) (Generator, error)
 
 // Map maps receiver Arbitrary (arb) to a new Arbitrary using mapper. Mapper must be a
 // function that has one input and one output. Mappers's input type must satisfy
 // target's type. Mapper's output defines the Generator type created by mapped
 // Arbitrary.
 func (arb Arbitrary) Map(mapper interface{}) Arbitrary {
-	return func(target reflect.Type) (Generator, error) {
+	return func(target reflect.Type, r *rand.Rand) (Generator, error) {
 		val := reflect.ValueOf(mapper)
 		switch {
 		case val.Kind() != reflect.Func:
@@ -32,7 +32,7 @@ func (arb Arbitrary) Map(mapper interface{}) Arbitrary {
 			return nil, fmt.Errorf("mapper must have 1 input value")
 		}
 
-		generateMappedValue, err := arb(val.Type().In(0))
+		generateMappedValue, err := arb(val.Type().In(0), r)
 		switch {
 		case err != nil:
 			return nil, fmt.Errorf("failed to create base generator. %s", err)
@@ -60,8 +60,8 @@ func (arb Arbitrary) Map(mapper interface{}) Arbitrary {
 // NOTE: This can highly impact Generator's time to generate arbitrary.Type as it will
 // try to generate target's values unitl predicate is satisfied.
 func (arb Arbitrary) Filter(predicate interface{}) Arbitrary {
-	return func(target reflect.Type) (Generator, error) {
-		generate, err := arb(target)
+	return func(target reflect.Type, r *rand.Rand) (Generator, error) {
+		generate, err := arb(target, r)
 		switch val := reflect.ValueOf(predicate); {
 		case err != nil:
 			return nil, fmt.Errorf("failed to create base generator. %s", err)
