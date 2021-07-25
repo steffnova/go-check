@@ -21,7 +21,7 @@ func Int64(limits ...constraints.Int64) Arbitrary {
 	if len(limits) > 0 {
 		constraint = limits[0]
 	}
-	return func(target reflect.Type) (Generator, error) {
+	return func(target reflect.Type, r *rand.Rand) (Generator, error) {
 		if target.Kind() != reflect.Int64 {
 			return nil, fmt.Errorf("target arbitrary's kind must be Int64. Got: %s", target.Kind())
 		}

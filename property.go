@@ -26,12 +26,12 @@ func ErrorForInputs(inputs []reflect.Value) Error {
 	}
 }
 
-type run func(rand *rand.Rand) error
+type run func() error
 
-type property func() (run, error)
+type property func(*rand.Rand) (run, error)
 
 func Property(predicate interface{}, arbGenerators ...generator.Arbitrary) property {
-	return func() (run, error) {
+	return func(r *rand.Rand) (run, error) {
 		generators := make([]generator.Generator, len(arbGenerators))
 
 		switch val := reflect.ValueOf(predicate); {
@@ -45,7 +45,7 @@ func Property(predicate interface{}, arbGenerators ...generator.Arbitrary) prope
 			return nil, fmt.Errorf("predicate's output parameter type must be error")
 		default:
 			for index, arbGenerator := range arbGenerators {
-				generate, err := arbGenerator(val.Type().In(index))
+				generate, err := arbGenerator(val.Type().In(index), r)
 				if err != nil {
 					return nil, fmt.Errorf("failed to create type generator at index [%d]. %s", index, err)
 				}
@@ -56,11 +56,13 @@ func Property(predicate interface{}, arbGenerators ...generator.Arbitrary) prope
 			}
 		}
 
-		return func(r *rand.Rand) error {
+		return func() error {
 			inputs := make([]reflect.Value, len(generators))
 			for index, generate := range generators {
 				inputs[index] = generate(r).Value()
 			}
+
+			fmt.Printf("\n%#v\n", inputs[0])
 
 			outputs := reflect.ValueOf(predicate).Call(inputs)
 			if !outputs[0].IsZero() {

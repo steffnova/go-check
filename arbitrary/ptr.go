@@ -5,33 +5,32 @@ import (
 )
 
 type Ptr struct {
-	IsNull bool
-	Type   Type
+	Type        reflect.Type
+	ElementType Type
 }
 
 func (ptr Ptr) Shrink() []Type {
-	if ptr.IsNull {
+	if ptr.ElementType == nil {
 		return nil
 	}
 
-	shrinked := ptr.Type.Shrink()
-	result := make([]Type, len(shrinked), len(shrinked))
+	shrinked := ptr.ElementType.Shrink()
+	result := make([]Type, len(shrinked))
 	for index, t := range shrinked {
 		result[index] = Ptr{
-			IsNull: false,
-			Type:   t,
+			ElementType: t,
 		}
 	}
 	return append(result, Ptr{
-		IsNull: true,
+		ElementType: nil,
 	})
 }
 
 func (ptr Ptr) Value() reflect.Value {
-	if ptr.IsNull {
-		return reflect.Zero(reflect.PtrTo(ptr.Type.Value().Type()))
+	if ptr.ElementType == nil {
+		return reflect.Zero(ptr.Type)
 	}
-	val := reflect.New(ptr.Type.Value().Type())
-	val.Elem().Set(ptr.Type.Value())
+	val := reflect.New(ptr.Type.Elem())
+	val.Elem().Set(ptr.ElementType.Value())
 	return val
 }

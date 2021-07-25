@@ -13,11 +13,11 @@ import (
 // by Generator's target. Error is returned If target's kind is not reflect.Array
 // or if Generator creation for array's elements fails.
 func Array(element Arbitrary) Arbitrary {
-	return func(target reflect.Type) (Generator, error) {
+	return func(target reflect.Type, r *rand.Rand) (Generator, error) {
 		if target.Kind() != reflect.Array {
 			return nil, fmt.Errorf("target arbitrary's kind must be Array. Got: %s", target.Kind())
 		}
-		generate, err := element(target.Elem())
+		generate, err := element(target.Elem(), r)
 		if err != nil {
 			return nil, fmt.Errorf("failed to crete generator. %s", err)
 		}
