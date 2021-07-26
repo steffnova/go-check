@@ -42,6 +42,18 @@ func (r rng) Uint64(minUint64, maxUint64 uint64) uint64 {
 	return n.Uint64()
 }
 
+func (r rng) Float64(minFloat64, maxFloat64 float64) float64 {
+	deviation := minFloat64/2 - maxFloat64/2
+	mean := deviation + minFloat64
+
+	for {
+		random := r.Rand.NormFloat64()*deviation + mean
+		if minFloat64 <= random && random <= maxFloat64 {
+			return random
+		}
+	}
+}
+
 func (r rng) Seed(seed int64) {
 	r.Rand.Seed(seed)
 }
