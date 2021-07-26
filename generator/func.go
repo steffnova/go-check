@@ -2,7 +2,6 @@ package generator
 
 import (
 	"fmt"
-	"math/rand"
 	"reflect"
 
 	"github.com/steffnova/go-check/arbitrary"
@@ -24,7 +23,7 @@ func hash(values []reflect.Value) []int64 {
 // variadic parameter doesn't match the number of target's function outputs, any
 // of the output Arbitraries fails to create it's generator.
 func Func(outputs ...Arbitrary) Arbitrary {
-	return func(target reflect.Type, r *rand.Rand) (Generator, error) {
+	return func(target reflect.Type, r Random) (Generator, error) {
 		if target.Kind() != reflect.Func {
 			return nil, fmt.Errorf("funcPtr must be a pointer to function")
 		}
@@ -32,22 +31,25 @@ func Func(outputs ...Arbitrary) Arbitrary {
 			return nil, fmt.Errorf("invalid number of output parameters")
 		}
 		generators := make([]Generator, len(outputs))
+		randoms := make([]Random, len(outputs))
 		for index, arb := range outputs {
-			generator, err := arb(target.Out(index), r)
+			random := r.Split()
+			generator, err := arb(target.Out(index), random)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create generator for output[%d]. %s", index, err)
 			}
 			generators[index] = generator
+			randoms[index] = random
 		}
-		return func(_ *rand.Rand) arbitrary.Type {
+		return func() arbitrary.Type {
 			return arbitrary.Func{
 				Fn: reflect.MakeFunc(target, func(inputs []reflect.Value) []reflect.Value {
 					seeds := hash(inputs)
 
 					outputs := make([]reflect.Value, target.NumOut())
 					for index, generate := range generators {
-						r := rand.New(rand.NewSource(seeds[index]))
-						outputs[index] = generate(r).Value()
+						randoms[index].Seed(seeds[index])
+						outputs[index] = generate().Value()
 					}
 
 					return outputs

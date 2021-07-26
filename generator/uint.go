@@ -2,9 +2,6 @@ package generator
 
 import (
 	"fmt"
-	"math"
-	"math/big"
-	"math/rand"
 	"reflect"
 
 	"github.com/steffnova/go-check/arbitrary"
@@ -21,28 +18,14 @@ func Uint64(limits ...constraints.Uint64) Arbitrary {
 	if len(limits) > 0 {
 		constraint = limits[0]
 	}
-	return func(target reflect.Type, r *rand.Rand) (Generator, error) {
+	return func(target reflect.Type, r Random) (Generator, error) {
 		if target.Kind() != reflect.Uint64 {
 			return nil, fmt.Errorf("target arbitrary's kind must be Uint64. Got: %s", target.Kind())
 		}
-		return func(rand *rand.Rand) arbitrary.Type {
-			max := big.NewInt(math.MaxInt64)
-			max = max.Mul(max, big.NewInt(int64(constraint.Max/uint64(math.MaxInt64))))
-			max = max.Add(max, big.NewInt(int64(constraint.Max%uint64(math.MaxInt64))))
-
-			min := big.NewInt(math.MaxInt64)
-			min = min.Mul(min, big.NewInt(int64(constraint.Min/uint64(math.MaxInt64))))
-			min = min.Add(min, big.NewInt(int64(constraint.Min%uint64(math.MaxInt64))))
-
-			diff := big.NewInt(0).Sub(max, min)
-			diff = diff.Add(diff, big.NewInt(1))
-
-			n := diff.Rand(r, diff)
-			n = n.Add(diff, min)
-
+		return func() arbitrary.Type {
 			return arbitrary.Uint64{
 				Constraint: constraint,
-				N:          n.Uint64(),
+				N:          r.Uint64(constraint.Min, constraint.Max),
 			}
 		}, nil
 	}

@@ -11,7 +11,7 @@ import (
 // fails.
 func String(limits ...constraints.String) Arbitrary {
 	constraint := constraints.StringDefault()
-	if len(limits) == 0 {
+	if len(limits) != 0 {
 		constraint = limits[0]
 	}
 

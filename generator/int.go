@@ -2,8 +2,6 @@ package generator
 
 import (
 	"fmt"
-	"math/big"
-	"math/rand"
 	"reflect"
 
 	"github.com/steffnova/go-check/arbitrary"
@@ -21,22 +19,14 @@ func Int64(limits ...constraints.Int64) Arbitrary {
 	if len(limits) > 0 {
 		constraint = limits[0]
 	}
-	return func(target reflect.Type, r *rand.Rand) (Generator, error) {
+	return func(target reflect.Type, r Random) (Generator, error) {
 		if target.Kind() != reflect.Int64 {
 			return nil, fmt.Errorf("target arbitrary's kind must be Int64. Got: %s", target.Kind())
 		}
-		return func(rand *rand.Rand) arbitrary.Type {
-			max := big.NewInt(int64(constraint.Max))
-			min := big.NewInt(int64(constraint.Min))
-
-			val := big.NewInt(0).Sub(max, min)
-			val = big.NewInt(0).Add(val, big.NewInt(1))
-			val = val.Rand(rand, val)
-			val = val.Add(val, min)
-
+		return func() arbitrary.Type {
 			return arbitrary.Int64{
 				Constraint: constraint,
-				N:          val.Int64(),
+				N:          r.Int64(constraint.Min, constraint.Max),
 			}
 		}, nil
 	}

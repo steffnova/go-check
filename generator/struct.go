@@ -2,7 +2,6 @@ package generator
 
 import (
 	"fmt"
-	"math/rand"
 	"reflect"
 
 	"github.com/steffnova/go-check/arbitrary"
@@ -18,7 +17,7 @@ func Struct(fieldArbitraries ...map[string]Arbitrary) Arbitrary {
 		fieldGenerators = fieldArbitraries[0]
 	}
 
-	return func(target reflect.Type, r *rand.Rand) (Generator, error) {
+	return func(target reflect.Type, r Random) (Generator, error) {
 		if target.Kind() != reflect.Struct {
 			return nil, fmt.Errorf("target must be a struct")
 		}
@@ -29,19 +28,19 @@ func Struct(fieldArbitraries ...map[string]Arbitrary) Arbitrary {
 			if !exists {
 				generator = Any()
 			}
-			generate, err := generator(field.Type, r)
+			generate, err := generator(field.Type, r.Split())
 			if err != nil {
 				return nil, fmt.Errorf("failed to create generator for field: %s. %s", field.Name, err)
 			}
 			generators[index] = generate
 		}
 
-		return func(rand *rand.Rand) arbitrary.Type {
+		return func() arbitrary.Type {
 			fields := make([]arbitrary.StructField, target.NumField())
 			for index := range fields {
 				fields[index] = arbitrary.StructField{
 					Name: target.Field(index).Name,
-					Type: generators[index](rand),
+					Type: generators[index](),
 				}
 			}
 			return arbitrary.Struct{
