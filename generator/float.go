@@ -43,3 +43,23 @@ func Float64(limits ...constraints.Float64) Arbitrary {
 		}, nil
 	}
 }
+
+// Float32 is Arbitrary that creates float32 Generator. Range in which float32 value is generated
+// is defined by limits parameter that specifies range's minimal and maximum value (min and max are
+// included in range). If no constraints are provided default range for float32 is used
+// [-math.MaxFloat32, math.MaxFloat32]. Even though limits is a variadic argument only the
+// first value is used for defining constraints. Error is returned if target's reflect.Kind
+// is not Float32 or constraints are out of range (-Inf, +Inf, Nan).
+func Float32(limits ...constraints.Float32) Arbitrary {
+	constraint := constraints.Float32Default()
+	if len(limits) > 0 {
+		constraint = limits[0]
+	}
+
+	return Float64(constraints.Float64{
+		Min: float64(constraint.Min),
+		Max: float64(constraint.Max),
+	}).Map(func(n float64) float32 {
+		return float32(n)
+	})
+}
