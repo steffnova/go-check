@@ -43,7 +43,7 @@ func (r rng) Uint64(minUint64, maxUint64 uint64) uint64 {
 }
 
 func (r rng) Float64(minFloat64, maxFloat64 float64) float64 {
-	deviation := minFloat64/2 - maxFloat64/2
+	deviation := maxFloat64/2 - minFloat64/2
 	mean := deviation + minFloat64
 
 	for {
