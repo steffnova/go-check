@@ -35,7 +35,7 @@ func (arb Arbitrary) Map(mapper interface{}) Arbitrary {
 		case err != nil:
 			return nil, fmt.Errorf("failed to create base generator. %s", err)
 		case val.Type().Out(0).Kind() != target.Kind():
-			return nil, fmt.Errorf("mappers output parameter's kind must match target's kind")
+			return nil, fmt.Errorf("mappers output parameter's kind must match target's kind. Got: %s", target.Kind())
 		default:
 			return func() arbitrary.Type {
 				arbType := generateMappedValue()

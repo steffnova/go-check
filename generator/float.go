@@ -23,7 +23,7 @@ func Float64(limits ...constraints.Float64) Arbitrary {
 
 	return func(target reflect.Type, r Random) (Generator, error) {
 		if target.Kind() != reflect.Float64 {
-			return nil, fmt.Errorf("target arbitrary's kind must be Int64. Got: %s", target.Kind())
+			return nil, fmt.Errorf("target arbitrary's kind must be Float64. Got: %s", target.Kind())
 		}
 		if constraint.Min < -math.MaxFloat64 {
 			return nil, fmt.Errorf("lower range value can't be lower then %f", -math.MaxFloat64)

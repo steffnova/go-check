@@ -17,6 +17,14 @@ func Any() Arbitrary {
 			generator = Array(Any())
 		case reflect.Bool:
 			generator = Bool()
+		case reflect.Complex64:
+			generator = Complex64()
+		case reflect.Complex128:
+			generator = Complex128()
+		case reflect.Float32:
+			generator = Float32()
+		case reflect.Float64:
+			generator = Float64()
 		case reflect.Int:
 			generator = Int()
 		case reflect.Int8:
