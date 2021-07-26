@@ -2,7 +2,6 @@ package generator
 
 import (
 	"fmt"
-	"math/rand"
 	"reflect"
 )
 
@@ -11,7 +10,7 @@ import (
 // default generator for it's reflect.Kind will be returned. Default generator for any type is
 // a generator with default constraints. Error will be thrown if target type is not supported.
 func Any() Arbitrary {
-	return func(target reflect.Type, r *rand.Rand) (Generator, error) {
+	return func(target reflect.Type, r Random) (Generator, error) {
 		var generator Arbitrary
 		switch target.Kind() {
 		case reflect.Array:
@@ -58,6 +57,6 @@ func Any() Arbitrary {
 			return nil, fmt.Errorf("no support for generating values for kind: %s", target.Kind())
 		}
 
-		return generator(target, r)
+		return generator(target, r.Split())
 	}
 }

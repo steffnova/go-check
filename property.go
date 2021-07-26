@@ -2,7 +2,6 @@ package check
 
 import (
 	"fmt"
-	"math/rand"
 	"reflect"
 	"strings"
 
@@ -28,10 +27,10 @@ func ErrorForInputs(inputs []reflect.Value) Error {
 
 type run func() error
 
-type property func(*rand.Rand) (run, error)
+type property func(generator.Random) (run, error)
 
 func Property(predicate interface{}, arbGenerators ...generator.Arbitrary) property {
-	return func(r *rand.Rand) (run, error) {
+	return func(r generator.Random) (run, error) {
 		generators := make([]generator.Generator, len(arbGenerators))
 
 		switch val := reflect.ValueOf(predicate); {
@@ -59,7 +58,7 @@ func Property(predicate interface{}, arbGenerators ...generator.Arbitrary) prope
 		return func() error {
 			inputs := make([]reflect.Value, len(generators))
 			for index, generate := range generators {
-				inputs[index] = generate(r).Value()
+				inputs[index] = generate().Value()
 			}
 
 			fmt.Printf("\n%#v\n", inputs[0])

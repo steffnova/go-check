@@ -2,7 +2,6 @@ package generator
 
 import (
 	"fmt"
-	"math/rand"
 	"reflect"
 
 	"github.com/steffnova/go-check/arbitrary"
@@ -16,7 +15,7 @@ import (
 // if target's reflect.Kind is not Slice, if creation of Generator for slice's elements
 // fails or creation of Generator for slice's size fail.
 func Slice(element Arbitrary, limits ...constraints.Length) Arbitrary {
-	return func(target reflect.Type, r *rand.Rand) (Generator, error) {
+	return func(target reflect.Type, r Random) (Generator, error) {
 		constraint := constraints.LengthDefault()
 		if len(limits) != 0 {
 			constraint = limits[0]
@@ -25,20 +24,16 @@ func Slice(element Arbitrary, limits ...constraints.Length) Arbitrary {
 			return nil, fmt.Errorf("targets kind must be Slice. Got: %s", target.Kind())
 		}
 
-		generateElement, err := element(target.Elem(), r)
+		generateElement, err := element(target.Elem(), r.Split())
 		if err != nil {
 			return nil, fmt.Errorf("failed to create generator for slice elements: %s", err)
 		}
 
-		generateSize, err := Int(constraints.Int(constraint))(reflect.TypeOf(int(0)), r)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create slice length generator: %s", err)
-		}
-
-		return func(rand *rand.Rand) arbitrary.Type {
-			elements := make([]arbitrary.Type, generateSize(rand).Value().Int())
+		return func() arbitrary.Type {
+			size := r.Int64(int64(constraint.Min), int64(constraint.Max))
+			elements := make([]arbitrary.Type, size)
 			for index := range elements {
-				arbType := generateElement(rand)
+				arbType := generateElement()
 				elements[index] = arbType
 			}
 
@@ -47,7 +42,6 @@ func Slice(element Arbitrary, limits ...constraints.Length) Arbitrary {
 				ElementType: target.Elem(),
 				Elements:    elements,
 			}
-
 		}, nil
 	}
 

@@ -1,18 +1,19 @@
 package generator
 
 import (
-	"math/rand"
 	"reflect"
 )
 
 // OneOf is Arbitrary that will create Generator for one of the passed
 // arbitraries.
 func OneOf(first Arbitrary, other ...Arbitrary) Arbitrary {
-	return func(target reflect.Type, r *rand.Rand) (Generator, error) {
+	return func(target reflect.Type, r Random) (Generator, error) {
 		arbitraries := append([]Arbitrary{first}, other...)
-		arb := arbitraries[r.Intn(len(arbitraries))]
 
-		gen, err := arb(target, r)
+		index := int(r.Int64(0, int64(len(arbitraries)-1)))
+		arb := arbitraries[index]
+
+		gen, err := arb(target, r.Split())
 		if err != nil {
 			return nil, err
 		}

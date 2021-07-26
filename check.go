@@ -1,7 +1,6 @@
 package check
 
 import (
-	// "github.com/steffnova/go-check/property"
 	"math/rand"
 	"testing"
 	"time"
@@ -24,9 +23,12 @@ func Check(t *testing.T, property property, config ...Config) {
 	if len(config) > 0 {
 		configuration = config[0]
 	}
-	r := rand.New(rand.NewSource(configuration.Seed))
 
-	run, err := property(r)
+	random := rng{
+		Rand: rand.New(rand.NewSource(configuration.Seed)),
+	}
+
+	run, err := property(random)
 	if err != nil {
 		t.Fatalf("failed to run property. %s", err)
 	}

@@ -2,7 +2,6 @@ package generator
 
 import (
 	"fmt"
-	"math/rand"
 	"reflect"
 
 	"github.com/steffnova/go-check/arbitrary"
@@ -19,12 +18,12 @@ func Ptr(arb Arbitrary) Arbitrary {
 // always return nil pointer for target's type. Error is returned if target's
 // reflect.Kind is not Ptr.
 func PtrInvalid() Arbitrary {
-	return func(target reflect.Type, r *rand.Rand) (Generator, error) {
+	return func(target reflect.Type, r Random) (Generator, error) {
 		if target.Kind() != reflect.Ptr {
 			return nil, fmt.Errorf("target's kind must be Ptr. Got: %s", target.Kind())
 		}
 
-		return func(rand *rand.Rand) arbitrary.Type {
+		return func() arbitrary.Type {
 			return arbitrary.Ptr{
 				ElementType: nil,
 				Type:        target,
@@ -38,20 +37,20 @@ func PtrInvalid() Arbitrary {
 // if target's reflect.Kind is not Ptr, or creation of arb's Generator
 // fails.
 func PtrValid(arb Arbitrary) Arbitrary {
-	return func(target reflect.Type, r *rand.Rand) (Generator, error) {
+	return func(target reflect.Type, r Random) (Generator, error) {
 		if target.Kind() != reflect.Ptr {
 			return nil, fmt.Errorf("target's kind must be Ptr. Got: %s", target.Kind())
 		}
 
-		generateValue, err := arb(target.Elem(), r)
+		generateValue, err := arb(target.Elem(), r.Split())
 		if err != nil {
 			return nil, fmt.Errorf("failed to create base generator. %s", err)
 		}
 
-		return func(rand *rand.Rand) arbitrary.Type {
+		return func() arbitrary.Type {
 			return arbitrary.Ptr{
 				Type:        target,
-				ElementType: generateValue(rand),
+				ElementType: generateValue(),
 			}
 		}, nil
 	}
