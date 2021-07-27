@@ -61,8 +61,6 @@ func Property(predicate interface{}, arbGenerators ...generator.Arbitrary) prope
 				inputs[index] = generate().Value()
 			}
 
-			fmt.Printf("\n%#v\n", inputs[0])
-
 			outputs := reflect.ValueOf(predicate).Call(inputs)
 			if !outputs[0].IsZero() {
 				// TODO: shrink on error
