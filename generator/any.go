@@ -21,6 +21,8 @@ func Any() Arbitrary {
 			generator = Complex64()
 		case reflect.Complex128:
 			generator = Complex128()
+		case reflect.Chan:
+			generator = Chan()
 		case reflect.Float32:
 			generator = Float32()
 		case reflect.Float64:
