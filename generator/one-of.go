@@ -13,7 +13,7 @@ func OneOf(first Arbitrary, other ...Arbitrary) Arbitrary {
 		index := int(r.Int64(0, int64(len(arbitraries)-1)))
 		arb := arbitraries[index]
 
-		gen, err := arb(target, r.Split())
+		gen, err := arb(target, r)
 		if err != nil {
 			return nil, err
 		}

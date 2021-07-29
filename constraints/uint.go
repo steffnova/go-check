@@ -67,6 +67,6 @@ type Uint64 struct {
 func Uint64Default() Uint64 {
 	return Uint64{
 		Min: 0,
-		Max: math.MaxUint16,
+		Max: math.MaxUint64,
 	}
 }

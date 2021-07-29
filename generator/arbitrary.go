@@ -30,7 +30,7 @@ func (arb Arbitrary) Map(mapper interface{}) Arbitrary {
 			return nil, fmt.Errorf("mapper must have 1 input value")
 		}
 
-		generateMappedValue, err := arb(val.Type().In(0), r.Split())
+		generateMappedValue, err := arb(val.Type().In(0), r)
 		switch {
 		case err != nil:
 			return nil, fmt.Errorf("failed to create base generator. %s", err)
@@ -59,7 +59,7 @@ func (arb Arbitrary) Map(mapper interface{}) Arbitrary {
 // try to generate target's values unitl predicate is satisfied.
 func (arb Arbitrary) Filter(predicate interface{}) Arbitrary {
 	return func(target reflect.Type, r Random) (Generator, error) {
-		generate, err := arb(target, r.Split())
+		generate, err := arb(target, r)
 		switch val := reflect.ValueOf(predicate); {
 		case err != nil:
 			return nil, fmt.Errorf("failed to create base generator. %s", err)

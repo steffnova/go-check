@@ -24,7 +24,7 @@ func Slice(element Arbitrary, limits ...constraints.Length) Arbitrary {
 			return nil, fmt.Errorf("targets kind must be Slice. Got: %s", target.Kind())
 		}
 
-		generateElement, err := element(target.Elem(), r.Split())
+		generateElement, err := element(target.Elem(), r)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create generator for slice elements: %s", err)
 		}

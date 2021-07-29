@@ -79,7 +79,7 @@ type Int64 struct {
 
 func Int64Default() Int64 {
 	return Int64{
-		Min: math.MinInt16,
-		Max: math.MaxInt16,
+		Min: math.MinInt64,
+		Max: math.MaxInt64,
 	}
 }
