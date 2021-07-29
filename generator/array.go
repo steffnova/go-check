@@ -16,7 +16,7 @@ func Array(element Arbitrary) Arbitrary {
 		if target.Kind() != reflect.Array {
 			return nil, fmt.Errorf("target arbitrary's kind must be Array. Got: %s", target.Kind())
 		}
-		generate, err := element(target.Elem(), r.Split())
+		generate, err := element(target.Elem(), r)
 		if err != nil {
 			return nil, fmt.Errorf("failed to crete generator. %s", err)
 		}
@@ -55,7 +55,7 @@ func ArrayFrom(arbs ...Arbitrary) Arbitrary {
 
 		generators := make([]Generator, target.Len())
 		for index := range generators {
-			generator, err := arbs[index](target.Elem(), r.Split())
+			generator, err := arbs[index](target.Elem(), r)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create element's generator. %s", err)
 			}

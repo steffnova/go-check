@@ -67,6 +67,6 @@ func Any() Arbitrary {
 			return nil, fmt.Errorf("no support for generating values for kind: %s", target.Kind())
 		}
 
-		return generator(target, r.Split())
+		return generator(target, r)
 	}
 }

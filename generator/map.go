@@ -22,12 +22,12 @@ func Map(key, value Arbitrary, limits ...constraints.Length) Arbitrary {
 			constraint = limits[0]
 		}
 
-		generateKey, err := key(target.Key(), r.Split())
+		generateKey, err := key(target.Key(), r)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create map's Key generator. %s", err)
 		}
 
-		generateValue, err := value(target.Elem(), r.Split())
+		generateValue, err := value(target.Elem(), r)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create map's Value generator. %s", err)
 		}

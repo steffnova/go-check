@@ -28,7 +28,7 @@ func Struct(fieldArbitraries ...map[string]Arbitrary) Arbitrary {
 			if !exists {
 				generator = Any()
 			}
-			generate, err := generator(field.Type, r.Split())
+			generate, err := generator(field.Type, r)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create generator for field: %s. %s", field.Name, err)
 			}

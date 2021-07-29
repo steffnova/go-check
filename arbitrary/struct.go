@@ -1,6 +1,9 @@
 package arbitrary
 
-import "reflect"
+import (
+	"fmt"
+	"reflect"
+)
 
 type StructField struct {
 	Name string
@@ -18,6 +21,10 @@ func (s Struct) Shrink() []Type {
 func (s Struct) Value() reflect.Value {
 	fields := make([]reflect.StructField, len(s.Fields), len(s.Fields))
 	for index, field := range s.Fields {
+		fmt.Println(field.Type.Value().Type())
+		if field.Type.Value().Type().PkgPath() != "" {
+			continue
+		}
 		fields[index] = reflect.StructField{
 			Name: field.Name,
 			Type: field.Type.Value().Type(),

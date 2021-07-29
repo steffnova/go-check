@@ -42,7 +42,7 @@ func PtrValid(arb Arbitrary) Arbitrary {
 			return nil, fmt.Errorf("target's kind must be Ptr. Got: %s", target.Kind())
 		}
 
-		generateValue, err := arb(target.Elem(), r.Split())
+		generateValue, err := arb(target.Elem(), r)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create base generator. %s", err)
 		}
