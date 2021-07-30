@@ -36,15 +36,14 @@ func Struct(fieldArbitraries ...map[string]Arbitrary) Arbitrary {
 		}
 
 		return func() arbitrary.Type {
-			fields := make([]arbitrary.StructField, target.NumField())
-			for index := range fields {
-				fields[index] = arbitrary.StructField{
-					Name: target.Field(index).Name,
-					Type: generators[index](),
-				}
+			fields := make(map[string]arbitrary.Type, target.NumField())
+			for index := 0; index < target.NumField(); index++ {
+				field := target.Field(index)
+				fields[field.Name] = generators[index]()
 			}
 			return arbitrary.Struct{
 				Fields: fields,
+				Type:   target,
 			}
 		}, nil
 	}
