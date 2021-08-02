@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	"github.com/steffnova/go-check/arbitrary"
+	"github.com/steffnova/go-check/shrinker"
 )
 
 // Func is Arbitrary that creates function Generator. Generator returns pure
@@ -35,24 +36,25 @@ func Func(outputs ...Arbitrary) Arbitrary {
 			randoms[index] = random
 		}
 		randomInt64 := r.Int64(math.MinInt64, math.MaxInt64)
-		return func() arbitrary.Type {
-			return arbitrary.Func{
-				Fn: reflect.MakeFunc(target, func(inputs []reflect.Value) []reflect.Value {
-					// In order to create 2 different pure functions that have the
-					// same signature but generate different ouput, random value is
-					// added to the hashed input parameters. This ensure that each
-					// function has differently seeded Random.
-					seed := int64(arbitrary.HashToInt64(inputs...)) + randomInt64
+		return func() (reflect.Value, shrinker.Shrinker) {
+			fn := reflect.MakeFunc(target, func(inputs []reflect.Value) []reflect.Value {
+				// In order to create 2 different pure functions that have the
+				// same signature but generate different ouput, random value is
+				// added to the hashed input parameters. This ensure that each
+				// function has differently seeded Random.
+				seed := int64(arbitrary.HashToInt64(inputs...)) + randomInt64
 
-					outputs := make([]reflect.Value, target.NumOut())
-					for index, generate := range generators {
-						randoms[index].Seed(seed)
-						outputs[index] = generate().Value()
-					}
+				outputs := make([]reflect.Value, target.NumOut())
+				for index, generate := range generators {
+					randoms[index].Seed(seed)
+					outputs[index], _ = generate()
+				}
 
-					return outputs
-				}),
-			}
+				return outputs
+			})
+
+			return fn, nil
+
 		}, nil
 	}
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/steffnova/go-check/arbitrary"
+	"github.com/steffnova/go-check/shrinker"
 )
 
 // Constant is arbitrary that creates generator of constant value. Value returned
@@ -22,10 +22,8 @@ func Constant(constant interface{}) Arbitrary {
 		case target.Kind() == reflect.TypeOf(constant).Kind():
 			fallthrough
 		case target.Kind() == reflect.Interface && reflect.TypeOf(constant).Implements(target):
-			return func() arbitrary.Type {
-				return arbitrary.Constant{
-					C: reflect.ValueOf(constant),
-				}
+			return func() (reflect.Value, shrinker.Shrinker) {
+				return reflect.ValueOf(constant), nil
 			}, nil
 		default:
 			return nil, fmt.Errorf("constant %s doesn't match the target's type: %s", reflect.TypeOf(constant).Kind().String(), target.String())

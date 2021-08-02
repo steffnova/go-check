@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/steffnova/go-check/arbitrary"
+	"github.com/steffnova/go-check/shrinker"
 )
 
 // Struct is Arbitrary that creates struct Generator. Each of the struct's fields has Arbitrary
@@ -35,16 +35,17 @@ func Struct(fieldArbitraries ...map[string]Arbitrary) Arbitrary {
 			generators[index] = generate
 		}
 
-		return func() arbitrary.Type {
-			fields := make(map[string]arbitrary.Type, target.NumField())
-			for index := 0; index < target.NumField(); index++ {
-				field := target.Field(index)
-				fields[field.Name] = generators[index]()
+		return func() (reflect.Value, shrinker.Shrinker) {
+			val := reflect.New(target).Elem()
+
+			shrinkers := make(map[string]shrinker.Shrinker, target.NumField())
+			for index, generator := range generators {
+				fieldName := target.Field(index).Name
+				fieldVal, shrinker := generator()
+				val.FieldByName(fieldName).Set(fieldVal)
+				shrinkers[fieldName] = shrinker
 			}
-			return arbitrary.Struct{
-				Fields: fields,
-				Type:   target,
-			}
+			return val, nil
 		}, nil
 	}
 }

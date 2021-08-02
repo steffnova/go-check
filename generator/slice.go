@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
+	"github.com/steffnova/go-check/shrinker"
 )
 
 // Slice returns Arbitrary that creates slice Generator. Slice's element values
@@ -24,24 +24,23 @@ func Slice(element Arbitrary, limits ...constraints.Length) Arbitrary {
 			return nil, fmt.Errorf("targets kind must be Slice. Got: %s", target.Kind())
 		}
 
-		generateElement, err := element(target.Elem(), r)
+		generator, err := element(target.Elem(), r)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create generator for slice elements: %s", err)
 		}
 
-		return func() arbitrary.Type {
+		return func() (reflect.Value, shrinker.Shrinker) {
 			size := r.Int64(int64(constraint.Min), int64(constraint.Max))
-			elements := make([]arbitrary.Type, size)
-			for index := range elements {
-				arbType := generateElement()
-				elements[index] = arbType
+			val := reflect.MakeSlice(target, int(size), int(size))
+
+			shrinkers := make([]shrinker.Shrinker, size)
+			for index := range shrinkers {
+				element, shrinker := generator()
+				shrinkers[index] = shrinker
+				val.Index(index).Set(element)
 			}
 
-			return arbitrary.Slice{
-				Constraint:  constraint,
-				ElementType: target.Elem(),
-				Elements:    elements,
-			}
+			return val, nil
 		}, nil
 	}
 

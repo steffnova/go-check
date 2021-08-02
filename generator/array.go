@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/steffnova/go-check/arbitrary"
+	"github.com/steffnova/go-check/shrinker"
 )
 
 // Array returns Arbitrary that creates array Generator. Array's element values
@@ -21,19 +21,17 @@ func Array(element Arbitrary) Arbitrary {
 			return nil, fmt.Errorf("failed to crete generator. %s", err)
 		}
 
-		return func() arbitrary.Type {
-			val := reflect.New(reflect.ArrayOf(target.Len(), target.Elem())).Elem()
-			elements := make([]arbitrary.Type, target.Len())
-			// for index := 0; index < target.Len(); index++ {
-			for index := range elements {
-				elements[index] = generate()
-				val.Index(index).Set(elements[index].Value())
+		return func() (reflect.Value, shrinker.Shrinker) {
+			val := reflect.New(target).Elem()
+
+			shrinkers := make([]shrinker.Shrinker, target.Len())
+			for index := range shrinkers {
+				element, shrinker := generate()
+				val.Index(index).Set(element)
+				shrinkers[index] = shrinker
 			}
 
-			return arbitrary.Array{
-				Elements: elements,
-				Val:      val,
-			}
+			return val, nil
 		}, nil
 	}
 }
@@ -62,18 +60,16 @@ func ArrayFrom(arbs ...Arbitrary) Arbitrary {
 			generators[index] = generator
 		}
 
-		return func() arbitrary.Type {
-			val := reflect.New(reflect.ArrayOf(target.Len(), target.Elem())).Elem()
-			elements := make([]arbitrary.Type, target.Len())
-			for index := 0; index < target.Len(); index++ {
-				elements[index] = generators[index]()
-				val.Index(index).Set(elements[index].Value())
+		return func() (reflect.Value, shrinker.Shrinker) {
+			val := reflect.New(target).Elem()
+			shrinkers := make([]shrinker.Shrinker, target.Len())
+			for index, generator := range generators {
+				element, shrinker := generator()
+				val.Index(index).Set(element)
+				shrinkers[index] = shrinker
 			}
 
-			return arbitrary.Array{
-				Elements: elements,
-				Val:      val,
-			}
+			return val, nil
 		}, nil
 	}
 }

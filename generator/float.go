@@ -5,8 +5,8 @@ import (
 	"math"
 	"reflect"
 
-	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
+	"github.com/steffnova/go-check/shrinker"
 )
 
 // Float64 is Arbitrary that creates float64 Generator. Range in which float64 value is generated
@@ -35,11 +35,9 @@ func Float64(limits ...constraints.Float64) Arbitrary {
 			return nil, fmt.Errorf("lower range value can't be greater then upper range value")
 		}
 
-		return func() arbitrary.Type {
-			return arbitrary.Float64{
-				Constraint: constraint,
-				N:          r.Float64(constraint.Min, constraint.Max),
-			}
+		return func() (reflect.Value, shrinker.Shrinker) {
+			n := r.Float64(constraint.Min, constraint.Max)
+			return reflect.ValueOf(n), nil
 		}, nil
 	}
 }

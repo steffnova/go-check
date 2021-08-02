@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/steffnova/go-check/arbitrary"
+	"github.com/steffnova/go-check/shrinker"
 )
 
-// Generator generates random arbitrary.Type
-type Generator func() arbitrary.Type
+// Generator generates random value and shrinker for it's type
+type Generator func() (reflect.Value, shrinker.Shrinker)
 
 // Arbitrary is Generator creator. It tries to create Generator for type specified
 // by target parameter with provided Random instance as r parameter.
@@ -30,21 +30,17 @@ func (arb Arbitrary) Map(mapper interface{}) Arbitrary {
 			return nil, fmt.Errorf("mapper must have 1 input value")
 		}
 
-		generateMappedValue, err := arb(val.Type().In(0), r)
+		generator, err := arb(val.Type().In(0), r)
 		switch {
 		case err != nil:
 			return nil, fmt.Errorf("failed to create base generator. %s", err)
 		case val.Type().Out(0).Kind() != target.Kind():
 			return nil, fmt.Errorf("mappers output parameter's kind must match target's kind. Got: %s", target.Kind())
 		default:
-			return func() arbitrary.Type {
-				arbType := generateMappedValue()
-				outputs := reflect.ValueOf(mapper).Call([]reflect.Value{arbType.Value()})
-				return arbitrary.Mapped{
-					Base:   arbType,
-					Mapper: mapper,
-					Val:    outputs[0],
-				}
+			return func() (reflect.Value, shrinker.Shrinker) {
+				val, shrinker := generator()
+				val = reflect.ValueOf(mapper).Call([]reflect.Value{val})[0]
+				return val, shrinker.Map(mapper)
 			}, nil
 		}
 	}
@@ -73,12 +69,12 @@ func (arb Arbitrary) Filter(predicate interface{}) Arbitrary {
 			return nil, fmt.Errorf("predicate must have bool as a output value")
 		}
 
-		return func() arbitrary.Type {
+		return func() (reflect.Value, shrinker.Shrinker) {
 			for {
-				arbType := generate()
-				outputs := reflect.ValueOf(predicate).Call([]reflect.Value{arbType.Value()})
+				val, _ := generate()
+				outputs := reflect.ValueOf(predicate).Call([]reflect.Value{val})
 				if outputs[0].Bool() {
-					return arbType
+					return val, nil
 				}
 			}
 		}, nil
