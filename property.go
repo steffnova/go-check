@@ -62,12 +62,25 @@ func Property(predicate interface{}, arbGenerators ...generator.Arbitrary) prope
 			}
 
 			outputs := reflect.ValueOf(predicate).Call(inputs)
-			if !outputs[0].IsZero() {
-				// TODO: shrink on error
-				return fmt.Errorf("%s. \nProperty error: %s", ErrorForInputs(inputs).Error(), outputs[0].Interface().(error))
+			if outputs[0].IsZero() {
+				return nil
 			}
 
-			return nil
+			numberOfShrinks := 0
+			for index, shrinker := range shrinkers {
+				for shrinker != nil {
+					oldValue := inputs[index]
+					failed := !outputs[0].IsZero()
+					inputs[index], shrinker = shrinker(failed)
+					if failed && !reflect.DeepEqual(oldValue.Interface(), inputs[index].Interface()) {
+						numberOfShrinks++
+					}
+					outputs = reflect.ValueOf(predicate).Call(inputs)
+				}
+			}
+			// TODO: shrink on error
+			return fmt.Errorf("%s. \nShrunked %d times. \nProperty error: %s", ErrorForInputs(inputs).Error(), numberOfShrinks, outputs[0].Interface().(error))
+
 		}, nil
 	}
 }

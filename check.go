@@ -35,7 +35,7 @@ func Check(t *testing.T, property property, config ...Config) {
 
 	for i := int64(0); i < configuration.Iterations; i++ {
 		if err := run(); err != nil {
-			t.Fatalf("\nCheck failed with seed: %d. \n%s", configuration.Seed, err)
+			t.Fatalf("\nCheck failed after %d tests with seed: %d. \n%s", i+1, configuration.Seed, err)
 		}
 	}
 }
