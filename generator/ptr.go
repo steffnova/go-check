@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/steffnova/go-check/arbitrary"
+	"github.com/steffnova/go-check/shrinker"
 )
 
 // Ptr is Arbitrary that creates pointer Generator. Generator will return
@@ -29,11 +29,11 @@ func PtrValid(arb Arbitrary) Arbitrary {
 			return nil, fmt.Errorf("failed to create base generator. %s", err)
 		}
 
-		return func() arbitrary.Type {
-			return arbitrary.Ptr{
-				Type:        target,
-				ElementType: generateValue(),
-			}
+		return func() (reflect.Value, shrinker.Shrinker) {
+			val, _ := generateValue()
+			ptr := reflect.New(target).Elem()
+			ptr.Elem().Set(val)
+			return ptr, nil
 		}, nil
 	}
 }

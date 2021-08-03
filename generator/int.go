@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
+	"github.com/steffnova/go-check/shrinker"
 )
 
 // Int64 is Arbitrary that creates int64 Generator. Range in which int64 value is generated
@@ -23,11 +23,9 @@ func Int64(limits ...constraints.Int64) Arbitrary {
 		if target.Kind() != reflect.Int64 {
 			return nil, fmt.Errorf("target arbitrary's kind must be Int64. Got: %s", target.Kind())
 		}
-		return func() arbitrary.Type {
-			return arbitrary.Int64{
-				Constraint: constraint,
-				N:          r.Int64(constraint.Min, constraint.Max),
-			}
+		return func() (reflect.Value, shrinker.Shrinker) {
+			n := r.Int64(constraint.Min, constraint.Max)
+			return reflect.ValueOf(n), nil
 		}, nil
 	}
 }

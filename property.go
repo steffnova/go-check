@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/steffnova/go-check/generator"
+	"github.com/steffnova/go-check/shrinker"
 )
 
 type Error func() string
@@ -48,17 +49,16 @@ func Property(predicate interface{}, arbGenerators ...generator.Arbitrary) prope
 				if err != nil {
 					return nil, fmt.Errorf("failed to create type generator at index [%d]. %s", index, err)
 				}
-				// if !generator.Type.ConvertibleTo(val.Type().In(index)) {
-				// 	return nil, fmt.Errorf("generator's arbitrary type (%s) can't be assigned to predicate's input type (%s)", generator.Type, val.Type().In(index))
-				// }
 				generators[index] = generate
 			}
 		}
 
 		return func() error {
 			inputs := make([]reflect.Value, len(generators))
+			shrinkers := make([]shrinker.Shrinker, len(generators))
+
 			for index, generate := range generators {
-				inputs[index] = generate().Value()
+				inputs[index], shrinkers[index] = generate()
 			}
 
 			outputs := reflect.ValueOf(predicate).Call(inputs)
