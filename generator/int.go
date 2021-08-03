@@ -25,7 +25,7 @@ func Int64(limits ...constraints.Int64) Arbitrary {
 		}
 		return func() (reflect.Value, shrinker.Shrinker) {
 			n := r.Int64(constraint.Min, constraint.Max)
-			return reflect.ValueOf(n), nil
+			return reflect.ValueOf(n), shrinker.Int64(n, constraint)
 		}, nil
 	}
 }
