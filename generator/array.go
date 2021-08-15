@@ -31,7 +31,7 @@ func Array(element Arbitrary) Arbitrary {
 				shrinkers[index] = shrinker
 			}
 
-			return val, nil
+			return val, shrinker.Array(val, shrinkers)
 		}, nil
 	}
 }
@@ -69,7 +69,7 @@ func ArrayFrom(arbs ...Arbitrary) Arbitrary {
 				shrinkers[index] = shrinker
 			}
 
-			return val, nil
+			return val, shrinker.Array(val, shrinkers)
 		}, nil
 	}
 }
