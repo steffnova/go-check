@@ -34,13 +34,15 @@ func Slice(element Arbitrary, limits ...constraints.Length) Arbitrary {
 			val := reflect.MakeSlice(target, int(size), int(size))
 
 			shrinkers := make([]shrinker.Shrinker, size)
+			values := make([]reflect.Value, size)
 			for index := range shrinkers {
 				element, shrinker := generator()
 				shrinkers[index] = shrinker
+				values[index] = element
 				val.Index(index).Set(element)
 			}
 
-			return val, nil
+			return val, shrinker.Slice(target, values, shrinkers, constraint)
 		}, nil
 	}
 
