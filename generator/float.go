@@ -37,7 +37,7 @@ func Float64(limits ...constraints.Float64) Arbitrary {
 
 		return func() (reflect.Value, shrinker.Shrinker) {
 			n := r.Float64(constraint.Min, constraint.Max)
-			return reflect.ValueOf(n), nil
+			return reflect.ValueOf(n), shrinker.Float64(n, constraint)
 		}, nil
 	}
 }
