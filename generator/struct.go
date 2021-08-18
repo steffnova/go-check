@@ -45,7 +45,7 @@ func Struct(fieldArbitraries ...map[string]Arbitrary) Arbitrary {
 				val.FieldByName(fieldName).Set(fieldVal)
 				shrinkers[fieldName] = shrinker
 			}
-			return val, nil
+			return val, shrinker.Struct(val, shrinkers)
 		}, nil
 	}
 }
