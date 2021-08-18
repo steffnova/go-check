@@ -30,10 +30,10 @@ func PtrValid(arb Arbitrary) Arbitrary {
 		}
 
 		return func() (reflect.Value, shrinker.Shrinker) {
-			val, _ := generateValue()
-			ptr := reflect.New(target).Elem()
+			val, valShrinker := generateValue()
+			ptr := reflect.New(target.Elem())
 			ptr.Elem().Set(val)
-			return ptr, nil
+			return ptr, shrinker.Ptr(ptr, valShrinker)
 		}, nil
 	}
 }
