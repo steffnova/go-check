@@ -8,6 +8,6 @@ func Bool() Arbitrary {
 		Min: 0,
 		Max: 1,
 	}).Map(func(n int64) bool {
-		return n == 0
+		return n != 0
 	})
 }
