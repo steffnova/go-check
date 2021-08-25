@@ -1,6 +1,7 @@
 package shrinker
 
 import (
+	"math"
 	"reflect"
 
 	"github.com/steffnova/go-check/constraints"
@@ -30,21 +31,13 @@ func float64Positive(n float64, limits constraints.Float64) Shrinker {
 	if limits.Min < 0 {
 		limits.Min = 0
 	}
-	return func(propertyFailed bool) (reflect.Value, Shrinker) {
-		switch {
-		case propertyFailed:
-			limits.Max = n
-		default:
-			limits.Min = n
-		}
 
-		shrinked := limits.Max - (limits.Max-limits.Min)/2
-		if shrinked == n {
-			return reflect.ValueOf(limits.Max), nil
-		}
-
-		return reflect.ValueOf(shrinked), float64Positive(shrinked, limits)
-	}
+	return Uint64(math.Float64bits(n), constraints.Uint64{
+		Min: math.Float64bits(limits.Min),
+		Max: math.Float64bits(limits.Max),
+	}).Map(func(exponent uint64) float64 {
+		return math.Float64frombits(exponent)
+	})
 }
 
 // float64Negative is a shrinker for negative float64 numbers. N is the shrinking target and limits are
