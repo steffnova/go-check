@@ -1,34 +1,45 @@
 package shrinker
 
-import "reflect"
+import (
+	"fmt"
+	"reflect"
+)
 
-// Ptr is a shrinker for pointers. ElementShrinker is shrinker for type to which
-// ptr points to. Shrinking process consists of shrinking the value to which pointer
-// points to, and shrinking of pointer to nil.
-func Ptr(ptr reflect.Value, elementShrinker Shrinker) Shrinker {
-	var shrinker Shrinker
-	var lastValidPtr reflect.Value
+// Ptr is a shrinker for pointers. Shrinker is shrinker for type to which ptr points to
+// points to. Shrinking process consists of shrinking the pointer's value, and shrinking
+// of pointer to nil
+func Ptr(val reflect.Value, shrinker Shrinker) Shrinker {
+	return func(propertyFailed bool) (reflect.Value, Shrinker, error) {
+		switch {
+		case val.Kind() != reflect.Ptr:
+			return reflect.Value{}, nil, fmt.Errorf("ptr shrinker cannot shrink: %s", val.Kind().String())
+		default:
+			return ptr(val, val, shrinker)(propertyFailed)
+		}
+	}
+}
 
-	shrinker = func(propertyFailed bool) (reflect.Value, Shrinker) {
-		var val reflect.Value
-		if elementShrinker != nil {
-			val, elementShrinker = elementShrinker(propertyFailed)
-			ptr.Elem().Set(val)
-			return ptr, shrinker
+func ptr(val reflect.Value, lastVal reflect.Value, shrinker Shrinker) Shrinker {
+	return func(propertyFailed bool) (reflect.Value, Shrinker, error) {
+		if shrinker != nil {
+			ptrVal, shrinker, err := shrinker(propertyFailed)
+			if err != nil {
+				return reflect.Value{}, nil, fmt.Errorf("failed to shrink ptr's value. %w", err)
+			}
+			val.Elem().Set(ptrVal)
+			return val, ptr(val, val, shrinker), nil
 		}
 
 		switch {
-		case !ptr.IsNil():
+		case !val.IsNil():
 			// Shrinking to nil could make a property not fail. The last valid pointer
 			// value needs to be saved in order to revert nil pointer if needed.
-			lastValidPtr, ptr = ptr, reflect.Zero(ptr.Type())
-			return ptr, shrinker
+			lastVal, val = val, reflect.Zero(val.Type())
+			return val, ptr(val, lastVal, shrinker), nil
 		case propertyFailed:
-			return ptr, nil
+			return val, nil, nil
 		default:
-			return lastValidPtr, nil
+			return lastVal, nil, nil
 		}
 	}
-
-	return shrinker
 }

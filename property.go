@@ -71,7 +71,12 @@ func Property(predicate interface{}, arbGenerators ...generator.Arbitrary) prope
 				for shrinker != nil {
 					oldValue := inputs[index]
 					failed := !outputs[0].IsZero()
-					inputs[index], shrinker = shrinker(failed)
+					var err error
+					inputs[index], shrinker, err = shrinker(failed)
+					if err != nil {
+						return fmt.Errorf("failed shrink input with index: %d. %s", index, err)
+					}
+
 					if failed && !reflect.DeepEqual(oldValue.Interface(), inputs[index].Interface()) {
 						numberOfShrinks++
 					}
