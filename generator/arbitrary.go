@@ -40,7 +40,7 @@ func (arb Arbitrary) Map(mapper interface{}) Arbitrary {
 			return func() (reflect.Value, shrinker.Shrinker) {
 				val, shrinker := generator()
 				val = reflect.ValueOf(mapper).Call([]reflect.Value{val})[0]
-				return val, shrinker.Map(mapper)
+				return val.Convert(target), shrinker.Map(target, mapper)
 			}, nil
 		}
 	}
@@ -51,8 +51,8 @@ func (arb Arbitrary) Map(mapper interface{}) Arbitrary {
 // type, while output parameter must be bool. Generator returned by new Arbitrary will
 // generate values that satisfy predicate.
 //
-// NOTE: This can highly impact Generator's time to generate arbitrary.Type as it will
-// try to generate target's values unitl predicate is satisfied.
+// NOTE: This can highly impact Generator's time to generate a value as it will try to
+// generate target's values unitl predicate is satisfied.
 func (arb Arbitrary) Filter(predicate interface{}) Arbitrary {
 	return func(target reflect.Type, r Random) (Generator, error) {
 		generate, err := arb(target, r)
@@ -74,7 +74,7 @@ func (arb Arbitrary) Filter(predicate interface{}) Arbitrary {
 				val, _ := generate()
 				outputs := reflect.ValueOf(predicate).Call([]reflect.Value{val})
 				if outputs[0].Bool() {
-					return val, nil
+					return val.Convert(target), nil
 				}
 			}
 		}, nil
