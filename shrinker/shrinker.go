@@ -18,7 +18,6 @@ type Shrinker func(propertyFailed bool) (reflect.Value, Shrinker, error)
 func (shrinker Shrinker) Map(target reflect.Type, mapper interface{}) Shrinker {
 	return func(propertyFailed bool) (reflect.Value, Shrinker, error) {
 		mapperVal := reflect.ValueOf(mapper)
-
 		switch {
 		case mapperVal.Kind() != reflect.Func:
 			return reflect.Value{}, nil, fmt.Errorf("mapper must be a function")
@@ -41,5 +40,43 @@ func (shrinker Shrinker) Map(target reflect.Type, mapper interface{}) Shrinker {
 			return shrink, nil, nil
 		}
 		return shrink, shrinker.Map(target, mapper), nil
+	}
+}
+
+// Compose creates composition from two shrinkers. Result is a Shrinker that will
+// use both shrinkers to provide shrunk values. Both shrinkers are used until they
+// are exhausted. Shrinker (receiver) is used first and next (parameter) is used second
+func (shrinker Shrinker) Compose(next Shrinker) Shrinker {
+	if shrinker == nil {
+		return next
+	}
+
+	return func(propertyFailed bool) (reflect.Value, Shrinker, error) {
+		val, shrinker, err := shrinker(propertyFailed)
+		switch {
+		case err != nil:
+			return reflect.Value{}, nil, err
+		case shrinker == nil:
+			return val, next, nil
+		default:
+			return val, shrinker.Compose(next), nil
+		}
+	}
+}
+
+// WithFallback creates a shrinker that will use shrinker (receiver) if property failed
+// otherwise next is used instead.
+func (shrinker Shrinker) WithFallback(next Shrinker) Shrinker {
+	if shrinker == nil {
+		return next
+	}
+
+	return func(propertyFailed bool) (reflect.Value, Shrinker, error) {
+		switch {
+		case propertyFailed:
+			return shrinker(true)
+		default:
+			return next(true)
+		}
 	}
 }
