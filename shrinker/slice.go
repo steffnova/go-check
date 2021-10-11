@@ -12,50 +12,59 @@ import (
 // shrunk at the same time. When elements can no longer be srunk, size is being shrunk by
 // removing one element at a time. Convergance speed for shrinker is O(n*m), n is slice
 // size and m is convergance speed of slice elements.
-func Slice(target reflect.Type, original []reflect.Value, elementShrinkers []Shrinker, limits constraints.Length) Shrinker {
-	candidates := []reflect.Value{}
-	candidateIndex := 0
-	shrinker := Shrinker(nil)
+func Slice(val reflect.Value, shrinkers []Shrinker, limits constraints.Length) Shrinker {
+	return sliceElements(val, shrinkers...).Compose(sliceSize(val, 0, limits))
+}
 
-	shrinker = func(propertyFailed bool) (reflect.Value, Shrinker, error) {
-		value := reflect.MakeSlice(target, 0, 0)
-		elementsShrunk := true
-		var err error
-		for index, elementShrinker := range elementShrinkers {
-			if elementShrinker == nil {
-				continue
-			}
-			elementsShrunk = false
-			original[index], elementShrinkers[index], err = elementShrinker(propertyFailed)
-			if err != nil {
-				return reflect.Value{}, nil, fmt.Errorf("failed to shrink slice element at index: %d. %w", index, err)
-			}
-			return reflect.Append(value, original...), Slice(target, original, elementShrinkers, limits), nil
+func sliceElement(val reflect.Value, index int, shrinker Shrinker) Shrinker {
+	if shrinker == nil {
+		return nil
+	}
+
+	return func(propertyFailed bool) (reflect.Value, Shrinker, error) {
+		switch {
+		case val.Kind() != reflect.Slice:
+			return reflect.Value{}, nil, fmt.Errorf("slice element shrinker cannot shrink: %s", val.Kind().String())
+		case val.Len() <= index:
+			return reflect.Value{}, nil, fmt.Errorf("cannot shrink element with index: %d out of range", index)
 		}
 
+		elementVal, shrinker, err := shrinker(propertyFailed)
+		if err != nil {
+			return reflect.Value{}, nil, fmt.Errorf("failed to shrink slice element: %w", err)
+		}
+
+		val.Index(index).Set(elementVal)
+		return val, sliceElement(val, index, shrinker), nil
+	}
+}
+
+func sliceElements(val reflect.Value, shrinkers ...Shrinker) Shrinker {
+	var chainShrinker Shrinker
+	for index, shrinker := range shrinkers {
+		chainShrinker = chainShrinker.Compose(sliceElement(val, index, shrinker))
+	}
+	return chainShrinker
+}
+
+func sliceSize(val reflect.Value, index int, limits constraints.Length) Shrinker {
+	return func(propertyFailed bool) (reflect.Value, Shrinker, error) {
 		switch {
-		case !elementsShrunk:
-			// If elements are not shrunk to smalles possible value, keep shrinking them
-			return reflect.Append(value, original...), shrinker, nil
-		case !propertyFailed:
-			// If element removed from a slice causes the property to succeed, it needs to
-			// be added to a candidates as it is essential element for property failure
-			candidates = append(candidates, original[candidateIndex-1])
-			return reflect.Append(value, append(candidates, original[candidateIndex:]...)...), shrinker, nil
-		case limits.Min == len(original)-(candidateIndex-len(candidates)):
-			// Shrinking should stop if we've reached a slice's minimal length defined by constraint.
-			// The last shrunk value is aggregation of candidates and remaning original elements
-			return reflect.Append(value, append(candidates, original[candidateIndex:]...)...), nil, nil
-		case candidateIndex == len(original):
-			// Shrinking should stop if candidate index has passed through all elements.
-			// Candidates is final shrunk value of original slice
-			return reflect.Append(value, candidates...), nil, nil
+		case val.Kind() != reflect.Slice:
+			return reflect.Value{}, nil, fmt.Errorf("slice size shrinker cannot shrink: %s", val.Kind().String())
+		case index < 0 || index > val.Len():
+			return reflect.Value{}, nil, fmt.Errorf("index: %d is out of slice range", index)
+		case limits.Min == val.Len()-index:
+			return val, nil, nil
 		default:
-			// In all other cases property keeps failing so slice size shrinking continues
-			// TODO: See if size shrinking speed can be increased
-			candidateIndex++
-			return reflect.Append(value, append(candidates, original[candidateIndex:]...)...), shrinker, nil
+			shrink := reflect.MakeSlice(val.Type(), 0, val.Len()-1)
+			shrink = reflect.AppendSlice(shrink, val.Slice(0, index))
+			shrink = reflect.AppendSlice(shrink, val.Slice(index+1, val.Len()))
+
+			shrinker1 := sliceSize(shrink, index, limits)
+			shrinker2 := sliceSize(val, index+1, limits)
+
+			return shrink, shrinker1.WithFallback(shrinker2), nil
 		}
 	}
-	return shrinker
 }
