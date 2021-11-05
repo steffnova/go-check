@@ -11,35 +11,49 @@ import (
 // is nil, it indicates that value can no longer be shrinked
 type Shrinker func(propertyFailed bool) (reflect.Value, Shrinker, error)
 
-// Map maps the shrinked value to a new one using the mapper and target.
+// Map maps the shrinked value to a new one using the mapper.
 // Mapper must be a function with one input and one output parameter where
-// input parameter must match shrinked type, otherwise panic occurs. Target
-// is used to convert mapped value to a expected type.
-func (shrinker Shrinker) Map(target reflect.Type, mapper interface{}) Shrinker {
+// input parameter must match shrinked type, otherwise panic occurs.
+func (shrinker Shrinker) Map(mapper interface{}) Shrinker {
 	return func(propertyFailed bool) (reflect.Value, Shrinker, error) {
-		mapperVal := reflect.ValueOf(mapper)
-		switch {
+		shrink, shrinker, err := shrinker(propertyFailed)
+
+		switch mapperVal := reflect.ValueOf(mapper); {
 		case mapperVal.Kind() != reflect.Func:
 			return reflect.Value{}, nil, fmt.Errorf("mapper must be a function")
 		case mapperVal.Type().NumIn() != 1:
 			return reflect.Value{}, nil, fmt.Errorf("mapper must have 1 input value")
 		case mapperVal.Type().NumOut() != 1:
 			return reflect.Value{}, nil, fmt.Errorf("mapper must have 1 output value")
-		case !mapperVal.Type().Out(0).ConvertibleTo(target):
-			return reflect.Value{}, nil, fmt.Errorf("mapper's output: %s can't be converted to target: %s", mapperVal.Type().Out(0).String(), target.String())
+		case err != nil:
+			return reflect.Value{}, nil, err
+		case mapperVal.Type().In(0) != shrink.Type():
+			return reflect.Value{}, nil, fmt.Errorf("mapper input type must match shrink type")
+		case shrinker != nil:
+			shrinker = shrinker.Map(mapper)
+			fallthrough
+		default:
+			shrink = mapperVal.Call([]reflect.Value{shrink})[0]
+			return shrink, shrinker, nil
 		}
+	}
+}
 
-		shrink, shrinker, err := shrinker(propertyFailed)
-		if err != nil {
-			return reflect.Value{}, nil, fmt.Errorf("shrinker.Map shrinking failed. %w", err)
+// Convert converts shrinked value to a type specified by target parameter.
+// Error is returned if shrinking fails or shrinked value can't be converted
+// to a target type.
+func (shrinker Shrinker) Convert(target reflect.Type) Shrinker {
+	return func(propertyFailed bool) (reflect.Value, Shrinker, error) {
+		switch shrink, shrinker, err := shrinker(propertyFailed); {
+		case err != nil:
+			return reflect.Value{}, nil, err
+		case !shrink.Type().ConvertibleTo(target):
+			return reflect.Value{}, nil, fmt.Errorf("shrink of type: %s can't be converted to target: %s", shrink.Type(), target)
+		case shrinker == nil:
+			return shrink.Convert(target), nil, nil
+		default:
+			return shrink.Convert(target), shrinker.Convert(target), nil
 		}
-
-		shrink = mapperVal.Call([]reflect.Value{shrink})[0].Convert(target)
-
-		if shrinker == nil {
-			return shrink, nil, nil
-		}
-		return shrink, shrinker.Map(target, mapper), nil
 	}
 }
 
@@ -50,7 +64,6 @@ func (shrinker Shrinker) Compose(next Shrinker) Shrinker {
 	if shrinker == nil {
 		return next
 	}
-
 	return func(propertyFailed bool) (reflect.Value, Shrinker, error) {
 		val, shrinker, err := shrinker(propertyFailed)
 		switch {

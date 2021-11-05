@@ -28,21 +28,20 @@ func (arb Arbitrary) Map(mapper interface{}) Arbitrary {
 			return nil, fmt.Errorf("mapper must have 1 output value")
 		case val.Type().NumIn() != 1:
 			return nil, fmt.Errorf("mapper must have 1 input value")
+		case val.Type().Out(0).Kind() != target.Kind():
+			return nil, fmt.Errorf("mappers output parameter's kind must match target's kind. Got: %s", target.Kind())
 		}
 
 		generator, err := arb(val.Type().In(0), r)
-		switch {
-		case err != nil:
+		if err != nil {
 			return nil, fmt.Errorf("failed to create base generator. %s", err)
-		case val.Type().Out(0).Kind() != target.Kind():
-			return nil, fmt.Errorf("mappers output parameter's kind must match target's kind. Got: %s", target.Kind())
-		default:
-			return func() (reflect.Value, shrinker.Shrinker) {
-				val, shrinker := generator()
-				val = reflect.ValueOf(mapper).Call([]reflect.Value{val})[0]
-				return val.Convert(target), shrinker.Map(target, mapper)
-			}, nil
 		}
+
+		return func() (reflect.Value, shrinker.Shrinker) {
+			val, shrinker := generator()
+			val = reflect.ValueOf(mapper).Call([]reflect.Value{val})[0]
+			return val.Convert(target), shrinker.Map(mapper).Convert(target)
+		}, nil
 	}
 }
 

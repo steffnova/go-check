@@ -42,7 +42,6 @@ func Map(key, value Arbitrary, limits ...constraints.Length) Arbitrary {
 				value, valueShrinker := generateValue()
 
 				if val.MapIndex(key).IsValid() {
-					fmt.Println("key exists")
 					continue
 				}
 

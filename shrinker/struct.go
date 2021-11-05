@@ -27,10 +27,11 @@ func Struct(val reflect.Value, fieldShrinkers map[string]Shrinker) Shrinker {
 				return reflect.Value{}, nil, fmt.Errorf("failed to shrink struct field: %s. %w", fieldName, err)
 			}
 
-			val.FieldByName(fieldName).Set(fieldVal)
+			out := reflect.New(val.Type()).Elem()
+			out.FieldByName(fieldName).Set(fieldVal)
 			fieldShrinkers[fieldName] = shrinker
 
-			return val, Struct(val, fieldShrinkers), nil
+			return out, Struct(out, fieldShrinkers), nil
 		}
 
 		return val, nil, nil

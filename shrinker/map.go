@@ -42,7 +42,7 @@ func MapSize(val reflect.Value, mapElements []MapElement, limits constraints.Len
 	})
 
 	return sliceSize(reflect.ValueOf(mapElements), 0, limits).
-		Map(val.Type(), mapper.Interface())
+		Map(mapper.Interface())
 }
 
 func MapValue(val reflect.Value, element MapElement) Shrinker {

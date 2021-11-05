@@ -23,15 +23,12 @@ func Array(val reflect.Value, shrinkers []Shrinker) Shrinker {
 		return []reflect.Value{newArray}
 	})
 
-	return func(propertyFailed bool) (reflect.Value, Shrinker, error) {
-		switch {
-		case val.Kind() != reflect.Array:
-			return reflect.Value{}, nil, fmt.Errorf("array shrinker cannot shrink %s", val.Kind().String())
-		case val.Len() != len(shrinkers):
-			return reflect.Value{}, nil, fmt.Errorf("size of array must match the number of shrinkers")
-		default:
-			shrinker := sliceElements(val.Slice(0, val.Len()), shrinkers...).Map(val.Type(), mapper.Interface())
-			return shrinker(propertyFailed)
-		}
+	switch {
+	case val.Kind() != reflect.Array:
+		return Invalid(fmt.Errorf("array shrinker cannot shrink %s", val.Kind().String()))
+	case val.Len() != len(shrinkers):
+		return Invalid(fmt.Errorf("size of array must match the number of shrinkers"))
+	default:
+		return sliceElements(val.Slice(0, val.Len()), shrinkers...).Map(mapper.Interface())
 	}
 }
