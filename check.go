@@ -1,9 +1,16 @@
 package check
 
 import (
+	"flag"
+	"fmt"
 	"math/rand"
 	"testing"
 	"time"
+)
+
+var (
+	seedFlag       = flag.CommandLine.Int64("seed", time.Now().UnixNano(), "seed value used for generating property inputs")
+	iterationsFlag = flag.CommandLine.Int64("iterations", 100, "number of iterations run for the property")
 )
 
 type Config struct {
@@ -12,10 +19,12 @@ type Config struct {
 }
 
 func DefaultConfig() Config {
-	return Config{
-		Seed:       time.Now().UnixNano(),
-		Iterations: 100,
+	config := Config{
+		Seed:       *seedFlag,
+		Iterations: *iterationsFlag,
 	}
+
+	return config
 }
 
 func Check(t *testing.T, property property, config ...Config) {
@@ -35,7 +44,10 @@ func Check(t *testing.T, property property, config ...Config) {
 
 	for i := int64(0); i < configuration.Iterations; i++ {
 		if err := run(); err != nil {
-			t.Fatalf("\nCheck failed after %d tests with seed: %d. \n%s", i+1, configuration.Seed, err)
+			t.Fatal(
+				fmt.Sprintf("\nCheck failed after %d tests with seed: %d. \n%s", i+1, configuration.Seed, err),
+				fmt.Sprintf("\n\nRe-run:\ngo test -run=%s -seed=%d -iterations=%d", t.Name(), configuration.Seed, configuration.Iterations),
+			)
 		}
 	}
 }
