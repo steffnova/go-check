@@ -31,16 +31,22 @@ func Slice(element Arbitrary, limits ...constraints.Length) Arbitrary {
 
 		return func() (reflect.Value, shrinker.Shrinker) {
 			size := r.Int64(int64(constraint.Min), int64(constraint.Max))
-			val := reflect.MakeSlice(target, int(size), int(size))
+			elements := make([]shrinker.Shrink, size)
 
-			shrinkers := make([]shrinker.Shrinker, size)
-			for index := range shrinkers {
-				element, shrinker := generator()
-				shrinkers[index] = shrinker
-				val.Index(index).Set(element)
+			for index := range elements {
+				elementValue, elementShrinker := generator()
+				elements[index] = shrinker.Shrink{
+					Value:    elementValue,
+					Shrinker: elementShrinker,
+				}
 			}
 
-			return val, shrinker.Slice(val, shrinkers, constraint)
+			shrinkable := shrinker.SliceShrink{
+				Type:     target,
+				Elements: elements,
+			}
+
+			return shrinkable.Value(), shrinker.Slice(shrinkable, 0, constraint)
 		}, nil
 	}
 

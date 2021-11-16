@@ -7,30 +7,20 @@ import (
 	"github.com/steffnova/go-check/constraints"
 )
 
-type Value struct {
-	Value    reflect.Value
-	Shrinker Shrinker
-}
-
-type MapElement struct {
-	Key   Value
-	Value Value
-}
-
-func Map(val reflect.Value, mapElements []MapElement, limits constraints.Length) Shrinker {
+func Map(val reflect.Value, mapElements []MapShrink, limits constraints.Length) Shrinker {
 	return MapSize(val, mapElements, limits).
 		Compose(MapValues(val, mapElements, limits)).
 		Compose(MapKeys(val, mapElements, limits))
 }
 
-func MapSize(val reflect.Value, mapElements []MapElement, limits constraints.Length) Shrinker {
+func MapSize(val reflect.Value, mapElements []MapShrink, limits constraints.Length) Shrinker {
 	mapperSignature := reflect.FuncOf(
 		[]reflect.Type{reflect.TypeOf(mapElements)},
 		[]reflect.Type{val.Type()},
 		false,
 	)
 	mapper := reflect.MakeFunc(mapperSignature, func(args []reflect.Value) (results []reflect.Value) {
-		elements := args[0].Interface().([]MapElement)
+		elements := args[0].Interface().([]MapShrink)
 
 		for _, key := range val.MapKeys() {
 			val.SetMapIndex(key, reflect.Value{})
@@ -41,11 +31,21 @@ func MapSize(val reflect.Value, mapElements []MapElement, limits constraints.Len
 		return []reflect.Value{val}
 	})
 
-	return sliceSize(reflect.ValueOf(mapElements), 0, limits).
-		Map(mapper.Interface())
+	sliceShrink := SliceShrink{
+		Type:     reflect.TypeOf(mapElements),
+		Elements: make([]Shrink, len(mapElements)),
+	}
+
+	for index, element := range mapElements {
+		sliceShrink.Elements[index] = Shrink{
+			Value: reflect.ValueOf(element),
+		}
+	}
+
+	return Slice(sliceShrink, 0, limits).Map(mapper.Interface())
 }
 
-func MapValue(val reflect.Value, element MapElement) Shrinker {
+func MapValue(val reflect.Value, element MapShrink) Shrinker {
 	if element.Value.Shrinker == nil {
 		return nil
 	}
@@ -65,7 +65,7 @@ func MapValue(val reflect.Value, element MapElement) Shrinker {
 	}
 }
 
-func MapValues(val reflect.Value, elements []MapElement, limits constraints.Length) Shrinker {
+func MapValues(val reflect.Value, elements []MapShrink, limits constraints.Length) Shrinker {
 	var shrinker Shrinker
 	for _, tempElement := range elements {
 		shrinker = shrinker.Compose(MapValue(val, tempElement))
@@ -74,7 +74,7 @@ func MapValues(val reflect.Value, elements []MapElement, limits constraints.Leng
 	return shrinker
 }
 
-func MapKey(val reflect.Value, element MapElement) Shrinker {
+func MapKey(val reflect.Value, element MapShrink) Shrinker {
 
 	if element.Key.Shrinker == nil {
 		return nil
@@ -101,7 +101,7 @@ func MapKey(val reflect.Value, element MapElement) Shrinker {
 	}
 }
 
-func MapKeys(val reflect.Value, elements []MapElement, limits constraints.Length) Shrinker {
+func MapKeys(val reflect.Value, elements []MapShrink, limits constraints.Length) Shrinker {
 	var shrinker Shrinker
 	for _, tempElement := range elements {
 		shrinker = shrinker.Compose(MapKey(val, tempElement))

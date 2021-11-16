@@ -77,19 +77,18 @@ func (shrinker Shrinker) Compose(next Shrinker) Shrinker {
 	}
 }
 
-// WithFallback creates a shrinker that will use shrinker (receiver) if property failed
-// otherwise next is used instead.
-func (shrinker Shrinker) WithFallback(next Shrinker) Shrinker {
+// Or returns a shrinker that uses either shrinker(receiver) or next. Decision is made
+// by evaluating the value of propertyFailed parameter. If property failed, shrinker
+// (receiver) will be used, otherwise next is used instead.
+func (shrinker Shrinker) Or(next Shrinker) Shrinker {
 	if shrinker == nil {
 		return next
 	}
 
 	return func(propertyFailed bool) (reflect.Value, Shrinker, error) {
-		switch {
-		case propertyFailed:
-			return shrinker(true)
-		default:
-			return next(true)
+		if !propertyFailed {
+			return next(!propertyFailed)
 		}
+		return shrinker(propertyFailed)
 	}
 }

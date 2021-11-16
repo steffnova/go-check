@@ -3,37 +3,34 @@ package shrinker
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/steffnova/go-check/arbitrary"
 )
 
 // Struct is a shrinker for Go's struct. Struct shrinking consists of shrinking individual
 // fields one by one. Convergance speed for shrinker is O(n*m), n is number of Struct fields
 // and m is convergance speed of field type.
-func Struct(val reflect.Value, fieldShrinkers map[string]Shrinker) Shrinker {
-	return func(propertyFailed bool) (reflect.Value, Shrinker, error) {
-		if val.Kind() != reflect.Struct {
-			return reflect.Value{}, nil, fmt.Errorf("struct shrinker cannot shrink: %s", val.Kind().String())
+func Struct(structType reflect.Type, fieldShrinks []Shrink) Shrinker {
+	switch {
+	case structType.Kind() != reflect.Struct:
+		return Invalid(fmt.Errorf("struct shrinker cannot shrink: %s", structType.Kind().String()))
+	case structType.NumField() != len(fieldShrinks):
+		return Invalid(fmt.Errorf("number shrinks must match number of struct fields"))
+	default:
+		sliceType := reflect.TypeOf([]interface{}{})
+
+		mapFn := func(in reflect.Value) reflect.Value {
+			out := reflect.New(structType).Elem()
+			for index := 0; index < in.Len(); index++ {
+				fieldValue := in.Index(index).Interface()
+				out.Field(index).Set(reflect.ValueOf(fieldValue))
+			}
+			return out
 		}
 
-		for i := 0; i < val.Type().NumField(); i++ {
-			fieldName := val.Type().Field(i).Name
-
-			shrinker := fieldShrinkers[fieldName]
-			if shrinker == nil {
-				continue
-			}
-
-			fieldVal, shrinker, err := shrinker(propertyFailed)
-			if err != nil {
-				return reflect.Value{}, nil, fmt.Errorf("failed to shrink struct field: %s. %w", fieldName, err)
-			}
-
-			out := reflect.New(val.Type()).Elem()
-			out.FieldByName(fieldName).Set(fieldVal)
-			fieldShrinkers[fieldName] = shrinker
-
-			return out, Struct(out, fieldShrinkers), nil
-		}
-
-		return val, nil, nil
+		return SliceElements(SliceShrink{
+			Type:     sliceType,
+			Elements: fieldShrinks,
+		}).Map(arbitrary.Mapper(sliceType, structType, mapFn))
 	}
 }

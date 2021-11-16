@@ -38,14 +38,16 @@ func Struct(fieldArbitraries ...map[string]Arbitrary) Arbitrary {
 		return func() (reflect.Value, shrinker.Shrinker) {
 			val := reflect.New(target).Elem()
 
-			shrinkers := make(map[string]shrinker.Shrinker, target.NumField())
+			shrinks := make([]shrinker.Shrink, target.NumField())
 			for index, generator := range generators {
-				fieldName := target.Field(index).Name
-				fieldVal, shrinker := generator()
-				val.FieldByName(fieldName).Set(fieldVal)
-				shrinkers[fieldName] = shrinker
+				fieldValue, fieldShrinker := generator()
+				val.Field(index).Set(fieldValue)
+				shrinks[index] = shrinker.Shrink{
+					Value:    fieldValue,
+					Shrinker: fieldShrinker,
+				}
 			}
-			return val, shrinker.Struct(val, shrinkers)
+			return val, shrinker.Struct(target, shrinks)
 		}, nil
 	}
 }
