@@ -35,7 +35,7 @@ func Map(key, value Arbitrary, limits ...constraints.Length) Arbitrary {
 		return func() (reflect.Value, shrinker.Shrinker) {
 			size := r.Int64(int64(constraint.Min), int64(constraint.Max))
 
-			mapElements := []shrinker.MapElement{}
+			mapElements := []shrinker.MapShrink{}
 			val := reflect.MakeMap(target)
 			for index := 0; index < int(size); index++ {
 				key, keyShrinker := generateKey()
@@ -45,12 +45,12 @@ func Map(key, value Arbitrary, limits ...constraints.Length) Arbitrary {
 					continue
 				}
 
-				mapElements = append(mapElements, shrinker.MapElement{
-					Key: shrinker.Value{
+				mapElements = append(mapElements, shrinker.MapShrink{
+					Key: shrinker.Shrink{
 						Value:    key,
 						Shrinker: keyShrinker,
 					},
-					Value: shrinker.Value{
+					Value: shrinker.Shrink{
 						Value:    value,
 						Shrinker: valueShrinker,
 					},

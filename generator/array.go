@@ -23,15 +23,18 @@ func Array(element Arbitrary) Arbitrary {
 
 		return func() (reflect.Value, shrinker.Shrinker) {
 			val := reflect.New(target).Elem()
+			elements := make([]shrinker.Shrink, target.Len())
 
-			shrinkers := make([]shrinker.Shrinker, target.Len())
-			for index := range shrinkers {
-				element, shrinker := generate()
+			for index := range elements {
+				element, s := generate()
 				val.Index(index).Set(element)
-				shrinkers[index] = shrinker
+				elements[index] = shrinker.Shrink{
+					Value:    element,
+					Shrinker: s,
+				}
 			}
 
-			return val, shrinker.Array(val, shrinkers)
+			return val, shrinker.Array(target, elements)
 		}, nil
 	}
 }
@@ -62,14 +65,18 @@ func ArrayFrom(arbs ...Arbitrary) Arbitrary {
 
 		return func() (reflect.Value, shrinker.Shrinker) {
 			val := reflect.New(target).Elem()
-			shrinkers := make([]shrinker.Shrinker, target.Len())
+			elements := make([]shrinker.Shrink, target.Len())
+
 			for index, generator := range generators {
-				element, shrinker := generator()
+				element, s := generator()
 				val.Index(index).Set(element)
-				shrinkers[index] = shrinker
+				elements[index] = shrinker.Shrink{
+					Value:    element,
+					Shrinker: s,
+				}
 			}
 
-			return val, shrinker.Array(val, shrinkers)
+			return val, shrinker.Array(target, elements)
 		}, nil
 	}
 }
