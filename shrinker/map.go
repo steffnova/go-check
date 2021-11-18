@@ -4,108 +4,56 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
 )
 
-func Map(val reflect.Value, mapElements []MapShrink, limits constraints.Length) Shrinker {
-	return MapSize(val, mapElements, limits).
-		Compose(MapValues(val, mapElements, limits)).
-		Compose(MapKeys(val, mapElements, limits))
-}
+// Map is a shrinker for map. Map is shrinked by three dimensions: size, keys and values.
+// Shrinking is first done by size and afterwords by map's elements. Element's key is shrunk
+// before value. Shrinking will fail if mapType is not a map, number of map elements is not
+// whithin limits (min and max map's size), or shrinking of one of map elements fails.
+func Map(mapType reflect.Type, elements [][2]Shrink, limits constraints.Length) Shrinker {
+	switch {
+	case mapType.Kind() != reflect.Map:
+		return Invalid(fmt.Errorf("map shrinker cannot shrink %s", mapType.String()))
+	case limits.Min > len(elements) || limits.Max < len(elements):
+		return Invalid(fmt.Errorf("number of map elements: %d is outside of range [%d, %d]", len(elements), limits.Min, limits.Max))
+	default:
+		mapSliceType := reflect.TypeOf([][2]interface{}{})
 
-func MapSize(val reflect.Value, mapElements []MapShrink, limits constraints.Length) Shrinker {
-	mapperSignature := reflect.FuncOf(
-		[]reflect.Type{reflect.TypeOf(mapElements)},
-		[]reflect.Type{val.Type()},
-		false,
-	)
-	mapper := reflect.MakeFunc(mapperSignature, func(args []reflect.Value) (results []reflect.Value) {
-		elements := args[0].Interface().([]MapShrink)
+		mapper := arbitrary.Mapper(mapSliceType, mapType, func(in reflect.Value) reflect.Value {
+			out := reflect.MakeMapWithSize(mapType, in.Len())
+			for index := 0; index < in.Len(); index++ {
+				key := in.Index(index).Index(0).Interface()
+				value := in.Index(index).Index(1).Interface()
+				out.SetMapIndex(reflect.ValueOf(key), reflect.ValueOf(value))
+			}
+			return out
+		})
 
-		for _, key := range val.MapKeys() {
-			val.SetMapIndex(key, reflect.Value{})
+		filter := arbitrary.FilterPredicate(mapType, func(in reflect.Value) bool {
+			return in.Len() >= limits.Min
+		})
+
+		sliceShrink := SliceShrink{
+			Type:     mapSliceType,
+			Elements: make([]Shrink, len(elements)),
 		}
-		for _, element := range elements {
-			val.SetMapIndex(element.Key.Value, element.Value.Value)
+
+		filterDefault := reflect.MakeMapWithSize(mapType, len(elements))
+
+		for index, element := range elements {
+			val := reflect.New(mapSliceType.Elem()).Elem()
+			val.Index(0).Set(element[0].Value)
+			val.Index(1).Set(element[1].Value)
+			sliceShrink.Elements[index] = Shrink{
+				Value:    val,
+				Shrinker: Array(mapSliceType.Elem(), []Shrink{element[0], element[1]}),
+			}
+
+			filterDefault.SetMapIndex(element[0].Value, element[1].Value)
 		}
-		return []reflect.Value{val}
-	})
 
-	sliceShrink := SliceShrink{
-		Type:     reflect.TypeOf(mapElements),
-		Elements: make([]Shrink, len(mapElements)),
+		return Slice(sliceShrink, 0, limits).Map(mapper).Filter(filterDefault, filter)
 	}
-
-	for index, element := range mapElements {
-		sliceShrink.Elements[index] = Shrink{
-			Value: reflect.ValueOf(element),
-		}
-	}
-
-	return Slice(sliceShrink, 0, limits).Map(mapper.Interface())
-}
-
-func MapValue(val reflect.Value, element MapShrink) Shrinker {
-	if element.Value.Shrinker == nil {
-		return nil
-	}
-
-	return func(propertyFailed bool) (reflect.Value, Shrinker, error) {
-		value, shrinker, err := element.Value.Shrinker(propertyFailed)
-		switch {
-		case err != nil:
-			return reflect.Value{}, nil, fmt.Errorf("failed to shrink map's value: %v. %w", element.Value.Value.Interface(), err)
-		case !val.MapIndex(element.Key.Value).IsValid():
-			return val, nil, nil
-		default:
-			element.Value.Value, element.Value.Shrinker = value, shrinker
-			val.SetMapIndex(element.Key.Value, element.Value.Value)
-			return val, MapValue(val, element), nil
-		}
-	}
-}
-
-func MapValues(val reflect.Value, elements []MapShrink, limits constraints.Length) Shrinker {
-	var shrinker Shrinker
-	for _, tempElement := range elements {
-		shrinker = shrinker.Compose(MapValue(val, tempElement))
-	}
-
-	return shrinker
-}
-
-func MapKey(val reflect.Value, element MapShrink) Shrinker {
-
-	if element.Key.Shrinker == nil {
-		return nil
-	}
-	element.Value.Value = val.MapIndex(element.Key.Value)
-
-	return func(propertyFailed bool) (reflect.Value, Shrinker, error) {
-		value, shrinker, err := element.Key.Shrinker(propertyFailed)
-		switch {
-		case err != nil:
-			return reflect.Value{}, nil, fmt.Errorf("failed to shrink map's key: %v. %w", element.Key.Value.Interface(), err)
-		case !val.MapIndex(element.Key.Value).IsValid():
-			return val, nil, nil
-		case val.MapIndex(value).IsValid() || reflect.DeepEqual(value, element.Key.Value):
-			element.Key.Shrinker = shrinker
-			return val, MapKey(val, element), nil
-		default:
-			currentValue := val.MapIndex(element.Key.Value)
-			val.SetMapIndex(element.Key.Value, reflect.Value{})
-			val.SetMapIndex(value, currentValue)
-			element.Key.Value, element.Key.Shrinker = value, shrinker
-			return val, MapKey(val, element), nil
-		}
-	}
-}
-
-func MapKeys(val reflect.Value, elements []MapShrink, limits constraints.Length) Shrinker {
-	var shrinker Shrinker
-	for _, tempElement := range elements {
-		shrinker = shrinker.Compose(MapKey(val, tempElement))
-	}
-
-	return shrinker
 }

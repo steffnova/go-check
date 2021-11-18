@@ -19,8 +19,3 @@ func (ss SliceShrink) Value() reflect.Value {
 	}
 	return val
 }
-
-type MapShrink struct {
-	Key   Shrink
-	Value Shrink
-}
