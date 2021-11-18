@@ -7,9 +7,10 @@ import (
 	"github.com/steffnova/go-check/arbitrary"
 )
 
-// Struct is a shrinker for Go's struct. Struct shrinking consists of shrinking individual
-// fields one by one. Convergance speed for shrinker is O(n*m), n is number of Struct fields
-// and m is convergance speed of field type.
+// Struct is a shrinker for struct. Struct shrinking consists of shrinking individual
+// fields one by one. Error is returned if struct type is not struct, length of fieldShrinks
+// is not equal to number of struct fields or if any of the struct fields return an error
+// during shrinking.
 func Struct(structType reflect.Type, fieldShrinks []Shrink) Shrinker {
 	switch {
 	case structType.Kind() != reflect.Struct:
@@ -17,7 +18,7 @@ func Struct(structType reflect.Type, fieldShrinks []Shrink) Shrinker {
 	case structType.NumField() != len(fieldShrinks):
 		return Invalid(fmt.Errorf("number shrinks must match number of struct fields"))
 	default:
-		sliceType := reflect.TypeOf([]interface{}{})
+		sliceType := reflect.ArrayOf(len(fieldShrinks), arbitrary.Type)
 
 		mapFn := func(in reflect.Value) reflect.Value {
 			out := reflect.New(structType).Elem()
@@ -28,9 +29,6 @@ func Struct(structType reflect.Type, fieldShrinks []Shrink) Shrinker {
 			return out
 		}
 
-		return SliceElements(SliceShrink{
-			Type:     sliceType,
-			Elements: fieldShrinks,
-		}).Map(arbitrary.Mapper(sliceType, structType, mapFn))
+		return Array(sliceType, fieldShrinks).Map(arbitrary.Mapper(sliceType, structType, mapFn))
 	}
 }

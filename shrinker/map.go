@@ -35,10 +35,7 @@ func Map(mapType reflect.Type, elements [][2]Shrink, limits constraints.Length) 
 			return in.Len() >= limits.Min
 		})
 
-		sliceShrink := SliceShrink{
-			Type:     mapSliceType,
-			Elements: make([]Shrink, len(elements)),
-		}
+		sliceElements := make([]Shrink, len(elements))
 
 		filterDefault := reflect.MakeMapWithSize(mapType, len(elements))
 
@@ -46,7 +43,7 @@ func Map(mapType reflect.Type, elements [][2]Shrink, limits constraints.Length) 
 			val := reflect.New(mapSliceType.Elem()).Elem()
 			val.Index(0).Set(element[0].Value)
 			val.Index(1).Set(element[1].Value)
-			sliceShrink.Elements[index] = Shrink{
+			sliceElements[index] = Shrink{
 				Value:    val,
 				Shrinker: Array(mapSliceType.Elem(), []Shrink{element[0], element[1]}),
 			}
@@ -54,6 +51,6 @@ func Map(mapType reflect.Type, elements [][2]Shrink, limits constraints.Length) 
 			filterDefault.SetMapIndex(element[0].Value, element[1].Value)
 		}
 
-		return Slice(sliceShrink, 0, limits).Map(mapper).Filter(filterDefault, filter)
+		return Slice(mapSliceType, sliceElements, 0, limits).Map(mapper).Filter(filterDefault, filter)
 	}
 }

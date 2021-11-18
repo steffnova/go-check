@@ -5,6 +5,11 @@ import (
 	"reflect"
 )
 
+type Shrink struct {
+	Value    reflect.Value
+	Shrinker Shrinker
+}
+
 // Shrinker returns shrinked value and next shrinker. Returned values
 // are usually affected by propertyFailed parameter. It helps shrinker
 // to decide how to properly shrink the value. If returned Shrinker

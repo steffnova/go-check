@@ -4,64 +4,46 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
 )
 
 // Slice is a shrinker for slice. Slice is shrinked by two dimensions: elements and size.
-// Shrinking is first done by elements, where in each shrink itteration all elements are
-// shrunk at the same time. When elements can no longer be srunk, size is being shrunk by
-// removing one element at a time. Convergance speed for shrinker is O(n*m), n is slice
-// size and m is convergance speed of slice elements.
-func Slice(slice SliceShrink, index int, limits constraints.Length) Shrinker {
+// Shrinking is first done by size, and then by elements. Error is returned if sliceType
+// is not slice, length of elements is out of limits range [min, max] or if any of the
+// elements returns an error during shrinking.
+func Slice(sliceType reflect.Type, elements []Shrink, index int, limits constraints.Length) Shrinker {
 	switch {
-	case slice.Type.Kind() != reflect.Slice:
-		return Invalid(fmt.Errorf("slice shrinker cannot shrink: %s", slice.Type.Kind().String()))
-	case index < 0 || index > len(slice.Elements):
+	case sliceType.Kind() != reflect.Slice:
+		return Invalid(fmt.Errorf("slice shrinker cannot shrink: %s", sliceType.Kind().String()))
+	case index < 0 || index > len(elements):
 		return Invalid(fmt.Errorf("index: %d is out of slice range", index))
-	case limits.Min == len(slice.Elements)-index:
-		return SliceElements(slice)
+	case limits.Min == len(elements)-index:
+		arrayType := reflect.ArrayOf(len(elements), arbitrary.Type)
+		mapFn := func(in reflect.Value) reflect.Value {
+			out := reflect.MakeSlice(sliceType, len(elements), len(elements))
+			for index := 0; index < in.Len(); index++ {
+				val := in.Index(index).Interface()
+				out.Index(index).Set(reflect.ValueOf(val))
+			}
+			return out
+		}
+		return Array(arrayType, elements).Map(arbitrary.Mapper(arrayType, sliceType, mapFn))
 	default:
 		return func(propertyFailed bool) (reflect.Value, Shrinker, error) {
-			elements := []Shrink{}
-			elements = append(elements, slice.Elements[:index]...)
-			elements = append(elements, slice.Elements[index+1:]...)
+			nextElements := []Shrink{}
+			nextElements = append(nextElements, elements[:index]...)
+			nextElements = append(nextElements, elements[index+1:]...)
 
-			nextShrink := SliceShrink{
-				Type:     slice.Type,
-				Elements: elements,
+			shrinker1 := Slice(sliceType, nextElements, index, limits)
+			shrinker2 := Slice(sliceType, elements, index+1, limits)
+
+			out := reflect.MakeSlice(sliceType, len(nextElements), len(nextElements))
+			for index, element := range nextElements {
+				out.Index(index).Set(element.Value)
 			}
 
-			shrinker1 := Slice(nextShrink, index, limits)
-			shrinker2 := Slice(slice, index+1, limits)
-
-			return nextShrink.Value(), shrinker1.Or(shrinker2), nil
+			return out, shrinker1.Or(shrinker2), nil
 		}
-	}
-}
-
-func SliceElements(slice SliceShrink) Shrinker {
-	return func(propertyFailed bool) (reflect.Value, Shrinker, error) {
-		for index, element := range slice.Elements {
-			if element.Shrinker == nil {
-				continue
-			}
-
-			elementValue, elementShrinker, err := element.Shrinker(propertyFailed)
-			if err != nil {
-				return reflect.Value{}, nil, fmt.Errorf("failed to shrink slice element with index: %d, %s", index, err)
-			}
-
-			if !elementValue.Type().AssignableTo(slice.Type.Elem()) {
-				return reflect.Value{}, nil, fmt.Errorf("failed to assign shrink type: %s to slice element with index %d", elementValue.Type(), index)
-			}
-
-			slice.Elements[index] = Shrink{
-				Value:    elementValue,
-				Shrinker: elementShrinker,
-			}
-
-			return slice.Value(), SliceElements(slice), nil
-		}
-		return slice.Value(), nil, nil
 	}
 }
