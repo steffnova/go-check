@@ -57,22 +57,36 @@ func (shrinker Shrinker) Convert(target reflect.Type) Shrinker {
 	}
 }
 
-// Compose creates composition from two shrinkers. Result is a Shrinker that will
-// use both shrinkers to provide shrunk values. Both shrinkers are used until they
-// are exhausted. Shrinker (receiver) is used first and next (parameter) is used second
-func (shrinker Shrinker) Compose(next Shrinker) Shrinker {
+// Filter filters shrink values returned by shrinker using a predicate. Predicate must be
+// a function that receives one value and returns boolean. Predicate's input must match
+// value that is being shrank. if predicate returns true shrank value is returned from
+// shrinker. In case of failure a shrinker (receiver) is being called as if the property
+// is failing until either predicate returns true or shrinker is exhausted. Default value
+// is returned in case shrinker is exhausted and predicate wasn't satisfied.
+func (shrinker Shrinker) Filter(defaultValue reflect.Value, predicate interface{}) Shrinker {
 	if shrinker == nil {
-		return next
+		return nil
 	}
 	return func(propertyFailed bool) (reflect.Value, Shrinker, error) {
-		val, shrinker, err := shrinker(propertyFailed)
-		switch {
+		shrink, nextShrinker, err := shrinker(propertyFailed)
+
+		switch val := reflect.ValueOf(predicate); {
 		case err != nil:
 			return reflect.Value{}, nil, err
-		case shrinker == nil:
-			return val, next, nil
+		case val.Kind() != reflect.Func:
+			return reflect.Value{}, nil, fmt.Errorf("predicate must be a function")
+		case val.Type().NumIn() != 1:
+			return reflect.Value{}, nil, fmt.Errorf("predicate must have one input value")
+		case val.Type().NumOut() != 1:
+			return reflect.Value{}, nil, fmt.Errorf("predicate must have one output value")
+		case val.Type().Out(0).Kind() != reflect.Bool:
+			return reflect.Value{}, nil, fmt.Errorf("predicate must have bool as a output value")
+		case val.Call([]reflect.Value{shrink})[0].Bool():
+			return shrink, nextShrinker.Filter(shrink, predicate), nil
+		case nextShrinker == nil:
+			return defaultValue, nil, nil
 		default:
-			return val, shrinker.Compose(next), nil
+			return nextShrinker.Filter(defaultValue, predicate)(false)
 		}
 	}
 }

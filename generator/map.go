@@ -15,6 +15,12 @@ import (
 // is used for defining constraints. Arbitrary will fail to create map Generator
 // if target's reflect.Kind is not Map, fails to create map's key and value
 // Generator or if creation of map's size fails.
+//
+// Note: Generator will always try to create a map within size limits. This
+// means that during key generation it will take into account collision with
+// existing map key's. Pool of values from which keys are generated must have
+// number of unique values equal to map's maximum length value defined by
+// limits parameter, otherwise map generation will be stuck in endless loop.
 func Map(key, value Arbitrary, limits ...constraints.Length) Arbitrary {
 	return func(target reflect.Type, r Random) (Generator, error) {
 		constraint := constraints.LengthDefault()
@@ -35,30 +41,24 @@ func Map(key, value Arbitrary, limits ...constraints.Length) Arbitrary {
 		return func() (reflect.Value, shrinker.Shrinker) {
 			size := r.Int64(int64(constraint.Min), int64(constraint.Max))
 
-			mapElements := []shrinker.MapShrink{}
+			shrinks := [][2]shrinker.Shrink{}
 			val := reflect.MakeMap(target)
+
 			for index := 0; index < int(size); index++ {
 				key, keyShrinker := generateKey()
 				value, valueShrinker := generateValue()
 
-				if val.MapIndex(key).IsValid() {
-					continue
+				for val.MapIndex(key).IsValid() {
+					key, keyShrinker = generateKey()
 				}
 
-				mapElements = append(mapElements, shrinker.MapShrink{
-					Key: shrinker.Shrink{
-						Value:    key,
-						Shrinker: keyShrinker,
-					},
-					Value: shrinker.Shrink{
-						Value:    value,
-						Shrinker: valueShrinker,
-					},
-				})
 				val.SetMapIndex(key, value)
+				shrinks = append(shrinks, [2]shrinker.Shrink{
+					{Value: key, Shrinker: keyShrinker},
+					{Value: value, Shrinker: valueShrinker},
+				})
 			}
-
-			return val, shrinker.Map(val, mapElements, constraint)
+			return val, shrinker.Map(target, shrinks, constraint)
 		}, nil
 	}
 }

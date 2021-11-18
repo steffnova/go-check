@@ -29,7 +29,7 @@ func (arb Arbitrary) Map(mapper interface{}) Arbitrary {
 		case val.Type().NumIn() != 1:
 			return nil, fmt.Errorf("mapper must have 1 input value")
 		case val.Type().Out(0).Kind() != target.Kind():
-			return nil, fmt.Errorf("mappers output parameter's kind must match target's kind. Got: %s", target.Kind())
+			return nil, fmt.Errorf("mappers output parameter's kind: %s must match target's kind. Got: %s", val.Type().Out(0).Kind(), target.Kind())
 		}
 
 		generator, err := arb(val.Type().In(0), r)
@@ -70,10 +70,10 @@ func (arb Arbitrary) Filter(predicate interface{}) Arbitrary {
 
 		return func() (reflect.Value, shrinker.Shrinker) {
 			for {
-				val, _ := generate()
+				val, shrinker := generate()
 				outputs := reflect.ValueOf(predicate).Call([]reflect.Value{val})
 				if outputs[0].Bool() {
-					return val.Convert(target), nil
+					return val, shrinker.Filter(val, predicate)
 				}
 			}
 		}, nil
