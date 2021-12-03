@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/shrinker"
 )
 
@@ -29,8 +30,8 @@ func PtrValid(arb Arbitrary) Arbitrary {
 			return nil, fmt.Errorf("failed to create base generator. %s", err)
 		}
 
-		return func() (reflect.Value, shrinker.Shrinker) {
-			val, valShrinker := generateValue()
+		return func(bias constraints.Bias) (reflect.Value, shrinker.Shrinker) {
+			val, valShrinker := generateValue(bias)
 			ptr := reflect.New(target.Elem())
 			ptr.Elem().Set(val)
 			return ptr, shrinker.Ptr(ptr, valShrinker)

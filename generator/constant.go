@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/shrinker"
 )
 
@@ -22,7 +23,7 @@ func Constant(constant interface{}) Arbitrary {
 		case target.Kind() == reflect.TypeOf(constant).Kind():
 			fallthrough
 		case target.Kind() == reflect.Interface && reflect.TypeOf(constant).Implements(target):
-			return func() (reflect.Value, shrinker.Shrinker) {
+			return func(bias constraints.Bias) (reflect.Value, shrinker.Shrinker) {
 				return reflect.ValueOf(constant), nil
 			}, nil
 		default:

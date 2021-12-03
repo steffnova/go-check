@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/shrinker"
 )
 
@@ -14,7 +15,7 @@ func Nil() Arbitrary {
 	return func(target reflect.Type, _ Random) (Generator, error) {
 		switch target.Kind() {
 		case reflect.Chan, reflect.Slice, reflect.Map, reflect.Func, reflect.Interface, reflect.Ptr:
-			return func() (reflect.Value, shrinker.Shrinker) {
+			return func(bias constraints.Bias) (reflect.Value, shrinker.Shrinker) {
 				return reflect.Zero(target), nil
 			}, nil
 		default:

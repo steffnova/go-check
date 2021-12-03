@@ -22,8 +22,8 @@ func Uint64(limits ...constraints.Uint64) Arbitrary {
 		if target.Kind() != reflect.Uint64 {
 			return nil, fmt.Errorf("target arbitrary's kind must be Uint64. Got: %s", target.Kind())
 		}
-		return func() (reflect.Value, shrinker.Shrinker) {
-			n := r.Uint64(constraint.Min, constraint.Max)
+		return func(bias constraints.Bias) (reflect.Value, shrinker.Shrinker) {
+			n := r.Uint64(constraint.Baised(bias))
 			nVal := reflect.ValueOf(n).Convert(target)
 			return nVal, shrinker.Uint64(nVal, constraint)
 		}, nil

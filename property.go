@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/generator"
 	"github.com/steffnova/go-check/shrinker"
 )
@@ -26,7 +27,7 @@ func ErrorForInputs(inputs []reflect.Value) Error {
 	}
 }
 
-type run func() error
+type run func(bias constraints.Bias) error
 
 type property func(generator.Random) (run, error)
 
@@ -53,12 +54,12 @@ func Property(predicate interface{}, arbGenerators ...generator.Arbitrary) prope
 			}
 		}
 
-		return func() error {
+		return func(bias constraints.Bias) error {
 			inputs := make([]reflect.Value, len(generators))
 			shrinkers := make([]shrinker.Shrinker, len(generators))
 
 			for index, generate := range generators {
-				inputs[index], shrinkers[index] = generate()
+				inputs[index], shrinkers[index] = generate(bias)
 			}
 
 			outputs := reflect.ValueOf(predicate).Call(inputs)

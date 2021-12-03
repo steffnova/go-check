@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/shrinker"
 )
 
 // Generator generates random value and shrinker for it's type
-type Generator func() (reflect.Value, shrinker.Shrinker)
+type Generator func(bias constraints.Bias) (reflect.Value, shrinker.Shrinker)
 
 // Arbitrary is Generator creator. It tries to create Generator for type specified
 // by target parameter with provided Random instance as r parameter.
@@ -37,8 +38,8 @@ func (arb Arbitrary) Map(mapper interface{}) Arbitrary {
 			return nil, fmt.Errorf("failed to create base generator. %s", err)
 		}
 
-		return func() (reflect.Value, shrinker.Shrinker) {
-			val, shrinker := generator()
+		return func(bias constraints.Bias) (reflect.Value, shrinker.Shrinker) {
+			val, shrinker := generator(bias)
 			val = reflect.ValueOf(mapper).Call([]reflect.Value{val})[0]
 			return val.Convert(target), shrinker.Map(mapper).Convert(target)
 		}, nil
@@ -68,9 +69,9 @@ func (arb Arbitrary) Filter(predicate interface{}) Arbitrary {
 			return nil, fmt.Errorf("predicate must have bool as a output value")
 		}
 
-		return func() (reflect.Value, shrinker.Shrinker) {
+		return func(bias constraints.Bias) (reflect.Value, shrinker.Shrinker) {
 			for {
-				val, shrinker := generate()
+				val, shrinker := generate(bias)
 				outputs := reflect.ValueOf(predicate).Call([]reflect.Value{val})
 				if outputs[0].Bool() {
 					return val, shrinker.Filter(val, predicate)

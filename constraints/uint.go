@@ -2,6 +2,7 @@ package constraints
 
 import (
 	"math"
+	"math/bits"
 	"strconv"
 )
 
@@ -62,6 +63,23 @@ func Uint32Default() Uint32 {
 type Uint64 struct {
 	Min uint64
 	Max uint64
+}
+
+func (u Uint64) Baised(bias Bias) Uint64 {
+	diff := u.Max - u.Min
+	bitSize := bits.Len64(diff)
+	factor := biasedFactor(bias, bitSize)
+
+	if factor == bitSize {
+		diff = 0
+	} else {
+		diff = diff >> (factor % bitSize)
+	}
+
+	return Uint64{
+		Min: u.Min,
+		Max: u.Min + diff,
+	}
 }
 
 func Uint64Default() Uint64 {

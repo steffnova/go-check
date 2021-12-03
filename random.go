@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"math/rand"
 
+	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/generator"
 )
 
@@ -12,9 +13,9 @@ type rng struct {
 	Rand *rand.Rand
 }
 
-func (r rng) Int64(minInt64, maxInt64 int64) int64 {
-	max := big.NewInt(maxInt64)
-	min := big.NewInt(minInt64)
+func (r rng) Int64(limit constraints.Int64) int64 {
+	max := big.NewInt(limit.Max)
+	min := big.NewInt(limit.Min)
 
 	val := big.NewInt(0).Sub(max, min)
 	val = big.NewInt(0).Add(val, big.NewInt(1))
@@ -24,14 +25,14 @@ func (r rng) Int64(minInt64, maxInt64 int64) int64 {
 	return val.Int64()
 }
 
-func (r rng) Uint64(minUint64, maxUint64 uint64) uint64 {
+func (r rng) Uint64(limit constraints.Uint64) uint64 {
 	max := big.NewInt(math.MaxInt64)
-	max = max.Mul(max, big.NewInt(int64(maxUint64/uint64(math.MaxInt64))))
-	max = max.Add(max, big.NewInt(int64(maxUint64%uint64(math.MaxInt64))))
+	max = max.Mul(max, big.NewInt(int64(limit.Max/uint64(math.MaxInt64))))
+	max = max.Add(max, big.NewInt(int64(limit.Max%uint64(math.MaxInt64))))
 
 	min := big.NewInt(math.MaxInt64)
-	min = min.Mul(min, big.NewInt(int64(minUint64/uint64(math.MaxInt64))))
-	min = min.Add(min, big.NewInt(int64(minUint64%uint64(math.MaxInt64))))
+	min = min.Mul(min, big.NewInt(int64(limit.Min/uint64(math.MaxInt64))))
+	min = min.Add(min, big.NewInt(int64(limit.Min%uint64(math.MaxInt64))))
 
 	diff := big.NewInt(0).Sub(max, min)
 	diff = diff.Add(diff, big.NewInt(1))
@@ -42,13 +43,13 @@ func (r rng) Uint64(minUint64, maxUint64 uint64) uint64 {
 	return n.Uint64()
 }
 
-func (r rng) Float64(minFloat64, maxFloat64 float64) float64 {
-	deviation := maxFloat64/2 - minFloat64/2
-	mean := deviation + minFloat64
+func (r rng) Float64(limit constraints.Float64) float64 {
+	deviation := limit.Max/2 - limit.Min/2
+	mean := deviation + limit.Min
 
 	for {
 		random := r.Rand.NormFloat64()*deviation + mean
-		if minFloat64 <= random && random <= maxFloat64 {
+		if limit.Min <= random && random <= limit.Max {
 			return random
 		}
 	}
@@ -59,7 +60,10 @@ func (r rng) Seed(seed int64) {
 }
 
 func (r rng) Split() generator.Random {
-	newSeed := r.Int64(math.MinInt64, math.MaxInt64)
+	newSeed := r.Int64(constraints.Int64{
+		Min: math.MinInt64,
+		Max: math.MaxInt64,
+	})
 	return &rng{
 		Rand: rand.New(rand.NewSource(newSeed)),
 	}

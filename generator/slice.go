@@ -29,13 +29,17 @@ func Slice(element Arbitrary, limits ...constraints.Length) Arbitrary {
 			return nil, fmt.Errorf("failed to create generator for slice elements: %s", err)
 		}
 
-		return func() (reflect.Value, shrinker.Shrinker) {
-			size := r.Int64(int64(constraint.Min), int64(constraint.Max))
+		return func(bias constraints.Bias) (reflect.Value, shrinker.Shrinker) {
+			size := r.Int64(constraints.Int64{
+				Min: int64(constraint.Min),
+				Max: int64(constraint.Max),
+			})
+
 			elements := make([]shrinker.Shrink, size)
 
 			out := reflect.MakeSlice(target, int(size), int(size))
 			for index := range elements {
-				elementValue, elementShrinker := generator()
+				elementValue, elementShrinker := generator(bias)
 				elements[index] = shrinker.Shrink{
 					Value:    elementValue,
 					Shrinker: elementShrinker,
