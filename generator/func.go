@@ -2,10 +2,10 @@ package generator
 
 import (
 	"fmt"
-	"math"
 	"reflect"
 
 	"github.com/steffnova/go-check/arbitrary"
+	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/shrinker"
 )
 
@@ -35,8 +35,8 @@ func Func(outputs ...Arbitrary) Arbitrary {
 			generators[index] = generator
 			randoms[index] = random
 		}
-		randomInt64 := r.Int64(math.MinInt64, math.MaxInt64)
-		return func() (reflect.Value, shrinker.Shrinker) {
+		randomInt64 := r.Int64(constraints.Int64Default())
+		return func(bias constraints.Bias) (reflect.Value, shrinker.Shrinker) {
 			fn := reflect.MakeFunc(target, func(inputs []reflect.Value) []reflect.Value {
 				// In order to create 2 different pure functions that have the
 				// same signature but generate different ouput, random value is
@@ -47,7 +47,7 @@ func Func(outputs ...Arbitrary) Arbitrary {
 				outputs := make([]reflect.Value, target.NumOut())
 				for index, generate := range generators {
 					randoms[index].Seed(seed)
-					outputs[index], _ = generate()
+					outputs[index], _ = generate(bias)
 				}
 
 				return outputs

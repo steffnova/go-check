@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/shrinker"
 )
 
@@ -35,12 +36,12 @@ func Struct(fieldArbitraries ...map[string]Arbitrary) Arbitrary {
 			generators[index] = generate
 		}
 
-		return func() (reflect.Value, shrinker.Shrinker) {
+		return func(bias constraints.Bias) (reflect.Value, shrinker.Shrinker) {
 			val := reflect.New(target).Elem()
 
 			shrinks := make([]shrinker.Shrink, target.NumField())
 			for index, generator := range generators {
-				fieldValue, fieldShrinker := generator()
+				fieldValue, fieldShrinker := generator(bias)
 				val.Field(index).Set(fieldValue)
 				shrinks[index] = shrinker.Shrink{
 					Value:    fieldValue,

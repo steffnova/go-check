@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/shrinker"
 )
 
@@ -21,12 +22,12 @@ func Array(element Arbitrary) Arbitrary {
 			return nil, fmt.Errorf("failed to crete generator. %s", err)
 		}
 
-		return func() (reflect.Value, shrinker.Shrinker) {
+		return func(bias constraints.Bias) (reflect.Value, shrinker.Shrinker) {
 			val := reflect.New(target).Elem()
 			elements := make([]shrinker.Shrink, target.Len())
 
 			for index := range elements {
-				element, s := generate()
+				element, s := generate(bias)
 				val.Index(index).Set(element)
 				elements[index] = shrinker.Shrink{
 					Value:    element,
@@ -63,12 +64,12 @@ func ArrayFrom(arbs ...Arbitrary) Arbitrary {
 			generators[index] = generator
 		}
 
-		return func() (reflect.Value, shrinker.Shrinker) {
+		return func(bias constraints.Bias) (reflect.Value, shrinker.Shrinker) {
 			val := reflect.New(target).Elem()
 			elements := make([]shrinker.Shrink, target.Len())
 
 			for index, generator := range generators {
-				element, s := generator()
+				element, s := generator(bias)
 				val.Index(index).Set(element)
 				elements[index] = shrinker.Shrink{
 					Value:    element,

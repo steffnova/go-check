@@ -35,8 +35,8 @@ func Float64(limits ...constraints.Float64) Arbitrary {
 			return nil, fmt.Errorf("lower range value can't be greater then upper range value")
 		}
 
-		return func() (reflect.Value, shrinker.Shrinker) {
-			n := r.Float64(constraint.Min, constraint.Max)
+		return func(bias constraints.Bias) (reflect.Value, shrinker.Shrinker) {
+			n := r.Float64(constraint)
 			val := reflect.ValueOf(n).Convert(target)
 			return val, shrinker.Float64(val, constraint)
 		}, nil

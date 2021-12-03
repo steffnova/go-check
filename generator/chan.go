@@ -22,10 +22,13 @@ func Chan(limits ...constraints.Length) Arbitrary {
 		if target.Kind() != reflect.Chan {
 			return nil, fmt.Errorf("target arbitrary's kind must be Chan. Got: %s", target.Kind())
 		}
-		return func() (reflect.Value, shrinker.Shrinker) {
+		return func(bias constraints.Bias) (reflect.Value, shrinker.Shrinker) {
 			val := reflect.MakeChan(
 				reflect.ChanOf(reflect.BothDir, target.Elem()),
-				int(r.Int64(int64(constraint.Min), int64(constraint.Max))),
+				int(r.Int64(constraints.Int64{
+					Min: int64(constraint.Min),
+					Max: int64(constraint.Max),
+				})),
 			)
 			return val, nil
 		}, nil

@@ -38,18 +38,21 @@ func Map(key, value Arbitrary, limits ...constraints.Length) Arbitrary {
 			return nil, fmt.Errorf("failed to create map's Value generator. %s", err)
 		}
 
-		return func() (reflect.Value, shrinker.Shrinker) {
-			size := r.Int64(int64(constraint.Min), int64(constraint.Max))
+		return func(bias constraints.Bias) (reflect.Value, shrinker.Shrinker) {
+			size := r.Int64(constraints.Int64{
+				Min: int64(constraint.Min),
+				Max: int64(constraint.Max),
+			})
 
 			shrinks := [][2]shrinker.Shrink{}
 			val := reflect.MakeMap(target)
 
 			for index := 0; index < int(size); index++ {
-				key, keyShrinker := generateKey()
-				value, valueShrinker := generateValue()
+				key, keyShrinker := generateKey(bias)
+				value, valueShrinker := generateValue(bias)
 
 				for val.MapIndex(key).IsValid() {
-					key, keyShrinker = generateKey()
+					key, keyShrinker = generateKey(bias)
 				}
 
 				val.SetMapIndex(key, value)
