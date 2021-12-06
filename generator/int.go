@@ -24,9 +24,11 @@ func Int64(limits ...constraints.Int64) Arbitrary {
 			return nil, fmt.Errorf("target arbitrary's kind must be Int64. Got: %s", target.Kind())
 		}
 		return func(bias constraints.Bias) (reflect.Value, shrinker.Shrinker) {
-			n := r.Int64(constraint)
+			biasedConstraint := constraint.Biased(bias)
+			n := r.Int64(biasedConstraint)
+			fmt.Println(biasedConstraint)
 			nVal := reflect.ValueOf(n).Convert(target)
-			return nVal, shrinker.Int64(nVal, constraint)
+			return nVal, shrinker.Int64(nVal, biasedConstraint)
 		}, nil
 	}
 }
