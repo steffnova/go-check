@@ -83,3 +83,28 @@ func Int64Default() Int64 {
 		Max: math.MaxInt64,
 	}
 }
+
+func (i Int64) Biased(bias Bias) Int64 {
+	switch {
+	case i.Min <= 0 && i.Max <= 0:
+		ui := Uint64{Min: uint64(-i.Max), Max: uint64(-i.Min)}.Baised(bias)
+		return Int64{
+			Min: int64(-ui.Max),
+			Max: int64(-ui.Min),
+		}
+	case i.Min >= 0 && i.Max >= 0:
+		ui := Uint64{Min: uint64(i.Min), Max: uint64(i.Max)}.Baised(bias)
+		return Int64{
+			Min: int64(ui.Min),
+			Max: int64(ui.Max),
+		}
+	default:
+		ui1 := Uint64{Min: 0, Max: uint64(-i.Min)}.Baised(bias)
+		ui2 := Uint64{Min: 0, Max: uint64(i.Max)}.Baised(bias)
+		return Int64{
+			Min: int64(-ui1.Max),
+			Max: int64(ui2.Max),
+		}
+	}
+
+}
