@@ -15,11 +15,16 @@ var (
 	iterationsFlag = flag.CommandLine.Int64("iterations", 100, "number of iterations run for the property")
 )
 
+// Config is configuration used by Check.
 type Config struct {
-	Seed       int64
-	Iterations int64
+	Seed       int64 // Seed used by random number generator
+	Iterations int64 // Number of times property will be checked
 }
 
+// Check checks if property holds. First parameter is *testing.T that will report
+// error if property doesn't hold. Even though config is a variadice parameter it
+// uses only the first value. If config is not specified default configuration is
+// used (random seed and 100 iterations).
 func Check(t *testing.T, property property, config ...Config) {
 	configuration := Config{
 		Seed:       *seedFlag,

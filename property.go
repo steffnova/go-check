@@ -3,32 +3,37 @@ package check
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/generator"
 	"github.com/steffnova/go-check/shrinker"
 )
 
-type run func(bias constraints.Bias) error
+type propertyRunner func(bias constraints.Bias) error
+type property func(generator.Random) (propertyRunner, error)
 
-type property func(generator.Random) (run, error)
-
+// Property defines a new property by specifing predicate and property generators.
+// Predicate must be a function that can have any number of input values, and must
+// have only one output value of error type. Number of predicate's input parameters
+// must match number of generators.
 func Property(predicate interface{}, arbGenerators ...generator.Arbitrary) property {
-	return func(r generator.Random) (run, error) {
+	return func(r generator.Random) (propertyRunner, error) {
 		generators := make([]generator.Generator, len(arbGenerators))
+		predicateVal := reflect.ValueOf(predicate)
 
-		switch val := reflect.ValueOf(predicate); {
-		case val.Kind() != reflect.Func:
+		switch t := reflect.TypeOf(predicate); {
+		case t.Kind() != reflect.Func:
 			return nil, fmt.Errorf("predicate must be a function")
-		case val.Type().NumIn() != len(arbGenerators):
-			return nil, fmt.Errorf("number of predicate input parameters (%d) doesn't match number of generators (%d)", val.Type().NumIn(), len(generators))
-		case val.Type().NumOut() != 1:
+		case t.NumIn() != len(arbGenerators):
+			return nil, fmt.Errorf("number of predicate input parameters (%d) doesn't match number of generators (%d)", t.NumIn(), len(generators))
+		case t.NumOut() != 1:
 			return nil, fmt.Errorf("number of predicate output parameters must be 1")
-		case !val.Type().Out(0).Implements(reflect.TypeOf((*error)(nil)).Elem()):
+		case !t.Out(0).Implements(reflect.TypeOf((*error)(nil)).Elem()):
 			return nil, fmt.Errorf("predicate's output parameter type must be error")
 		default:
 			for index, arbGenerator := range arbGenerators {
-				generate, err := arbGenerator(val.Type().In(index), r)
+				generate, err := arbGenerator(t.In(index), r)
 				if err != nil {
 					return nil, fmt.Errorf("failed to create type generator at index [%d]. %s", index, err)
 				}
@@ -44,7 +49,7 @@ func Property(predicate interface{}, arbGenerators ...generator.Arbitrary) prope
 				inputs[index], shrinkers[index] = generate(bias)
 			}
 
-			outputs := reflect.ValueOf(predicate).Call(inputs)
+			outputs := predicateVal.Call(inputs)
 			if outputs[0].IsZero() {
 				return nil
 			}
@@ -52,23 +57,25 @@ func Property(predicate interface{}, arbGenerators ...generator.Arbitrary) prope
 			numberOfShrinks := 0
 			for index, shrinker := range shrinkers {
 				for shrinker != nil {
-					oldValue := inputs[index]
-					failed := !outputs[0].IsZero()
-					var err error
-					inputs[index], shrinker, err = shrinker(failed)
+					propertyFailed := !outputs[0].IsZero()
+					shrink, nextShrinker, err := shrinker(propertyFailed)
 					if err != nil {
-						return fmt.Errorf("failed shrink input with index: %d. %s", index, err)
+						return fmt.Errorf("failed to shrink input with index: %d. %s", index, err)
 					}
 
-					if failed && !reflect.DeepEqual(oldValue.Interface(), inputs[index].Interface()) {
+					if propertyFailed && !reflect.DeepEqual(inputs[index].Interface(), shrink.Interface()) {
 						numberOfShrinks++
 					}
-					outputs = reflect.ValueOf(predicate).Call(inputs)
+					inputs[index], shrinker = shrink, nextShrinker
+					outputs = predicateVal.Call(inputs)
 				}
 			}
-			// TODO: shrink on error
-			return fmt.Errorf("%s. \nShrunked %d times. \nProperty error: %s", propertyFailed(inputs), numberOfShrinks, outputs[0].Interface().(error))
 
+			return fmt.Errorf(strings.Join([]string{
+				propertyFailed(inputs).Error(),
+				fmt.Sprintf("Shrink %d time(s)", numberOfShrinks),
+				fmt.Sprintf("Failure reason: %s", outputs[0].Interface().(error)),
+			}, "\n"))
 		}, nil
 	}
 }
