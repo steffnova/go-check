@@ -3,29 +3,11 @@ package check
 import (
 	"fmt"
 	"reflect"
-	"strings"
 
 	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/generator"
 	"github.com/steffnova/go-check/shrinker"
 )
-
-type Error func() string
-
-func (pe Error) Error() string {
-	return pe()
-}
-
-func ErrorForInputs(inputs []reflect.Value) Error {
-	return func() string {
-		inputData := make([]string, len(inputs))
-		for index, input := range inputs {
-			inputData[index] = fmt.Sprintf("<%s> %#v", input.Type().String(), input.Interface())
-		}
-
-		return fmt.Sprintf("Property failed for inputs: [\n\t%s\n]", strings.Join(inputData, ",\n\t"))
-	}
-}
 
 type run func(bias constraints.Bias) error
 
@@ -85,7 +67,7 @@ func Property(predicate interface{}, arbGenerators ...generator.Arbitrary) prope
 				}
 			}
 			// TODO: shrink on error
-			return fmt.Errorf("%s. \nShrunked %d times. \nProperty error: %s", ErrorForInputs(inputs).Error(), numberOfShrinks, outputs[0].Interface().(error))
+			return fmt.Errorf("%s. \nShrunked %d times. \nProperty error: %s", propertyFailed(inputs), numberOfShrinks, outputs[0].Interface().(error))
 
 		}, nil
 	}

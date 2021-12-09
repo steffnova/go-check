@@ -20,17 +20,12 @@ type Config struct {
 	Iterations int64
 }
 
-func DefaultConfig() Config {
-	config := Config{
+func Check(t *testing.T, property property, config ...Config) {
+	configuration := Config{
 		Seed:       *seedFlag,
 		Iterations: *iterationsFlag,
 	}
 
-	return config
-}
-
-func Check(t *testing.T, property property, config ...Config) {
-	configuration := DefaultConfig()
 	if len(config) > 0 {
 		configuration = config[0]
 	}
