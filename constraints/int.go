@@ -99,11 +99,15 @@ func (i Int64) Biased(bias Bias) Int64 {
 			Max: int64(ui.Max),
 		}
 	default:
-		ui1 := Uint64{Min: 0, Max: uint64(-i.Min)}.Baised(bias)
-		ui2 := Uint64{Min: 0, Max: uint64(i.Max)}.Baised(bias)
+		// In order to perserve symmetry ratio for generated numbers (50:50 ration between
+		// negative and positive numbers when range is [-n, n]), 0 is considered a positive
+		// number and negative numbers start from -1. This way negative numbers can be
+		// represented with same number of bits as positive, and will ensure that range of
+		// positive and negative values is expanded at the same rate.
+		ui := Uint64{Min: 0, Max: uint64(-i.Min) - 1}.Baised(bias)
 		return Int64{
-			Min: int64(-ui1.Max),
-			Max: int64(ui2.Max),
+			Min: int64(-ui.Max) - 1,
+			Max: Int64{Min: 0, Max: i.Max}.Biased(bias).Max,
 		}
 	}
 
