@@ -26,7 +26,6 @@ func Int64(limits ...constraints.Int64) Arbitrary {
 		return func(bias constraints.Bias) (reflect.Value, shrinker.Shrinker) {
 			biasedConstraint := constraint.Biased(bias)
 			n := r.Int64(biasedConstraint)
-			fmt.Println(biasedConstraint)
 			nVal := reflect.ValueOf(n).Convert(target)
 			return nVal, shrinker.Int64(nVal, biasedConstraint)
 		}, nil
