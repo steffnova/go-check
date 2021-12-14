@@ -20,18 +20,18 @@ func Ptr(arb Arbitrary) Arbitrary {
 // if target's reflect.Kind is not Ptr, or creation of arb's Generator
 // fails.
 func PtrValid(arb Arbitrary) Arbitrary {
-	return func(target reflect.Type, r Random) (Generator, error) {
+	return func(target reflect.Type, bias constraints.Bias, r Random) (Generator, error) {
 		if target.Kind() != reflect.Ptr {
 			return nil, fmt.Errorf("target's kind must be Ptr. Got: %s", target.Kind())
 		}
 
-		generateValue, err := arb(target.Elem(), r)
+		generateValue, err := arb(target.Elem(), bias, r)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create base generator. %s", err)
 		}
 
-		return func(bias constraints.Bias) (reflect.Value, shrinker.Shrinker) {
-			val, valShrinker := generateValue(bias)
+		return func() (reflect.Value, shrinker.Shrinker) {
+			val, valShrinker := generateValue()
 			ptr := reflect.New(target.Elem())
 			ptr.Elem().Set(val)
 			return ptr, shrinker.Ptr(ptr, valShrinker)

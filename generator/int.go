@@ -19,11 +19,11 @@ func Int64(limits ...constraints.Int64) Arbitrary {
 	if len(limits) > 0 {
 		constraint = limits[0]
 	}
-	return func(target reflect.Type, r Random) (Generator, error) {
+	return func(target reflect.Type, bias constraints.Bias, r Random) (Generator, error) {
 		if target.Kind() != reflect.Int64 {
 			return nil, fmt.Errorf("target arbitrary's kind must be Int64. Got: %s", target.Kind())
 		}
-		return func(bias constraints.Bias) (reflect.Value, shrinker.Shrinker) {
+		return func() (reflect.Value, shrinker.Shrinker) {
 			biasedConstraint := constraint.Biased(bias)
 			n := r.Int64(biasedConstraint)
 			nVal := reflect.ValueOf(n).Convert(target)
