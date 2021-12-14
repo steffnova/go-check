@@ -18,7 +18,7 @@ func Struct(fieldArbitraries ...map[string]Arbitrary) Arbitrary {
 		fieldGenerators = fieldArbitraries[0]
 	}
 
-	return func(target reflect.Type, r Random) (Generator, error) {
+	return func(target reflect.Type, bias constraints.Bias, r Random) (Generator, error) {
 		if target.Kind() != reflect.Struct {
 			return nil, fmt.Errorf("target must be a struct")
 		}
@@ -29,19 +29,19 @@ func Struct(fieldArbitraries ...map[string]Arbitrary) Arbitrary {
 			if !exists {
 				generator = Any()
 			}
-			generate, err := generator(field.Type, r)
+			generate, err := generator(field.Type, bias, r)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create generator for field: %s. %s", field.Name, err)
 			}
 			generators[index] = generate
 		}
 
-		return func(bias constraints.Bias) (reflect.Value, shrinker.Shrinker) {
+		return func() (reflect.Value, shrinker.Shrinker) {
 			val := reflect.New(target).Elem()
 
 			shrinks := make([]shrinker.Shrink, target.NumField())
 			for index, generator := range generators {
-				fieldValue, fieldShrinker := generator(bias)
+				fieldValue, fieldShrinker := generator()
 				val.Field(index).Set(fieldValue)
 				shrinks[index] = shrinker.Shrink{
 					Value:    fieldValue,

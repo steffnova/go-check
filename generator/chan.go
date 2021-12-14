@@ -18,11 +18,11 @@ func Chan(limits ...constraints.Length) Arbitrary {
 	if len(limits) > 0 {
 		constraint = limits[0]
 	}
-	return func(target reflect.Type, r Random) (Generator, error) {
+	return func(target reflect.Type, bias constraints.Bias, r Random) (Generator, error) {
 		if target.Kind() != reflect.Chan {
 			return nil, fmt.Errorf("target arbitrary's kind must be Chan. Got: %s", target.Kind())
 		}
-		return func(bias constraints.Bias) (reflect.Value, shrinker.Shrinker) {
+		return func() (reflect.Value, shrinker.Shrinker) {
 			val := reflect.MakeChan(
 				reflect.ChanOf(reflect.BothDir, target.Elem()),
 				int(r.Int64(constraints.Int64{

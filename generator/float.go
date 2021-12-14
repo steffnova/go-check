@@ -21,7 +21,7 @@ func Float64(limits ...constraints.Float64) Arbitrary {
 		constraint = limits[0]
 	}
 
-	return func(target reflect.Type, r Random) (Generator, error) {
+	return func(target reflect.Type, bias constraints.Bias, r Random) (Generator, error) {
 		if target.Kind() != reflect.Float64 {
 			return nil, fmt.Errorf("target arbitrary's kind must be Float64. Got: %s", target.Kind())
 		}
@@ -35,7 +35,7 @@ func Float64(limits ...constraints.Float64) Arbitrary {
 			return nil, fmt.Errorf("lower range value can't be greater then upper range value")
 		}
 
-		return func(bias constraints.Bias) (reflect.Value, shrinker.Shrinker) {
+		return func() (reflect.Value, shrinker.Shrinker) {
 			n := r.Float64(constraint)
 			val := reflect.ValueOf(n).Convert(target)
 			return val, shrinker.Float64(val, constraint)

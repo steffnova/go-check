@@ -15,7 +15,7 @@ import (
 // if target's reflect.Kind is not Slice, if creation of Generator for slice's elements
 // fails or creation of Generator for slice's size fail.
 func Slice(element Arbitrary, limits ...constraints.Length) Arbitrary {
-	return func(target reflect.Type, r Random) (Generator, error) {
+	return func(target reflect.Type, bias constraints.Bias, r Random) (Generator, error) {
 		constraint := constraints.LengthDefault()
 		if len(limits) != 0 {
 			constraint = limits[0]
@@ -24,22 +24,23 @@ func Slice(element Arbitrary, limits ...constraints.Length) Arbitrary {
 			return nil, fmt.Errorf("targets kind must be Slice. Got: %s", target.Kind())
 		}
 
-		generator, err := element(target.Elem(), r)
+		generator, err := element(target.Elem(), bias, r)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create generator for slice elements: %s", err)
 		}
 
-		return func(bias constraints.Bias) (reflect.Value, shrinker.Shrinker) {
-			size := r.Int64(constraints.Int64{
+		return func() (reflect.Value, shrinker.Shrinker) {
+			biasedConstraints := constraints.Int64{
 				Min: int64(constraint.Min),
 				Max: int64(constraint.Max),
-			})
+			}.Biased(bias)
+			size := r.Int64(biasedConstraints)
 
 			elements := make([]shrinker.Shrink, size)
 
 			out := reflect.MakeSlice(target, int(size), int(size))
 			for index := range elements {
-				elementValue, elementShrinker := generator(bias)
+				elementValue, elementShrinker := generator()
 				elements[index] = shrinker.Shrink{
 					Value:    elementValue,
 					Shrinker: elementShrinker,
@@ -47,7 +48,7 @@ func Slice(element Arbitrary, limits ...constraints.Length) Arbitrary {
 				out.Index(index).Set(elementValue)
 			}
 
-			return out, shrinker.Slice(target, elements, 0, constraint)
+			return out, shrinker.Slice(target, elements, 0, constraints.Length{Min: int(biasedConstraints.Min), Max: int(biasedConstraints.Max)})
 		}, nil
 	}
 

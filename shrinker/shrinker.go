@@ -111,3 +111,50 @@ func (shrinker Shrinker) Or(next Shrinker) Shrinker {
 		return shrinker(propertyFailed)
 	}
 }
+
+// Retry returns a shrinker that returns retryValue, and shrinker receiver until either
+// reminingRetries equals 0 or propertyFailed is true. Retry is useful for shrinkers
+// that do not shrink deterministically like shrinkers returned by Bind. On deterministic
+// shrinkers this has no effect and will only increase total time of shrinking process.
+func (shrinker Shrinker) Retry(maxRetries, remainingRetries uint, retryValue reflect.Value) Shrinker {
+	if shrinker == nil {
+		return nil
+	}
+
+	return func(propertyFailed bool) (reflect.Value, Shrinker, error) {
+		if propertyFailed || remainingRetries == 0 {
+			val, next, err := shrinker(propertyFailed)
+			if err != nil {
+				return reflect.Value{}, nil, err
+			}
+			return val, next.Retry(maxRetries, maxRetries, val), nil
+
+		}
+		return retryValue, shrinker.Retry(maxRetries, remainingRetries-1, retryValue), nil
+	}
+}
+
+type binder func(reflect.Value) (reflect.Value, Shrinker, error)
+
+// Bind returns a shrinker that uses the shrunk value to generate shrink returned
+// by binder. This is a non-deterministic shrinker, as binder returns a shrink
+// that is influnced by shrinker's (receiver) shrink. Bind is best paired with Retry
+// combinator.
+func (shrinker Shrinker) Bind(binder binder, nextShrinker Shrinker) Shrinker {
+	if shrinker == nil {
+		return nextShrinker
+	}
+	return func(propertyFailed bool) (reflect.Value, Shrinker, error) {
+		source, sourceShrinker, err := shrinker(propertyFailed)
+		if err != nil {
+			return reflect.Value{}, nil, err
+		}
+
+		destination, destinationShrinker, err := binder(source)
+		if err != nil {
+			return reflect.Value{}, nil, err
+		}
+
+		return destination, sourceShrinker.Bind(binder, destinationShrinker), nil
+	}
+}

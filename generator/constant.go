@@ -16,14 +16,14 @@ import (
 // value, target is an interface but constant doesn't implement it, and finally if
 // target's kinds doesn't match constant's kind.
 func Constant(constant interface{}) Arbitrary {
-	return func(target reflect.Type, r Random) (Generator, error) {
+	return func(target reflect.Type, bias constraints.Bias, r Random) (Generator, error) {
 		switch {
 		case constant == nil:
-			return Nil()(target, r)
+			return Nil()(target, bias, r)
 		case target.Kind() == reflect.TypeOf(constant).Kind():
 			fallthrough
 		case target.Kind() == reflect.Interface && reflect.TypeOf(constant).Implements(target):
-			return func(bias constraints.Bias) (reflect.Value, shrinker.Shrinker) {
+			return func() (reflect.Value, shrinker.Shrinker) {
 				return reflect.ValueOf(constant), nil
 			}, nil
 		default:

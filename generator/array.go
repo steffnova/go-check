@@ -13,21 +13,21 @@ import (
 // by Generator's target. Error is returned If target's kind is not reflect.Array
 // or if Generator creation for array's elements fails.
 func Array(element Arbitrary) Arbitrary {
-	return func(target reflect.Type, r Random) (Generator, error) {
+	return func(target reflect.Type, bias constraints.Bias, r Random) (Generator, error) {
 		if target.Kind() != reflect.Array {
 			return nil, fmt.Errorf("target arbitrary's kind must be Array. Got: %s", target.Kind())
 		}
-		generate, err := element(target.Elem(), r)
+		generate, err := element(target.Elem(), bias, r)
 		if err != nil {
 			return nil, fmt.Errorf("failed to crete generator. %s", err)
 		}
 
-		return func(bias constraints.Bias) (reflect.Value, shrinker.Shrinker) {
+		return func() (reflect.Value, shrinker.Shrinker) {
 			val := reflect.New(target).Elem()
 			elements := make([]shrinker.Shrink, target.Len())
 
 			for index := range elements {
-				element, s := generate(bias)
+				element, s := generate()
 				val.Index(index).Set(element)
 				elements[index] = shrinker.Shrink{
 					Value:    element,
@@ -47,7 +47,7 @@ func Array(element Arbitrary) Arbitrary {
 // Error is returned If target's kind is reflect.Array, len(arbs) doesn't match the size
 // target array or Generator creation for any of the array's elements fails.
 func ArrayFrom(arbs ...Arbitrary) Arbitrary {
-	return func(target reflect.Type, r Random) (Generator, error) {
+	return func(target reflect.Type, bias constraints.Bias, r Random) (Generator, error) {
 		if target.Kind() != reflect.Array {
 			return nil, fmt.Errorf("target arbitrary's kind must be Array. Got: %s", target.Kind())
 		}
@@ -57,19 +57,19 @@ func ArrayFrom(arbs ...Arbitrary) Arbitrary {
 
 		generators := make([]Generator, target.Len())
 		for index := range generators {
-			generator, err := arbs[index](target.Elem(), r)
+			generator, err := arbs[index](target.Elem(), bias, r)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create element's generator. %s", err)
 			}
 			generators[index] = generator
 		}
 
-		return func(bias constraints.Bias) (reflect.Value, shrinker.Shrinker) {
+		return func() (reflect.Value, shrinker.Shrinker) {
 			val := reflect.New(target).Elem()
 			elements := make([]shrinker.Shrink, target.Len())
 
 			for index, generator := range generators {
-				element, s := generator(bias)
+				element, s := generator()
 				val.Index(index).Set(element)
 				elements[index] = shrinker.Shrink{
 					Value:    element,
