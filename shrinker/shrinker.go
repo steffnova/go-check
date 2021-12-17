@@ -136,25 +136,34 @@ func (shrinker Shrinker) Retry(maxRetries, remainingRetries uint, retryValue ref
 
 type binder func(reflect.Value) (reflect.Value, Shrinker, error)
 
-// Bind returns a shrinker that uses the shrunk value to generate shrink returned
-// by binder. This is a non-deterministic shrinker, as binder returns a shrink
-// that is influnced by shrinker's (receiver) shrink. Bind is best paired with Retry
-// combinator.
-func (shrinker Shrinker) Bind(binder binder, nextShrinker Shrinker) Shrinker {
-	if shrinker == nil {
-		return nextShrinker
-	}
+// Bind returns a shrinker that uses the shrunk value to generate shrink returned by
+// binder. Binder is not guaranteed to be deterministic, as it returns new result value
+// based on root shrinker's shrink and it should be considered non-deterministic. Two
+// shrinkers needs to be passed alongside binder, next and lastFailing. Next shrinker
+// is the shrinker from the previous iteration of shrinking where lastFailing is shrinker
+// that caused last property falsification. Because of "non-deterministic" property of
+// binder, Bind is best paired with Retry combinator that can improve shrinking efficiency.
+func (shrinker Shrinker) Bind(binder binder, next, lastFailing Shrinker) Shrinker {
 	return func(propertyFailed bool) (reflect.Value, Shrinker, error) {
+		if propertyFailed {
+			lastFailing = next
+		}
+
+		// if shrinker is exhausted, call the lastShrinker that falsified the
+		// property with propertyFailed set to true, to continue shrinking process
+		if shrinker == nil {
+			return lastFailing(true)
+		}
+
 		source, sourceShrinker, err := shrinker(propertyFailed)
 		if err != nil {
 			return reflect.Value{}, nil, err
 		}
-
-		destination, destinationShrinker, err := binder(source)
+		boundValue, boundShrinker, err := binder(source)
 		if err != nil {
 			return reflect.Value{}, nil, err
 		}
 
-		return destination, sourceShrinker.Bind(binder, destinationShrinker), nil
+		return boundValue, sourceShrinker.Bind(binder, boundShrinker, lastFailing), nil
 	}
 }
