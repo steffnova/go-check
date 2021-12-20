@@ -2,7 +2,7 @@ package constraints
 
 import (
 	"math"
-	"strconv"
+	"math/bits"
 )
 
 // Int constraints
@@ -22,17 +22,15 @@ type Int struct {
 //
 // - For 64bit architecture Int{Min: math.MinInt64, Max: math.MaxInt64}
 func IntDefault() Int {
-	if strconv.IntSize == 32 {
+	if bits.UintSize == 32 {
 		return Int{
 			Min: math.MinInt32,
 			Max: math.MaxInt32,
 		}
 	}
 	return Int{
-		// Using bitwise operations to calculate maxInt64 and minInt64 to avoid
-		// compiler errors on 32 bit platforms, as int64 cannot be assigned to int
-		Min: math.MinInt32 << 1,
-		Max: (int(math.MaxInt32) << 32) | ((int(math.MaxInt32 + 1)) | int(math.MaxInt32)),
+		Min: int(math.MinInt64),
+		Max: int(math.MaxInt64),
 	}
 }
 

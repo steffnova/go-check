@@ -3,7 +3,6 @@ package constraints
 import (
 	"math"
 	"math/bits"
-	"strconv"
 )
 
 type Uint struct {
@@ -12,7 +11,7 @@ type Uint struct {
 }
 
 func UintDefault() Uint {
-	if strconv.IntSize == 32 {
+	if bits.UintSize == 32 {
 		return Uint{
 			Min: 0,
 			Max: math.MaxUint32,
@@ -20,7 +19,7 @@ func UintDefault() Uint {
 	}
 	return Uint{
 		Min: 0,
-		Max: uint(math.MaxUint32)<<32 | uint(math.MaxUint32),
+		Max: uint(math.MaxUint64),
 	}
 }
 
