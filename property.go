@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/generator"
 	"github.com/steffnova/go-check/shrinker"
@@ -16,9 +17,9 @@ type property func(constraints.Bias, generator.Random) error
 // Predicate must be a function that can have any number of input values, and must
 // have only one output value of error type. Number of predicate's input parameters
 // must match number of generators.
-func Property(predicate interface{}, arbGenerators ...generator.Arbitrary) property {
+func Property(predicate interface{}, arbGenerators ...generator.Generator) property {
 	return func(bias constraints.Bias, r generator.Random) error {
-		generators := make([]generator.Generator, len(arbGenerators))
+		generators := make([]generator.Generate, len(arbGenerators))
 		predicateVal := reflect.ValueOf(predicate)
 
 		switch t := reflect.TypeOf(predicate); {
@@ -40,14 +41,14 @@ func Property(predicate interface{}, arbGenerators ...generator.Arbitrary) prope
 			}
 		}
 
-		inputs := make([]reflect.Value, len(generators))
+		inputs := make(arbitrary.Arbitraries, len(generators))
 		shrinkers := make([]shrinker.Shrinker, len(generators))
 
 		for index, generate := range generators {
 			inputs[index], shrinkers[index] = generate()
 		}
 
-		outputs := predicateVal.Call(inputs)
+		outputs := predicateVal.Call(inputs.Values())
 		if outputs[0].IsZero() {
 			return nil
 		}
@@ -56,21 +57,21 @@ func Property(predicate interface{}, arbGenerators ...generator.Arbitrary) prope
 		for index, shrinker := range shrinkers {
 			for shrinker != nil {
 				propertyFailed := !outputs[0].IsZero()
-				shrink, nextShrinker, err := shrinker(propertyFailed)
+				shrink, nextShrinker, err := shrinker(inputs[index], propertyFailed)
 				if err != nil {
 					return fmt.Errorf("failed to shrink input with index: %d. %s", index, err)
 				}
 
-				if propertyFailed && !reflect.DeepEqual(inputs[index].Interface(), shrink.Interface()) {
+				if propertyFailed && !reflect.DeepEqual(inputs[index].Value.Interface(), shrink.Value.Interface()) {
 					numberOfShrinks++
 				}
 				inputs[index], shrinker = shrink, nextShrinker
-				outputs = predicateVal.Call(inputs)
+				outputs = predicateVal.Call(inputs.Values())
 			}
 		}
 
 		return fmt.Errorf(strings.Join([]string{
-			propertyFailed(inputs).Error(),
+			propertyFailed(inputs.Values()).Error(),
 			fmt.Sprintf("Shrink %d time(s)", numberOfShrinks),
 			fmt.Sprintf("Failure reason: %s", outputs[0].Interface().(error)),
 		}, "\n"))

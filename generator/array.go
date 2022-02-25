@@ -4,39 +4,32 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/shrinker"
 )
 
-// Array returns Arbitrary that creates array Generator. Array's element values
-// are generate with Arbitrary provided in element parameter. Array's size is defined
-// by Generator's target. Error is returned If target's kind is not reflect.Array
-// or if Generator creation for array's elements fails.
-func Array(element Arbitrary) Arbitrary {
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generator, error) {
+func Array(element Generator) Generator {
+	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		if target.Kind() != reflect.Array {
 			return nil, fmt.Errorf("target arbitrary's kind must be Array. Got: %s", target.Kind())
 		}
-		generate, err := element(target.Elem(), bias, r)
-		if err != nil {
-			return nil, fmt.Errorf("failed to crete generator. %s", err)
-		}
 
-		return func() (reflect.Value, shrinker.Shrinker) {
-			val := reflect.New(target).Elem()
-			elements := make([]shrinker.Shrink, target.Len())
-
-			for index := range elements {
-				element, s := generate()
-				val.Index(index).Set(element)
-				elements[index] = shrinker.Shrink{
-					Value:    element,
-					Shrinker: s,
-				}
+		mapper := arbitrary.Mapper(reflect.SliceOf(target.Elem()), target, func(in reflect.Value) reflect.Value {
+			out := reflect.New(target).Elem()
+			for index := 0; index < in.Len(); index++ {
+				val := in.Index(index).Interface()
+				out.Index(index).Set(reflect.ValueOf(val))
 			}
+			return out
+		})
 
-			return val, shrinker.Array(target, elements)
-		}, nil
+		generator := Slice(element, constraints.Length{
+			Min: target.Len(),
+			Max: target.Len(),
+		}).Map(mapper)
+
+		return generator(target, bias, r)
 	}
 }
 
@@ -46,8 +39,8 @@ func Array(element Arbitrary) Arbitrary {
 // constraints for each element in the array. Array's size is defined by Generator's target.
 // Error is returned If target's kind is reflect.Array, len(arbs) doesn't match the size
 // target array or Generator creation for any of the array's elements fails.
-func ArrayFrom(arbs ...Arbitrary) Arbitrary {
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generator, error) {
+func ArrayFrom(arbs ...Generator) Generator {
+	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		if target.Kind() != reflect.Array {
 			return nil, fmt.Errorf("target arbitrary's kind must be Array. Got: %s", target.Kind())
 		}
@@ -55,7 +48,7 @@ func ArrayFrom(arbs ...Arbitrary) Arbitrary {
 			return nil, fmt.Errorf("invalid number of arbs. Expected: %d", target.Len())
 		}
 
-		generators := make([]Generator, target.Len())
+		generators := make([]Generate, target.Len())
 		for index := range generators {
 			generator, err := arbs[index](target.Elem(), bias, r)
 			if err != nil {
@@ -64,20 +57,23 @@ func ArrayFrom(arbs ...Arbitrary) Arbitrary {
 			generators[index] = generator
 		}
 
-		return func() (reflect.Value, shrinker.Shrinker) {
-			val := reflect.New(target).Elem()
-			elements := make([]shrinker.Shrink, target.Len())
-
-			for index, generator := range generators {
-				element, s := generator()
-				val.Index(index).Set(element)
-				elements[index] = shrinker.Shrink{
-					Value:    element,
-					Shrinker: s,
-				}
+		return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
+			arb := arbitrary.Arbitrary{
+				Value:    reflect.New(target).Elem(),
+				Elements: make(arbitrary.Arbitraries, target.Len()),
 			}
 
-			return val, shrinker.Array(target, elements)
+			shrinkers := make([]shrinker.Shrinker, target.Len())
+
+			for index, generator := range generators {
+				arb.Elements[index], shrinkers[index] = generator()
+				arb.Value.Index(index).Set(arb.Elements[index].Value)
+			}
+
+			return arb, shrinker.Array(shrinker.Chain(
+				shrinker.CollectionElement(shrinkers...),
+				shrinker.CollectionElements(shrinkers...),
+			))
 		}, nil
 	}
 }

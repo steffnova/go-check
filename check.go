@@ -35,7 +35,7 @@ func Check(t *testing.T, property property, config ...Config) {
 		configuration = config[0]
 	}
 
-	random := rng{
+	random := Rng{
 		Rand: rand.New(rand.NewSource(configuration.Seed)),
 	}
 

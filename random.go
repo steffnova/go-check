@@ -9,11 +9,11 @@ import (
 	"github.com/steffnova/go-check/generator"
 )
 
-type rng struct {
+type Rng struct {
 	Rand *rand.Rand
 }
 
-func (r rng) Int64(limit constraints.Int64) int64 {
+func (r Rng) Int64(limit constraints.Int64) int64 {
 	max := big.NewInt(limit.Max)
 	min := big.NewInt(limit.Min)
 
@@ -25,7 +25,7 @@ func (r rng) Int64(limit constraints.Int64) int64 {
 	return val.Int64()
 }
 
-func (r rng) Uint64(limit constraints.Uint64) uint64 {
+func (r Rng) Uint64(limit constraints.Uint64) uint64 {
 	max := big.NewInt(math.MaxInt64)
 	max = max.Mul(max, big.NewInt(int64(limit.Max/uint64(math.MaxInt64))))
 	max = max.Add(max, big.NewInt(int64(limit.Max%uint64(math.MaxInt64))))
@@ -43,7 +43,7 @@ func (r rng) Uint64(limit constraints.Uint64) uint64 {
 	return n.Uint64()
 }
 
-func (r rng) Float64(limit constraints.Float64) float64 {
+func (r Rng) Float64(limit constraints.Float64) float64 {
 	deviation := limit.Max/2 - limit.Min/2
 	mean := deviation + limit.Min
 
@@ -55,16 +55,16 @@ func (r rng) Float64(limit constraints.Float64) float64 {
 	}
 }
 
-func (r rng) Seed(seed int64) {
+func (r Rng) Seed(seed int64) {
 	r.Rand.Seed(seed)
 }
 
-func (r rng) Split() generator.Random {
+func (r Rng) Split() generator.Random {
 	newSeed := r.Int64(constraints.Int64{
 		Min: math.MinInt64,
 		Max: math.MaxInt64,
 	})
-	return &rng{
+	return &Rng{
 		Rand: rand.New(rand.NewSource(newSeed)),
 	}
 }

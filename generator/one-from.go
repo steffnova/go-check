@@ -1,21 +1,15 @@
 package generator
 
-import (
-	"reflect"
+func OneFrom(first Generator, other ...Generator) Generator {
+	arbs := append([]Generator{first}, other...)
+	weightedArbs := make([]Weighted, len(arbs))
 
-	"github.com/steffnova/go-check/constraints"
-)
-
-// OneFrom is Arbitrary that will create Generator frome one of the passed
-// arbitraries.
-func OneFrom(first Arbitrary, other ...Arbitrary) Arbitrary {
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generator, error) {
-		arbitraries := append([]Arbitrary{first}, other...)
-
-		index := int(r.Int64(constraints.Int64{
-			Min: 0,
-			Max: int64(len(arbitraries) - 1),
-		}))
-		return arbitraries[index](target, bias, r)
+	for index, arb := range arbs {
+		weightedArbs[index] = Weighted{
+			Weight: 1,
+			Gen:    arb,
+		}
 	}
+
+	return OneFromWeighted(weightedArbs[0], weightedArbs[1:]...)
 }

@@ -8,7 +8,7 @@ import (
 // generated are defines by limits parameter (MinCodePoint and MaxCodePoint
 // are included in the range). Even though limits is a variadic argument only
 // the first value is used for defining constraints.
-func Rune(limits ...constraints.Rune) Arbitrary {
+func Rune(limits ...constraints.Rune) Generator {
 	constraint := constraints.RuneDefault()
 	if len(limits) != 0 {
 		constraint = limits[0]

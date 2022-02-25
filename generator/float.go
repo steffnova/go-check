@@ -3,10 +3,8 @@ package generator
 import (
 	"fmt"
 	"math"
-	"reflect"
 
 	"github.com/steffnova/go-check/constraints"
-	"github.com/steffnova/go-check/shrinker"
 )
 
 // Float64 is Arbitrary that creates float64 Generator. Range in which float64 value is generated
@@ -15,31 +13,46 @@ import (
 // [-math.MaxFloat64, math.MaxFloat64]. Even though limits is a variadic argument only the
 // first value is used for defining constraints. Error is returned if target's reflect.Kind
 // is not Float64 or constraints are out of range (-Inf, +Inf, Nan).
-func Float64(limits ...constraints.Float64) Arbitrary {
+func Float64(limits ...constraints.Float64) Generator {
 	constraint := constraints.Float64Default()
 	if len(limits) > 0 {
 		constraint = limits[0]
 	}
 
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generator, error) {
-		if target.Kind() != reflect.Float64 {
-			return nil, fmt.Errorf("target arbitrary's kind must be Float64. Got: %s", target.Kind())
-		}
-		if constraint.Min < -math.MaxFloat64 {
-			return nil, fmt.Errorf("lower range value can't be lower then %f", -math.MaxFloat64)
-		}
-		if constraint.Max > math.MaxFloat64 {
-			return nil, fmt.Errorf("upper range value can't be greater then %f", math.MaxFloat64)
-		}
-		if constraint.Max < constraint.Min {
-			return nil, fmt.Errorf("lower range value can't be greater then upper range value")
-		}
-
-		return func() (reflect.Value, shrinker.Shrinker) {
-			n := r.Float64(constraint)
-			val := reflect.ValueOf(n).Convert(target)
-			return val, shrinker.Float64(val, constraint)
-		}, nil
+	switch {
+	case constraint.Min < -math.MaxFloat64:
+		return InvalidGen(fmt.Errorf("lower range value can't be lower then %f", -math.MaxFloat64))
+	case constraint.Max > math.MaxFloat64:
+		return InvalidGen(fmt.Errorf("upper range value can't be greater then %f", math.MaxFloat64))
+	case constraint.Max < constraint.Min:
+		return InvalidGen(fmt.Errorf("lower range value can't be greater then upper range value"))
+	case constraint.Max <= math.Copysign(0, -1):
+		return Uint64(constraints.Uint64{Min: -math.Float64bits(constraint.Max), Max: -math.Float64bits(constraint.Min)}).
+			Map(func(x uint64) float64 {
+				return -math.Float64frombits(x)
+			})
+	case constraint.Min >= math.Copysign(0, 1):
+		return Uint64(constraints.Uint64{Min: math.Float64bits(constraint.Min), Max: math.Float64bits(constraint.Max)}).
+			Map(func(x uint64) float64 {
+				return math.Float64frombits(x)
+			})
+	default:
+		return OneFromWeighted(
+			Weighted{
+				Weight: uint(math.Float64bits(-constraint.Min)) + 1,
+				Gen: Uint64(constraints.Uint64{Min: 0, Max: math.Float64bits(-constraint.Min)}).
+					Map(func(x uint64) float64 {
+						return -math.Float64frombits(x)
+					}),
+			},
+			Weighted{
+				Weight: uint(math.Float64bits(constraint.Max)) + 1,
+				Gen: Uint64(constraints.Uint64{Min: 0, Max: math.Float64bits(constraint.Max)}).
+					Map(func(x uint64) float64 {
+						return math.Float64frombits(x)
+					}),
+			},
+		)
 	}
 }
 
@@ -49,7 +62,7 @@ func Float64(limits ...constraints.Float64) Arbitrary {
 // [-math.MaxFloat32, math.MaxFloat32]. Even though limits is a variadic argument only the
 // first value is used for defining constraints. Error is returned if target's reflect.Kind
 // is not Float32 or constraints are out of range (-Inf, +Inf, Nan).
-func Float32(limits ...constraints.Float32) Arbitrary {
+func Float32(limits ...constraints.Float32) Generator {
 	constraint := constraints.Float32Default()
 	if len(limits) > 0 {
 		constraint = limits[0]

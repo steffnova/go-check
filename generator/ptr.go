@@ -4,37 +4,33 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
-	"github.com/steffnova/go-check/shrinker"
 )
 
 // Ptr is Arbitrary that creates pointer Generator. Generator will return
 // either valid or invalid (nil) pointer for target's type. Error is returned
 // if target's reflect.Kind is not Ptr, or creation of arb's Generator fails.
-func Ptr(arb Arbitrary) Arbitrary {
-	return OneFrom(Nil(), PtrValid(arb))
+func Ptr(arb Generator) Generator {
+	return OneFrom(Nil(), PtrTo(arb))
 }
 
-// PtrValid is Arbitrary that creates pointer Generator. Generator will
+// PtrTo is Arbitrary that creates pointer Generator. Generator will
 // always return non-nil pointer for target's type. Error is returned
 // if target's reflect.Kind is not Ptr, or creation of arb's Generator
 // fails.
-func PtrValid(arb Arbitrary) Arbitrary {
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generator, error) {
+func PtrTo(arb Generator) Generator {
+	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		if target.Kind() != reflect.Ptr {
 			return nil, fmt.Errorf("target's kind must be Ptr. Got: %s", target.Kind())
 		}
 
-		generateValue, err := arb(target.Elem(), bias, r)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create base generator. %s", err)
-		}
+		mapper := arbitrary.Mapper(target.Elem(), target, func(in reflect.Value) reflect.Value {
+			out := reflect.New(target.Elem())
+			out.Elem().Set(in)
+			return out
+		})
 
-		return func() (reflect.Value, shrinker.Shrinker) {
-			val, valShrinker := generateValue()
-			ptr := reflect.New(target.Elem())
-			ptr.Elem().Set(val)
-			return ptr, shrinker.Ptr(ptr, valShrinker)
-		}, nil
+		return arb.Map(mapper)(target, bias, r)
 	}
 }

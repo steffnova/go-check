@@ -1,11 +1,9 @@
 package shrinker
 
-import "reflect"
+import "github.com/steffnova/go-check/arbitrary"
 
-// Invalid is shrinker that always returns an error. Error value is specified
-// with err parameter.
 func Invalid(err error) Shrinker {
-	return func(propertyFailed bool) (reflect.Value, Shrinker, error) {
-		return reflect.Value{}, nil, err
+	return func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, Shrinker, error) {
+		return arbitrary.Arbitrary{}, nil, err
 	}
 }

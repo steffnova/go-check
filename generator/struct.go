@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/shrinker"
 )
@@ -12,17 +13,17 @@ import (
 // assigned implicitly or explictly. Arbitrary for struct fields can be provided explicitly by
 // adding it to fieldArbitraries, otherwise implicit Any() Arbitrary is assigned. Error is returned
 // if target's reflect.Kind is not Struct, or creation of Generator for any of the fields fails.
-func Struct(fieldArbitraries ...map[string]Arbitrary) Arbitrary {
-	fieldGenerators := map[string]Arbitrary{}
+func Struct(fieldArbitraries ...map[string]Generator) Generator {
+	fieldGenerators := map[string]Generator{}
 	if len(fieldArbitraries) != 0 {
 		fieldGenerators = fieldArbitraries[0]
 	}
 
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generator, error) {
+	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		if target.Kind() != reflect.Struct {
 			return nil, fmt.Errorf("target must be a struct")
 		}
-		generators := make([]Generator, target.NumField())
+		generators := make([]Generate, target.NumField())
 		for index := range generators {
 			field := target.Field(index)
 			generator, exists := fieldGenerators[field.Name]
@@ -36,19 +37,18 @@ func Struct(fieldArbitraries ...map[string]Arbitrary) Arbitrary {
 			generators[index] = generate
 		}
 
-		return func() (reflect.Value, shrinker.Shrinker) {
-			val := reflect.New(target).Elem()
-
-			shrinks := make([]shrinker.Shrink, target.NumField())
-			for index, generator := range generators {
-				fieldValue, fieldShrinker := generator()
-				val.Field(index).Set(fieldValue)
-				shrinks[index] = shrinker.Shrink{
-					Value:    fieldValue,
-					Shrinker: fieldShrinker,
-				}
+		return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
+			arb := arbitrary.Arbitrary{
+				Value:    reflect.New(target).Elem(),
+				Elements: make(arbitrary.Arbitraries, target.NumField()),
 			}
-			return val, shrinker.Struct(target, shrinks)
+
+			shrinkers := make([]shrinker.Shrinker, target.NumField())
+			for index, generator := range generators {
+				arb.Elements[index], shrinkers[index] = generator()
+				arb.Value.Field(index).Set(arb.Elements[index].Value)
+			}
+			return arb, shrinker.Struct(shrinker.Chain(shrinker.CollectionElement(shrinkers...), shrinker.CollectionElements(shrinkers...)))
 		}, nil
 	}
 }

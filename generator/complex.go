@@ -11,7 +11,7 @@ import (
 // is used [-math.MaxFloat64, math.MaxFloat64] for both parts. Even though limits is a variadic
 // argument only the first value is used for defining constraints. Error is returned if target's
 // reflect.Kind is not Complex128 or constraints are out of range (-Inf, +Inf, Nan).
-func Complex128(limits ...constraints.Complex128) Arbitrary {
+func Complex128(limits ...constraints.Complex128) Generator {
 	constraint := constraints.Complex128Default()
 	if len(limits) != 0 {
 		constraint = limits[0]
@@ -32,7 +32,7 @@ func Complex128(limits ...constraints.Complex128) Arbitrary {
 // is used [-math.MaxFloat32, math.MaxFloat32] for both parts. Even though limits is a variadic
 // argument only the first value is used for defining constraints. Error is returned if target's
 // reflect.Kind is not Complex64 or constraints are out of range (-Inf, +Inf, Nan).
-func Complex64(limits ...constraints.Complex64) Arbitrary {
+func Complex64(limits ...constraints.Complex64) Generator {
 	constraint := constraints.Complex64Default()
 	if len(limits) != 0 {
 		constraint = limits[0]

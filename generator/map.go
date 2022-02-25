@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/shrinker"
 )
@@ -21,8 +22,8 @@ import (
 // existing map key's. Pool of values from which keys are generated must have
 // number of unique values equal to map's maximum length value defined by
 // limits parameter, otherwise map generation will be stuck in endless loop.
-func Map(key, value Arbitrary, limits ...constraints.Length) Arbitrary {
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generator, error) {
+func Map(key, value Generator, limits ...constraints.Length) Generator {
+	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		constraint := constraints.LengthDefault()
 		if len(limits) != 0 {
 			constraint = limits[0]
@@ -38,30 +39,39 @@ func Map(key, value Arbitrary, limits ...constraints.Length) Arbitrary {
 			return nil, fmt.Errorf("failed to create map's Value generator. %s", err)
 		}
 
-		return func() (reflect.Value, shrinker.Shrinker) {
+		return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
 			size := r.Int64(constraints.Int64{
 				Min: int64(constraint.Min),
 				Max: int64(constraint.Max),
 			})
 
-			shrinks := [][2]shrinker.Shrink{}
-			val := reflect.MakeMap(target)
+			arb := arbitrary.Arbitrary{
+				Value:    reflect.MakeMap(target),
+				Elements: make(arbitrary.Arbitraries, size),
+			}
+
+			shrinkers := make([]shrinker.Shrinker, int(size))
+
+			filter := arbitrary.FilterPredicate(target, func(in reflect.Value) bool {
+				return in.Len() >= constraint.Min
+			})
 
 			for index := 0; index < int(size); index++ {
 				key, keyShrinker := generateKey()
 				value, valueShrinker := generateValue()
 
-				for val.MapIndex(key).IsValid() {
+				for arb.Value.MapIndex(key.Value).IsValid() {
 					key, keyShrinker = generateKey()
 				}
 
-				val.SetMapIndex(key, value)
-				shrinks = append(shrinks, [2]shrinker.Shrink{
-					{Value: key, Shrinker: keyShrinker},
-					{Value: value, Shrinker: valueShrinker},
-				})
+				arb.Elements[index] = arbitrary.Arbitrary{
+					Elements: arbitrary.Arbitraries{key, value},
+				}
+				shrinkers[index] = shrinker.CollectionElement(keyShrinker, valueShrinker) // shrinker.Chain(shrinker.OneByOne(keyShrinker, valueShrinker), shrinker.All(keyShrinker, valueShrinker))
+
+				arb.Value.SetMapIndex(key.Value, value.Value)
 			}
-			return val, shrinker.Map(target, shrinks, constraint)
+			return arb, shrinker.Map(shrinker.CollectionSize(arb.Elements, shrinkers, 0, constraint)).Filter(arb, filter)
 		}, nil
 	}
 }
