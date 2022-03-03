@@ -31,7 +31,7 @@ func Struct(fields ...map[string]Generator) Generator {
 		generators := make([]Generate, target.NumField())
 		for index := range generators {
 			field := target.Field(index)
-			if !field.IsExported() {
+			if field.PkgPath != "" {
 				return nil, fmt.Errorf("can't generate struct with unexported fields")
 			}
 			generator, exists := fieldGenerators[field.Name]
