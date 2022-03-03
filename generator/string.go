@@ -2,11 +2,10 @@ package generator
 
 import "github.com/steffnova/go-check/constraints"
 
-// String is Arbitrary that creates string Generator. Range in which string's runes
-// are generated, and string's length are defined by limits parameter. Even though
-// limits is a variadic argument only the first value is used for defining. Error is
-// returned if target's reflect.Kind is not String, if creation of underlaying slice
-// fails.
+// String returns generator for string types. Range of slice size is defined by
+// "limits" parameter. If "limits" parameter is not specified default [0, 100]
+// range is used instead. Error is returned if generator's target is not a
+// string type, or limits.Min > limits.Max
 func String(limits ...constraints.String) Generator {
 	constraint := constraints.StringDefault()
 	if len(limits) != 0 {

@@ -16,8 +16,6 @@ func Map(shrinker Shrinker) Shrinker {
 		case val.Value.Kind() != reflect.Map:
 			return arbitrary.Arbitrary{}, nil, fmt.Errorf("map shrinker cannot shrink %s", val.Value.Kind().String())
 		case val.Value.Len() != len(val.Elements):
-			fmt.Println("Nodes: ", len(val.Elements))
-			fmt.Println("Length: ", val.Value.Len())
 			return arbitrary.Arbitrary{}, nil, fmt.Errorf("number of elements must match size of the map")
 		default:
 			next, shrinker, err := shrinker(val, propertyFailed)

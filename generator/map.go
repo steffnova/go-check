@@ -9,13 +9,12 @@ import (
 	"github.com/steffnova/go-check/shrinker"
 )
 
-// Map is arbitrary that creates map Generator. key and value parameters
-// are Arbitraries used to crete Generators for map's key and value. Map's
-// size range is specifed by limits paramter (minimal and maximal value are
-// included). Even though limits is a variadic argument only the first value
-// is used for defining constraints. Arbitrary will fail to create map Generator
-// if target's reflect.Kind is not Map, fails to create map's key and value
-// Generator or if creation of map's size fails.
+// Map returns generator for map types. Generators for map's key and value are
+// specified by "key" and "value" parameters, respectively. Range of map size values
+// is defined by "limits" parameter. If "limits" parameter is not specified default
+// [0, 100] range is used instead. Error is returned if generator's target is not a
+// map type, key generator returns an error, value generator returns an error or
+// limits.Min > limits.Max
 //
 // Note: Generator will always try to create a map within size limits. This
 // means that during key generation it will take into account collision with
@@ -27,6 +26,9 @@ func Map(key, value Generator, limits ...constraints.Length) Generator {
 		constraint := constraints.LengthDefault()
 		if len(limits) != 0 {
 			constraint = limits[0]
+		}
+		if target.Kind() != reflect.Map {
+			return nil, fmt.Errorf("can't use map generator for %s type", target)
 		}
 
 		generateKey, err := key(target.Key(), bias, r)
@@ -67,7 +69,7 @@ func Map(key, value Generator, limits ...constraints.Length) Generator {
 				arb.Elements[index] = arbitrary.Arbitrary{
 					Elements: arbitrary.Arbitraries{key, value},
 				}
-				shrinkers[index] = shrinker.CollectionElement(keyShrinker, valueShrinker) // shrinker.Chain(shrinker.OneByOne(keyShrinker, valueShrinker), shrinker.All(keyShrinker, valueShrinker))
+				shrinkers[index] = shrinker.CollectionElement(keyShrinker, valueShrinker)
 
 				arb.Value.SetMapIndex(key.Value, value.Value)
 			}

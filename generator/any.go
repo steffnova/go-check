@@ -7,10 +7,8 @@ import (
 	"github.com/steffnova/go-check/constraints"
 )
 
-// Any is Arbitrary that returns default Generator for Generator's target parameter. Any will
-// return Generator for all Go's types except interface{} types. If User defined type is passed,
-// default generator for it's reflect.Kind will be returned. Default generator for any type is
-// a generator with default constraints. Error will be thrown if target type is not supported.
+// Any returns generator with default constraints for a type specified by generator's target.
+// Unsupported target: interface{}
 func Any() Generator {
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		var generator Generator
@@ -57,8 +55,8 @@ func Any() Generator {
 			generator = Func(outputs...)
 		case reflect.Map:
 			generator = Map(Any(), Any())
-		// case reflect.Ptr:
-		// 	generator = Ptr(Any())
+		case reflect.Ptr:
+			generator = Ptr(Any())
 		case reflect.Struct:
 			generator = Struct()
 		case reflect.Slice:

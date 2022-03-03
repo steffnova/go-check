@@ -9,14 +9,19 @@ import (
 	"github.com/steffnova/go-check/shrinker"
 )
 
+// Struct returns generator for string types. Generators for struct fields can be
+// passed through "fields" parameter. If generator for a field is not provided, Any()
+// generator is used for that field. Error is returned if generator's target is not
+// struct, struct has unexported fields, or any of the field generators returns an error.
+
 // Struct is Arbitrary that creates struct Generator. Each of the struct's fields has Arbitrary
 // assigned implicitly or explictly. Arbitrary for struct fields can be provided explicitly by
 // adding it to fieldArbitraries, otherwise implicit Any() Arbitrary is assigned. Error is returned
 // if target's reflect.Kind is not Struct, or creation of Generator for any of the fields fails.
-func Struct(fieldArbitraries ...map[string]Generator) Generator {
+func Struct(fields ...map[string]Generator) Generator {
 	fieldGenerators := map[string]Generator{}
-	if len(fieldArbitraries) != 0 {
-		fieldGenerators = fieldArbitraries[0]
+	if len(fields) != 0 {
+		fieldGenerators = fields[0]
 	}
 
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
@@ -26,6 +31,9 @@ func Struct(fieldArbitraries ...map[string]Generator) Generator {
 		generators := make([]Generate, target.NumField())
 		for index := range generators {
 			field := target.Field(index)
+			if !field.IsExported() {
+				return nil, fmt.Errorf("can't generate struct with unexported fields")
+			}
 			generator, exists := fieldGenerators[field.Name]
 			if !exists {
 				generator = Any()

@@ -1,15 +1,18 @@
 package generator
 
-func OneFrom(first Generator, other ...Generator) Generator {
-	arbs := append([]Generator{first}, other...)
-	weightedArbs := make([]Weighted, len(arbs))
+import "fmt"
 
-	for index, arb := range arbs {
-		weightedArbs[index] = Weighted{
-			Weight: 1,
-			Gen:    arb,
-		}
+// OneFrom returns one of the provided generators. Error is returned if
+// number of generators is 0, or chosen generator returns an error.
+func OneFrom(generators ...Generator) Generator {
+	if len(generators) == 0 {
+		return Invalid(fmt.Errorf("number of generators must be greater than 0"))
 	}
 
-	return OneFromWeighted(weightedArbs[0], weightedArbs[1:]...)
+	weights := make([]uint64, len(generators))
+	for index := range generators {
+		weights[index] = 1
+	}
+
+	return Weighted(weights, generators...)
 }

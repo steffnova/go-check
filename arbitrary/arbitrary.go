@@ -1,6 +1,8 @@
 package arbitrary
 
-import "reflect"
+import (
+	"reflect"
+)
 
 // Arbitrary represents arbitrary type returned by shrinkers and generators.
 type Arbitrary struct {

@@ -9,6 +9,11 @@ import (
 	"github.com/steffnova/go-check/shrinker"
 )
 
+// Slice returns generator for slice types. Slice elements are generated with
+// generator specified by "element" parameter. Range of slice size values is
+// defined by "limits" parameter. If "limits" parameter is not specified default
+// [0, 100] range is used instead. Error is returned if generator's target is not
+// a slice type, element generator returns an error, or limits.Min > limits.Max
 func Slice(element Generator, limits ...constraints.Length) Generator {
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		constraint := constraints.LengthDefault()

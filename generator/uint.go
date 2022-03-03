@@ -9,11 +9,10 @@ import (
 	"github.com/steffnova/go-check/shrinker"
 )
 
-// Uint64 is Generator that creates uint64 Generator. Range in which uint64 value is generated
-// is defined by limits parameter that specifies range's minimal and maximum value (min and max
-// are included in range). If no constraints are provided default range for uint64 is used
-// [math.MinUint64, math.MaxUint64]. Even though limits is a variadic argument only the first
-// value is used for defining constraints. Error is returned if target's reflect.Kind is not Uint64.
+// Uint64 returns generator for uint64 types. Range of int64 values that can be
+// generated is defined by "limits" parameter.  If no limits are provided default
+// uint64 range [0, math.MaxUint64] is used instead. Error is returned if
+// generator's target is not uint64 type or limits.Min is greater than limits.Max.
 func Uint64(limits ...constraints.Uint64) Generator {
 	constraint := constraints.Uint64Default()
 	if len(limits) > 0 {
@@ -33,6 +32,10 @@ func Uint64(limits ...constraints.Uint64) Generator {
 	}
 }
 
+// Uint32 returns generator for uint32 types. Range of int32 values that can be
+// generated is defined by "limits" parameter.  If no limits are provided default
+// uint32 range [0, math.MaxUint32] is used instead. Error is returned if
+// generator's target is not uint32 type or limits.Min is greater than limits.Max.
 func Uint32(limits ...constraints.Uint32) Generator {
 	constraint := constraints.Uint32Default()
 	if len(limits) > 0 {
@@ -46,6 +49,10 @@ func Uint32(limits ...constraints.Uint32) Generator {
 	})
 }
 
+// Uint16 returns generator for uint16 types. Range of int16 values that can be
+// generated is defined by "limits" parameter.  If no limits are provided default
+// uint16 range [0, math.MaxUint16] is used instead. Error is returned if
+// generator's target is not uint16 type or limits.Min is greater than limits.Max.
 func Uint16(limits ...constraints.Uint16) Generator {
 	constraint := constraints.Uint16Default()
 	if len(limits) > 0 {
@@ -59,12 +66,10 @@ func Uint16(limits ...constraints.Uint16) Generator {
 	})
 }
 
-// Uint8 is Arbitrary that creates uint8 Generator. Range in which Uint8 value is generated
-// is defined by limits parameter that specifies range's minimal and maximum value (min and
-// max are included in range). If no constraints are provided default range for Uint8 is
-// used [math.MinUint8, math.MaxUint8]. Even though limits is a variadic argument only the
-// first value is used for defining constraints. Error is returned if target's reflect.Kind
-// is not Uint8.
+// Uint8 returns generator for uint8 types. Range of int8 values that can be
+// generated is defined by "limits" parameter.  If no limits are provided default
+// uint8 range [0, math.MaxUint8] is used instead. Error is returned if
+// generator's target is not uint8 type or limits.Min is greater than limits.Max.
 func Uint8(limits ...constraints.Uint8) Generator {
 	constraint := constraints.Uint8Default()
 	if len(limits) > 0 {
@@ -78,12 +83,10 @@ func Uint8(limits ...constraints.Uint8) Generator {
 	})
 }
 
-// Uint is Arbitrary that creates uint Generator. Range in which Uint value is generated
-// is defined by limits parameter that specifies range's minimal and maximum value (min and
-// max are included in range). If no constraints are provided default range for Uint is
-// used [math.MinUint, math.MaxUint]. Even though limits is a variadic argument only the
-// first value is used for defining constraints. Error is returned if target's reflect.Kind
-// is not Uint.
+// UInt returns generator for uint types. Range of uint values that can be
+// generated is defined by "limits" parameter.  If no limits are provided default
+// uint range is used instead. Error is returned if generator's target is not uint
+// type or limits.Min is greater than limits.Max.
 func Uint(limits ...constraints.Uint) Generator {
 	constraint := constraints.UintDefault()
 	if len(limits) > 0 {

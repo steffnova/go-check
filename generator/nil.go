@@ -9,9 +9,9 @@ import (
 	"github.com/steffnova/go-check/shrinker"
 )
 
-// Nil is Arbitrary that creates nil Generator. Generates nil value for
-// chan, slice, map, func, interface and ptr types. Error is returned
-// if target is not one of the supported types.
+// Nil returns generator for types that can have nil values. Supported types
+// are: chan, slice, map, func, interface and pointers. Error is returned if
+// target is not one of the supported types.
 func Nil() Generator {
 	return func(target reflect.Type, bias constraints.Bias, _ Random) (Generate, error) {
 		switch target.Kind() {

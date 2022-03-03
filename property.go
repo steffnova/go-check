@@ -35,7 +35,7 @@ func Property(predicate interface{}, arbGenerators ...generator.Generator) prope
 			for index, arbGenerator := range arbGenerators {
 				generate, err := arbGenerator(t.In(index), bias, r)
 				if err != nil {
-					return fmt.Errorf("failed to create type generator at index [%d]. %s", index, err)
+					return fmt.Errorf("failed to use generator for property parameter at index %d. %s", index+1, err)
 				}
 				generators[index] = generate
 			}

@@ -7,12 +7,11 @@ import (
 	"github.com/steffnova/go-check/constraints"
 )
 
-// Float64 is Arbitrary that creates float64 Generator. Range in which float64 value is generated
-// is defined by limits parameter that specifies range's minimal and maximum value (min and max are
-// included in range). If no constraints are provided default range for float64 is used
-// [-math.MaxFloat64, math.MaxFloat64]. Even though limits is a variadic argument only the
-// first value is used for defining constraints. Error is returned if target's reflect.Kind
-// is not Float64 or constraints are out of range (-Inf, +Inf, Nan).
+// Float64 returns generator for float64 types. Range of float64 values that can be generated is
+// defined by "limits" parameter. If no limits are provided default float64 range
+// [-math.MaxFloat64, math.MaxFloat64] is used instead. Error is returned if generator's target
+// is not float64 type, "limits" paramter has invalid values (-Inf, NaN, +Inf), or limits.Min is
+// greater than limits.Max.
 func Float64(limits ...constraints.Float64) Generator {
 	constraint := constraints.Float64Default()
 	if len(limits) > 0 {
@@ -21,11 +20,11 @@ func Float64(limits ...constraints.Float64) Generator {
 
 	switch {
 	case constraint.Min < -math.MaxFloat64:
-		return InvalidGen(fmt.Errorf("lower range value can't be lower then %f", -math.MaxFloat64))
+		return Invalid(fmt.Errorf("lower range value can't be lower then %f", -math.MaxFloat64))
 	case constraint.Max > math.MaxFloat64:
-		return InvalidGen(fmt.Errorf("upper range value can't be greater then %f", math.MaxFloat64))
+		return Invalid(fmt.Errorf("upper range value can't be greater then %f", math.MaxFloat64))
 	case constraint.Max < constraint.Min:
-		return InvalidGen(fmt.Errorf("lower range value can't be greater then upper range value"))
+		return Invalid(fmt.Errorf("lower range value can't be greater then upper range value"))
 	case constraint.Max <= math.Copysign(0, -1):
 		return Uint64(constraints.Uint64{Min: -math.Float64bits(constraint.Max), Max: -math.Float64bits(constraint.Min)}).
 			Map(func(x uint64) float64 {
@@ -37,31 +36,36 @@ func Float64(limits ...constraints.Float64) Generator {
 				return math.Float64frombits(x)
 			})
 	default:
-		return OneFromWeighted(
-			Weighted{
-				Weight: uint(math.Float64bits(-constraint.Min)) + 1,
-				Gen: Uint64(constraints.Uint64{Min: 0, Max: math.Float64bits(-constraint.Min)}).
-					Map(func(x uint64) float64 {
-						return -math.Float64frombits(x)
-					}),
+		return Weighted(
+			[]uint64{
+				uint64(math.Float64bits(-constraint.Min)) + 1,
+				uint64(math.Float64bits(constraint.Max)) + 1,
 			},
-			Weighted{
-				Weight: uint(math.Float64bits(constraint.Max)) + 1,
-				Gen: Uint64(constraints.Uint64{Min: 0, Max: math.Float64bits(constraint.Max)}).
-					Map(func(x uint64) float64 {
-						return math.Float64frombits(x)
-					}),
-			},
+			Uint64(constraints.Uint64{Min: 0, Max: math.Float64bits(-constraint.Min)}).
+				Map(func(x uint64) float64 {
+					return -math.Float64frombits(x)
+				}),
+			Uint64(constraints.Uint64{Min: 0, Max: math.Float64bits(constraint.Max)}).
+				Map(func(x uint64) float64 {
+					return math.Float64frombits(x)
+				}),
+			// Weighted{
+			// 	Weight: uint(math.Float64bits(-constraint.Min)) + 1,
+
+			// },
+			// Weighted{
+			// 	Weight: uint(math.Float64bits(constraint.Max)) + 1,
+			// 	Gen:
+			// },
 		)
 	}
 }
 
-// Float32 is Arbitrary that creates float32 Generator. Range in which float32 value is generated
-// is defined by limits parameter that specifies range's minimal and maximum value (min and max are
-// included in range). If no constraints are provided default range for float32 is used
-// [-math.MaxFloat32, math.MaxFloat32]. Even though limits is a variadic argument only the
-// first value is used for defining constraints. Error is returned if target's reflect.Kind
-// is not Float32 or constraints are out of range (-Inf, +Inf, Nan).
+// Float32 returns generator for float32 types. Range of float64 values that can be generated is
+// defined by "limits" paramter. If no constraints are provided default float32 range
+// [-math.MaxFloat32, math.MaxFloat32] is used instead. Error is returned if generator's target
+// is not float32 type, "limits" paramter has invalid values (-Inf, NaN, +Inf), or limits.Min is
+// greater than limits.Max.
 func Float32(limits ...constraints.Float32) Generator {
 	constraint := constraints.Float32Default()
 	if len(limits) > 0 {
