@@ -2,7 +2,9 @@ package generator
 
 import (
 	"fmt"
+	"reflect"
 
+	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
 )
 
@@ -16,19 +18,25 @@ func Rune(limits ...constraints.Rune) Generator {
 	if len(limits) != 0 {
 		constraint = limits[0]
 	}
-	switch {
-	case constraint.MinCodePoint > constraint.MaxCodePoint:
-		return Invalid(fmt.Errorf("minimal code point %d can't be greater than maximal code point: %d", constraint.MinCodePoint, constraint.MaxCodePoint))
-	case constraint.MinCodePoint < 0:
-		return Invalid(fmt.Errorf("minimal code point must be greater then or equal to 0"))
-	case constraint.MaxCodePoint > 0x10ffff:
-		return Invalid(fmt.Errorf("maximal code point must be lower then or equal to 0x10ffff"))
-	default:
-		return Int32(constraints.Int32{
-			Max: constraint.MaxCodePoint,
-			Min: constraint.MinCodePoint,
-		}).Map(func(n int32) rune {
-			return rune(n)
-		})
+
+	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+		switch {
+		case target.Kind() != reflect.Int32:
+			return nil, fmt.Errorf("can't use Rune generator for %s type", target)
+		case constraint.MinCodePoint > constraint.MaxCodePoint:
+			return nil, fmt.Errorf("minimal code point %d can't be greater than maximal code point: %d", constraint.MinCodePoint, constraint.MaxCodePoint)
+		case constraint.MinCodePoint < 0:
+			return nil, fmt.Errorf("minimal code point must be greater then or equal to 0")
+		case constraint.MaxCodePoint > 0x10ffff:
+			return nil, fmt.Errorf("maximal code point must be lower then or equal to 0x10ffff")
+		default:
+			mapper := arbitrary.Mapper(reflect.TypeOf(int32(0)), target, func(in reflect.Value) reflect.Value {
+				return reflect.ValueOf(rune(int32(in.Int()))).Convert(target)
+			})
+			return Int32(constraints.Int32{
+				Max: constraint.MaxCodePoint,
+				Min: constraint.MinCodePoint,
+			}).Map(mapper)(target, bias, r)
+		}
 	}
 }

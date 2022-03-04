@@ -41,12 +41,16 @@ func Uint32(limits ...constraints.Uint32) Generator {
 	if len(limits) > 0 {
 		constraint = limits[0]
 	}
-	return Uint64(constraints.Uint64{
-		Min: uint64(constraint.Min),
-		Max: uint64(constraint.Max),
-	}).Map(func(n uint64) uint32 {
-		return uint32(n)
-	})
+	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+		mapper := arbitrary.Mapper(reflect.TypeOf(uint64(0)), target, func(in reflect.Value) reflect.Value {
+			return reflect.ValueOf(uint32(in.Uint())).Convert(target)
+		})
+		return Uint64(constraints.Uint64{
+			Min: uint64(constraint.Min),
+			Max: uint64(constraint.Max),
+		}).Map(mapper)(target, bias, r)
+	}
+
 }
 
 // Uint16 returns generator for uint16 types. Range of int16 values that can be
@@ -58,12 +62,15 @@ func Uint16(limits ...constraints.Uint16) Generator {
 	if len(limits) > 0 {
 		constraint = limits[0]
 	}
-	return Uint64(constraints.Uint64{
-		Max: uint64(constraint.Max),
-		Min: uint64(constraint.Min),
-	}).Map(func(n uint64) uint16 {
-		return uint16(n)
-	})
+	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+		mapper := arbitrary.Mapper(reflect.TypeOf(uint64(0)), target, func(in reflect.Value) reflect.Value {
+			return reflect.ValueOf(uint16(in.Uint())).Convert(target)
+		})
+		return Uint64(constraints.Uint64{
+			Min: uint64(constraint.Min),
+			Max: uint64(constraint.Max),
+		}).Map(mapper)(target, bias, r)
+	}
 }
 
 // Uint8 returns generator for uint8 types. Range of int8 values that can be
@@ -75,12 +82,15 @@ func Uint8(limits ...constraints.Uint8) Generator {
 	if len(limits) > 0 {
 		constraint = limits[0]
 	}
-	return Uint64(constraints.Uint64{
-		Max: uint64(constraint.Max),
-		Min: uint64(constraint.Min),
-	}).Map(func(n uint64) uint8 {
-		return uint8(n)
-	})
+	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+		mapper := arbitrary.Mapper(reflect.TypeOf(uint64(0)), target, func(in reflect.Value) reflect.Value {
+			return reflect.ValueOf(uint8(in.Uint())).Convert(target)
+		})
+		return Uint64(constraints.Uint64{
+			Min: uint64(constraint.Min),
+			Max: uint64(constraint.Max),
+		}).Map(mapper)(target, bias, r)
+	}
 }
 
 // UInt returns generator for uint types. Range of uint values that can be
@@ -92,11 +102,14 @@ func Uint(limits ...constraints.Uint) Generator {
 	if len(limits) > 0 {
 		constraint = limits[0]
 	}
+	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+		mapper := arbitrary.Mapper(reflect.TypeOf(uint64(0)), target, func(in reflect.Value) reflect.Value {
+			return reflect.ValueOf(uint(in.Uint())).Convert(target)
+		})
 
-	return Uint64(constraints.Uint64{
-		Max: uint64(constraint.Max),
-		Min: uint64(constraint.Min),
-	}).Map(func(n uint64) uint {
-		return uint(n)
-	})
+		return Uint64(constraints.Uint64{
+			Min: uint64(constraint.Min),
+			Max: uint64(constraint.Max),
+		}).Map(mapper)(target, bias, r)
+	}
 }

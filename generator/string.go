@@ -1,6 +1,11 @@
 package generator
 
-import "github.com/steffnova/go-check/constraints"
+import (
+	"reflect"
+
+	"github.com/steffnova/go-check/arbitrary"
+	"github.com/steffnova/go-check/constraints"
+)
 
 // String returns generator for string types. Range of slice size is defined by
 // "limits" parameter. If "limits" parameter is not specified default [0, 100]
@@ -12,10 +17,13 @@ func String(limits ...constraints.String) Generator {
 		constraint = limits[0]
 	}
 
-	return Slice(
-		Rune(constraint.Rune),
-		constraint.Length,
-	).Map(func(runes []rune) string {
-		return string(runes)
-	})
+	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+		mapper := arbitrary.Mapper(reflect.TypeOf([]rune{}), target, func(in reflect.Value) reflect.Value {
+			return in.Convert(target)
+		})
+		return Slice(
+			Rune(constraint.Rune),
+			constraint.Length,
+		).Map(mapper)(target, bias, r)
+	}
 }
