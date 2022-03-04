@@ -2,7 +2,9 @@ package generator
 
 import (
 	"fmt"
+	"reflect"
 
+	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
 )
 
@@ -16,49 +18,35 @@ func Int64(limits ...constraints.Int64) Generator {
 		constraint = limits[0]
 	}
 
-	switch {
-	case constraint.Min > constraint.Max:
-		return Invalid(fmt.Errorf("lower limit: %d cannot be greater than upper limit: %d", constraint.Min, constraint.Max))
-	case constraint.Max < 0:
-		return Uint64(constraints.Uint64{Min: uint64(-constraint.Max), Max: uint64(-constraint.Min)}).
-			Map(func(x uint64) int64 {
-				return int64(-x)
-			})
-	case constraint.Min >= 0:
-		return Uint64(constraints.Uint64{Min: uint64(constraint.Min), Max: uint64(constraint.Max)}).
-			Map(func(x uint64) int64 {
-				return int64(x)
-			})
-	default:
-		return Weighted(
-			[]uint64{
-				uint64(-(constraint.Min)),
-				uint64(constraint.Max) + 1,
-			},
-			Uint64(constraints.Uint64{Min: 0, Max: uint64(-constraint.Min)}).
-				Map(func(x uint64) int64 {
-					return int64(-x)
-				}),
-			Uint64(constraints.Uint64{Min: 0, Max: uint64(constraint.Max)}).
-				Map(func(x uint64) int64 {
-					return int64(x)
-				}),
-			// Weighted{
-			// 	Weight: uint(-(constraint.Min)),
-			// 	Gen: Uint64(constraints.Uint64{Min: 0, Max: uint64(-constraint.Min)}).
-			// 		Map(func(x uint64) int64 {
-			// 			return int64(-x)
-			// 		}),
-			// },
-			// Weighted{
-			// 	Weight: uint(constraint.Max) + 1,
-			// 	Gen: Uint64(constraints.Uint64{Min: 0, Max: uint64(constraint.Max)}).
-			// 		Map(func(x uint64) int64 {
-			// 			return int64(x)
-			// 		}),
-			// },
-		)
+	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+		negativeMapper := arbitrary.Mapper(reflect.TypeOf(uint64(0)), target, func(in reflect.Value) reflect.Value {
+			return reflect.ValueOf(int64(-in.Uint())).Convert(target)
+		})
+
+		positiveMapper := arbitrary.Mapper(reflect.TypeOf(uint64(0)), target, func(in reflect.Value) reflect.Value {
+			return reflect.ValueOf(int64(in.Uint())).Convert(target)
+		})
+
+		switch {
+		case constraint.Min > constraint.Max:
+			return nil, fmt.Errorf("lower limit: %d cannot be greater than upper limit: %d", constraint.Min, constraint.Max)
+		case constraint.Max < 0:
+			return Uint64(constraints.Uint64{Min: uint64(-constraint.Max), Max: uint64(-constraint.Min)}).
+				Map(negativeMapper)(target, bias, r)
+		case constraint.Min >= 0:
+			return Uint64(constraints.Uint64{Min: uint64(constraint.Min), Max: uint64(constraint.Max)}).
+				Map(positiveMapper)(target, bias, r)
+		default:
+			return Weighted(
+				[]uint64{uint64(-(constraint.Min)), uint64(constraint.Max) + 1},
+				Uint64(constraints.Uint64{Min: 0, Max: uint64(-constraint.Min)}).
+					Map(negativeMapper),
+				Uint64(constraints.Uint64{Min: 0, Max: uint64(constraint.Max)}).
+					Map(positiveMapper),
+			)(target, bias, r)
+		}
 	}
+
 }
 
 // Int32 returns generator for int32 types. Range of int32 values that can be
@@ -70,10 +58,15 @@ func Int32(limits ...constraints.Int32) Generator {
 	if len(limits) > 0 {
 		constraint = limits[0]
 	}
-	return Int64(constraints.Int64{Min: int64(constraint.Min), Max: int64(constraint.Max)}).
-		Map(func(x int64) int32 {
-			return int32(x)
+	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+		mapper := arbitrary.Mapper(reflect.TypeOf(int64(0)), target, func(in reflect.Value) reflect.Value {
+			return reflect.ValueOf(int32(in.Int())).Convert(target)
 		})
+		return Int64(constraints.Int64{
+			Min: int64(constraint.Min),
+			Max: int64(constraint.Max),
+		}).Map(mapper)(target, bias, r)
+	}
 }
 
 // Int16 returns generator for int16 types. Range of int16 values that can be
@@ -85,10 +78,15 @@ func Int16(limits ...constraints.Int16) Generator {
 	if len(limits) > 0 {
 		constraint = limits[0]
 	}
-	return Int64(constraints.Int64{Min: int64(constraint.Min), Max: int64(constraint.Max)}).
-		Map(func(x int64) int16 {
-			return int16(x)
+	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+		mapper := arbitrary.Mapper(reflect.TypeOf(int64(0)), target, func(in reflect.Value) reflect.Value {
+			return reflect.ValueOf(int16(in.Int())).Convert(target)
 		})
+		return Int64(constraints.Int64{
+			Min: int64(constraint.Min),
+			Max: int64(constraint.Max),
+		}).Map(mapper)(target, bias, r)
+	}
 }
 
 // Int8 returns generator for int8 types. Range of int8 values that can be
@@ -100,10 +98,16 @@ func Int8(limits ...constraints.Int8) Generator {
 	if len(limits) > 0 {
 		constraint = limits[0]
 	}
-	return Int64(constraints.Int64{Min: int64(constraint.Min), Max: int64(constraint.Max)}).
-		Map(func(x int64) int8 {
-			return int8(x)
+
+	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+		mapper := arbitrary.Mapper(reflect.TypeOf(int64(0)), target, func(in reflect.Value) reflect.Value {
+			return reflect.ValueOf(int8(in.Int())).Convert(target)
 		})
+		return Int64(constraints.Int64{
+			Min: int64(constraint.Min),
+			Max: int64(constraint.Max),
+		}).Map(mapper)(target, bias, r)
+	}
 }
 
 // Int returns generator for int types. Range of int values that can be
@@ -116,10 +120,13 @@ func Int(limits ...constraints.Int) Generator {
 		constraint.Min, constraint.Max = limits[0].Min, limits[0].Max
 	}
 
-	return Int64(constraints.Int64{
-		Max: int64(constraint.Max),
-		Min: int64(constraint.Min),
-	}).Map(func(n int64) int {
-		return int(n)
-	})
+	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+		mapper := arbitrary.Mapper(reflect.TypeOf(int64(0)), target, func(in reflect.Value) reflect.Value {
+			return reflect.ValueOf(int(in.Int())).Convert(target)
+		})
+		return Int64(constraints.Int64{
+			Min: int64(constraint.Min),
+			Max: int64(constraint.Max),
+		}).Map(mapper)(target, bias, r)
+	}
 }
