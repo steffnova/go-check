@@ -72,7 +72,7 @@ func (shrinker Shrinker) Filter(defaultValue arbitrary.Arbitrary, predicate inte
 		case nextShrinker == nil:
 			return defaultValue, nil, nil
 		default:
-			return nextShrinker.Filter(defaultValue, predicate)(arb, false)
+			return nextShrinker.Filter(defaultValue, predicate)(shrink, false)
 		}
 	}
 }
