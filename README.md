@@ -76,23 +76,23 @@ package main_test
 
 import (
     "fmt"
-    "testing"
+    "testing"   
 
     "github.com/steffnova/go-check"
     "github.com/steffnova/go-check/generator"
 )
 
 func TestSubtractionCommutativity(t *testing.T) {
-	check.Check(t, check.Property(
-		func(x, y int) error {
-			if x-y != y-x {
-				return fmt.Errorf("commutativity does not hold for subtraction. ")
-			}
-			return nil
-		},
-		generator.Int()
-		generator.Int()
-	))
+    check.Check(t, check.Property(
+        func(x, y int) error {
+            if x-y != y-x {
+                return fmt.Errorf("commutativity does not hold for subtraction. ")
+            }
+            return nil
+        },
+        generator.Int()
+        generator.Int()
+    ))
 }
 
 ```
@@ -118,3 +118,6 @@ Test result display the number of test ran before test failed, seed that was use
 go-check accept two flag parameters that can be added to `go test` command:
   - seed, seed for random number generator used by all generators
   - iterations, total number of test go-check will perform
+
+## Documentation
+  - [Generators](/docs/generators.md)
