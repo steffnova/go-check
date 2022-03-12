@@ -28,6 +28,8 @@ func Int64(limits ...constraints.Int64) Generator {
 		})
 
 		switch {
+		case target.Kind() != reflect.Int64:
+			return nil, fmt.Errorf("can't use Int64 generator for %s type", target)
 		case constraint.Min > constraint.Max:
 			return nil, fmt.Errorf("lower limit: %d cannot be greater than upper limit: %d", constraint.Min, constraint.Max)
 		case constraint.Max < 0:
@@ -59,6 +61,10 @@ func Int32(limits ...constraints.Int32) Generator {
 		constraint = limits[0]
 	}
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+		if target.Kind() != reflect.Int32 {
+			return nil, fmt.Errorf("can't use Int32 generator for %s type", target)
+		}
+
 		mapper := arbitrary.Mapper(reflect.TypeOf(int64(0)), target, func(in reflect.Value) reflect.Value {
 			return reflect.ValueOf(int32(in.Int())).Convert(target)
 		})
@@ -79,6 +85,10 @@ func Int16(limits ...constraints.Int16) Generator {
 		constraint = limits[0]
 	}
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+		if target.Kind() != reflect.Int16 {
+			return nil, fmt.Errorf("can't use Int16 generator for %s type", target)
+		}
+
 		mapper := arbitrary.Mapper(reflect.TypeOf(int64(0)), target, func(in reflect.Value) reflect.Value {
 			return reflect.ValueOf(int16(in.Int())).Convert(target)
 		})
@@ -100,6 +110,10 @@ func Int8(limits ...constraints.Int8) Generator {
 	}
 
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+		if target.Kind() != reflect.Int8 {
+			return nil, fmt.Errorf("can't use Int8 generator for %s type", target)
+		}
+
 		mapper := arbitrary.Mapper(reflect.TypeOf(int64(0)), target, func(in reflect.Value) reflect.Value {
 			return reflect.ValueOf(int8(in.Int())).Convert(target)
 		})
@@ -121,6 +135,10 @@ func Int(limits ...constraints.Int) Generator {
 	}
 
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+		if target.Kind() != reflect.Int {
+			return nil, fmt.Errorf("can't use Int generator for %s type", target)
+		}
+
 		mapper := arbitrary.Mapper(reflect.TypeOf(int64(0)), target, func(in reflect.Value) reflect.Value {
 			return reflect.ValueOf(int(in.Int())).Convert(target)
 		})

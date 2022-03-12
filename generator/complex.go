@@ -20,6 +20,8 @@ func Complex128(limits ...constraints.Complex128) Generator {
 	}
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		switch {
+		case target.Kind() != reflect.Complex128:
+			return nil, fmt.Errorf("can't use Complex128 generator for %s type", target)
 		case constraint.Real.Min > constraint.Real.Max:
 			return nil, fmt.Errorf("lower limit of complex's real part can't be higher that it's upper limit")
 		case constraint.Imaginary.Min > constraint.Real.Max:
@@ -47,27 +49,23 @@ func Complex64(limits ...constraints.Complex64) Generator {
 	if len(limits) != 0 {
 		constraint = limits[0]
 	}
-
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		switch {
+		case target.Kind() != reflect.Complex64:
+			return nil, fmt.Errorf("can't use Complex64 generator for %s type", target)
 		case constraint.Real.Min > constraint.Real.Max:
 			return nil, fmt.Errorf("lower limit of complex's real part can't be higher that it's upper limit")
 		case constraint.Imaginary.Min > constraint.Real.Max:
 			return nil, fmt.Errorf("lower limit of complex's imaginary part can't be higher that it's upper limit")
 		default:
-			mapper := arbitrary.Mapper(reflect.TypeOf(complex128(0)), target, func(in reflect.Value) reflect.Value {
-				return reflect.ValueOf(complex64(in.Complex()))
+			mapper := arbitrary.Mapper(reflect.TypeOf([2]float32{}), target, func(in reflect.Value) reflect.Value {
+				parts := in.Interface().([2]float32)
+				return reflect.ValueOf(complex(parts[0], parts[1])).Convert(target)
 			})
-			return Complex128(constraints.Complex128{
-				Real: constraints.Float64{
-					Min: float64(constraint.Real.Min),
-					Max: float64(constraint.Real.Max),
-				},
-				Imaginary: constraints.Float64{
-					Min: float64(constraint.Imaginary.Min),
-					Max: float64(constraint.Imaginary.Max),
-				},
-			}).Map(mapper)(target, bias, r)
+			return ArrayFrom(
+				Float32(constraint.Real),
+				Float32(constraint.Imaginary),
+			).Map(mapper)(target, bias, r)
 		}
 	}
 }
