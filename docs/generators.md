@@ -117,7 +117,7 @@ func TestEvenInteger(t *testing.T) {
 }
 ```
 
-*NOTE*: The only caveat with Filter combinator is that it can impact generator's generation speed, or in the worst case enter a infinite loop, so a special care needs to be attended when choosing predicate for generator's data set. Two generators used in following example demonstrate, very slow generator and generator with predicate that is never satisfied:
+*NOTE*: Filter combinator can impact generator's generation speed, or in the worst case enter a infinite loop, so a special care needs to be attended when choosing predicate for generator's data set. Two generators used in following example demonstrate, very slow generator and generator with predicate that is never satisfied:
 
 ```go
 package main_test

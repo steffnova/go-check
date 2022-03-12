@@ -22,7 +22,7 @@ func Nil() Generator {
 				}, nil
 			}, nil
 		default:
-			return nil, fmt.Errorf("nil is not a valid value for target: %s", target.String())
+			return nil, fmt.Errorf("can't use Nil generator for %s type", target)
 		}
 	}
 }

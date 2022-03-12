@@ -22,7 +22,7 @@ func Ptr(arb Generator) Generator {
 func PtrTo(arb Generator) Generator {
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		if target.Kind() != reflect.Ptr {
-			return nil, fmt.Errorf("target's kind must be Ptr. Got: %s", target.Kind())
+			return nil, fmt.Errorf("can't use Ptr generator for %s type", target)
 		}
 
 		mapper := arbitrary.Mapper(target.Elem(), target, func(in reflect.Value) reflect.Value {

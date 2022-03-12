@@ -13,13 +13,13 @@ import (
 type Generate func() (arbitrary.Arbitrary, shrinker.Shrinker)
 
 // Generator returns Generate for a type specified by "target" parameter, that can be used to
-// generate target's value using "bias" and "r" parameters.
+// generate target's value using "bias" and "r".
 type Generator func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error)
 
-// Map returns generator that maps generated value to a new one using mapper. Mapper must be a
-// function that has one input and one output. Mapper's input type must match generated value's
-// type and Mapper's output type must match generator's target type. Error is returned if mapper
-// is invalid or if generator of mapper's input type returns an error.
+// Map (combinator) returns generator that maps generated value to a new one using mapper. Mapper
+// must be a function that has one input and one output. Mapper's input type must match generated
+// value's type and Mapper's output type must match generator's target type. Error is returned if
+// mapper is invalid or if generator of mapper's input type returns an error.
 func (generator Generator) Map(mapper interface{}) Generator {
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		val := reflect.ValueOf(mapper)
@@ -49,8 +49,8 @@ func (generator Generator) Map(mapper interface{}) Generator {
 	}
 }
 
-// Filter returns a generator that generates value only if predicate is satisfied. Predicate
-// is a function that has one input and one output. Predicate's input parameter must
+// Filter (combinator) returns a generator that generates value only if predicate is satisfied.
+// Predicate is a function that has one input and one output. Predicate's input parameter must
 // match generator's target type, and output parameter must be bool. Error is returned
 // predicate is invalid, or generator for predicate's input returns an error.
 //
@@ -84,12 +84,12 @@ func (generator Generator) Filter(predicate interface{}) Generator {
 	}
 }
 
-// Bind returns bounded generator using "binder" parameter. Binder is a function
-// that has one input and one output. Input's type must match generated value's
-// type. Output type must be generator.Generator. Binder allows using generated
-// value of one generator as an input to another generator. Error is returned
-// if binder is invalid, generator returns an error or bound generator returns
-// an error.
+// Bind (combinator) returns bounded generator using "binder" parameter. Binder
+// is a function that has one input and one output. Input's type must match
+// generated value's type. Output type must be generator.Generator. Binder allows
+// using generated value of one generator as an input to another generator. Error
+// is returned if binder is invalid, generator returns an error or bound generator
+// returns an error.
 func (generator Generator) Bind(binder interface{}) Generator {
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		binderVal := reflect.ValueOf(binder)

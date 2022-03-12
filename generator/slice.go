@@ -21,7 +21,7 @@ func Slice(element Generator, limits ...constraints.Length) Generator {
 			constraint = limits[0]
 		}
 		if target.Kind() != reflect.Slice {
-			return nil, fmt.Errorf("targets kind must be Slice. Got: %s", target.Kind())
+			return nil, fmt.Errorf("can't use Slice generator for %s type", target)
 		}
 
 		generator, err := element(target.Elem(), bias, r)

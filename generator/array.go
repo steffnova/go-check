@@ -15,7 +15,7 @@ import (
 func Array(element Generator) Generator {
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		if target.Kind() != reflect.Array {
-			return nil, fmt.Errorf("can't use array generator for %s type", target)
+			return nil, fmt.Errorf("can't use Array generator for %s type", target)
 		}
 
 		if _, err := element(target.Elem(), bias, r); err != nil {

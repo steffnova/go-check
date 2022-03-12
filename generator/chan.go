@@ -20,7 +20,7 @@ func Chan(limits ...constraints.Length) Generator {
 	}
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		if target.Kind() != reflect.Chan {
-			return nil, fmt.Errorf("can't use chan generator for %s type", target)
+			return nil, fmt.Errorf("can't use Chan generator for %s type", target)
 		}
 		if constraint.Min > constraint.Max {
 			return nil, fmt.Errorf("constraint's error. lower limit: %d cannot be greater than upper limit: %d", constraint.Min, constraint.Max)

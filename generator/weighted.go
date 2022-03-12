@@ -54,7 +54,6 @@ func Weighted(weights []uint64, generators ...Generator) Generator {
 
 			return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
 				x := r.Uint64(constraints.Uint64{Min: 0, Max: uint64(totalWeight)})
-
 				generator := generates[0]
 				for index, weight := range weightsIndex {
 					if weight >= x {

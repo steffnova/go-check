@@ -28,7 +28,7 @@ func Map(key, value Generator, limits ...constraints.Length) Generator {
 			constraint = limits[0]
 		}
 		if target.Kind() != reflect.Map {
-			return nil, fmt.Errorf("can't use map generator for %s type", target)
+			return nil, fmt.Errorf("can't use Map generator for %s type", target)
 		}
 
 		generateKey, err := key(target.Key(), bias, r)
@@ -69,7 +69,10 @@ func Map(key, value Generator, limits ...constraints.Length) Generator {
 				arb.Elements[index] = arbitrary.Arbitrary{
 					Elements: arbitrary.Arbitraries{key, value},
 				}
-				shrinkers[index] = shrinker.CollectionElement(keyShrinker, valueShrinker)
+				shrinkers[index] = shrinker.Chain(
+					shrinker.CollectionElement(keyShrinker, valueShrinker),
+					shrinker.CollectionElements(keyShrinker, valueShrinker),
+				)
 
 				arb.Value.SetMapIndex(key.Value, value.Value)
 			}

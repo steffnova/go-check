@@ -17,7 +17,7 @@ import (
 func Func(outputs ...Generator) Generator {
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		if target.Kind() != reflect.Func {
-			return nil, fmt.Errorf("funcPtr must be a pointer to function")
+			return nil, fmt.Errorf("can't use Func generator for %s type", target)
 		}
 		if len(outputs) != target.NumOut() {
 			return nil, fmt.Errorf("invalid number of output parameters")
