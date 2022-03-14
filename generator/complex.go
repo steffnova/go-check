@@ -24,7 +24,7 @@ func Complex128(limits ...constraints.Complex128) Generator {
 			return nil, fmt.Errorf("can't use Complex128 generator for %s type", target)
 		case constraint.Real.Min > constraint.Real.Max:
 			return nil, fmt.Errorf("lower limit of complex's real part can't be higher that it's upper limit")
-		case constraint.Imaginary.Min > constraint.Real.Max:
+		case constraint.Imaginary.Min > constraint.Imaginary.Max:
 			return nil, fmt.Errorf("lower limit of complex's imaginary part can't be higher that it's upper limit")
 		default:
 			mapper := arbitrary.Mapper(reflect.TypeOf([2]float64{}), target, func(in reflect.Value) reflect.Value {
@@ -55,7 +55,7 @@ func Complex64(limits ...constraints.Complex64) Generator {
 			return nil, fmt.Errorf("can't use Complex64 generator for %s type", target)
 		case constraint.Real.Min > constraint.Real.Max:
 			return nil, fmt.Errorf("lower limit of complex's real part can't be higher that it's upper limit")
-		case constraint.Imaginary.Min > constraint.Real.Max:
+		case constraint.Imaginary.Min > constraint.Imaginary.Max:
 			return nil, fmt.Errorf("lower limit of complex's imaginary part can't be higher that it's upper limit")
 		default:
 			mapper := arbitrary.Mapper(reflect.TypeOf([2]float32{}), target, func(in reflect.Value) reflect.Value {
