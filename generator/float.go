@@ -21,10 +21,7 @@ func Float64(limits ...constraints.Float64) Generator {
 	}
 
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
-		negativeMapper := arbitrary.Mapper(reflect.TypeOf(uint64(0)), target, func(in reflect.Value) reflect.Value {
-			return reflect.ValueOf(-math.Float64frombits(in.Uint())).Convert(target)
-		})
-		positiveMapper := arbitrary.Mapper(reflect.TypeOf(uint64(0)), target, func(in reflect.Value) reflect.Value {
+		mapper := arbitrary.Mapper(reflect.TypeOf(uint64(0)), target, func(in reflect.Value) reflect.Value {
 			return reflect.ValueOf(math.Float64frombits(in.Uint())).Convert(target)
 		})
 
@@ -38,21 +35,30 @@ func Float64(limits ...constraints.Float64) Generator {
 		case constraint.Max < constraint.Min:
 			return nil, fmt.Errorf("lower range value can't be greater then upper range value")
 		case constraint.Min >= math.Copysign(0, 1):
-			return Uint64(constraints.Uint64{Min: math.Float64bits(constraint.Min), Max: math.Float64bits(constraint.Max)}).
-				Map(positiveMapper)(target, bias, r)
+			return Uint64(
+				constraints.Uint64{
+					Min: math.Float64bits(constraint.Min),
+					Max: math.Float64bits(constraint.Max),
+				}).Map(mapper)(target, bias, r)
 		case constraint.Max <= math.Copysign(0, -1):
-			return Uint64(constraints.Uint64{Min: -math.Float64bits(constraint.Max), Max: -math.Float64bits(constraint.Min)}).
-				Map(negativeMapper)(target, bias, r)
+			return Uint64(constraints.Uint64{
+				Min: math.Float64bits(math.Copysign(constraint.Max, -1)),
+				Max: math.Float64bits(constraint.Min),
+			}).Map(mapper)(target, bias, r)
 		default:
 			return Weighted(
 				[]uint64{
-					uint64(math.Float64bits(-constraint.Min)) + 1,
+					uint64(math.Float64bits(math.Copysign(constraint.Min, 1))) + 1,
 					uint64(math.Float64bits(constraint.Max)) + 1,
 				},
-				Uint64(constraints.Uint64{Min: 0, Max: math.Float64bits(-constraint.Min)}).
-					Map(negativeMapper),
-				Uint64(constraints.Uint64{Min: 0, Max: math.Float64bits(constraint.Max)}).
-					Map(positiveMapper),
+				Uint64(constraints.Uint64{
+					Min: math.Float64bits(math.Copysign(0, -1)),
+					Max: math.Float64bits(constraint.Min),
+				}).Map(mapper),
+				Uint64(constraints.Uint64{
+					Min: 0,
+					Max: math.Float64bits(constraint.Max),
+				}).Map(mapper),
 			)(target, bias, r)
 		}
 	}
@@ -70,10 +76,7 @@ func Float32(limits ...constraints.Float32) Generator {
 	}
 
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
-		negativeMapper := arbitrary.Mapper(reflect.TypeOf(uint32(0)), target, func(in reflect.Value) reflect.Value {
-			return reflect.ValueOf(-math.Float32frombits(uint32(in.Uint()))).Convert(target)
-		})
-		positiveMapper := arbitrary.Mapper(reflect.TypeOf(uint32(0)), target, func(in reflect.Value) reflect.Value {
+		mapper := arbitrary.Mapper(reflect.TypeOf(uint32(0)), target, func(in reflect.Value) reflect.Value {
 			return reflect.ValueOf(math.Float32frombits(uint32(in.Uint()))).Convert(target)
 		})
 
@@ -86,22 +89,30 @@ func Float32(limits ...constraints.Float32) Generator {
 			return nil, fmt.Errorf("upper range value can't be greater then %f", math.MaxFloat64)
 		case constraint.Max < constraint.Min:
 			return nil, fmt.Errorf("lower range value can't be greater then upper range value")
-		case constraint.Min >= float32(math.Copysign(0, 1)):
-			return Uint32(constraints.Uint32{Min: math.Float32bits(constraint.Min), Max: math.Float32bits(constraint.Max)}).
-				Map(positiveMapper)(target, bias, r)
-		case constraint.Max <= float32(math.Copysign(0, -1)):
-			return Uint32(constraints.Uint32{Min: -math.Float32bits(constraint.Max), Max: -math.Float32bits(constraint.Min)}).
-				Map(negativeMapper)(target, bias, r)
+		case constraint.Min >= 0:
+			return Uint32(constraints.Uint32{
+				Min: math.Float32bits(constraint.Min),
+				Max: math.Float32bits(constraint.Max),
+			}).Map(mapper)(target, bias, r)
+		case constraint.Max <= 0:
+			return Uint32(constraints.Uint32{
+				Min: math.Float32bits(float32(math.Copysign(float64(constraint.Max), -1))),
+				Max: math.Float32bits(constraint.Min),
+			}).Map(mapper)(target, bias, r)
 		default:
 			return Weighted(
 				[]uint64{
 					uint64(math.Float32bits(-constraint.Min)) + 1,
 					uint64(math.Float32bits(constraint.Max)) + 1,
 				},
-				Uint32(constraints.Uint32{Min: 0, Max: math.Float32bits(-constraint.Min)}).
-					Map(negativeMapper),
-				Uint32(constraints.Uint32{Min: 0, Max: math.Float32bits(constraint.Max)}).
-					Map(positiveMapper),
+				Uint32(constraints.Uint32{
+					Min: math.Float32bits(float32(math.Copysign(0, -1))),
+					Max: math.Float32bits(constraint.Min),
+				}).Map(mapper),
+				Uint32(constraints.Uint32{
+					Min: 0,
+					Max: math.Float32bits(constraint.Max),
+				}).Map(mapper),
 			)(target, bias, r)
 		}
 	}
