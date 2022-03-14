@@ -3,30 +3,34 @@ package generator_test
 import (
 	"fmt"
 
-	"github.com/steffnova/go-check"
+	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/generator"
 )
 
+// This example demonstrates usage of Func() generator for generation of pure functions.
+// Func() generator requires generators for it's output values to be passed to it. In this
+// example generated function will return []int, thus Slice(Int()) generator is used.
 func ExampleFunc() {
-	// Streamer uses Func generator to generate pure functions.
-	check.Stream(check.Streamer(
+	streamer := check.Streamer(
 		func(f func(x, y int) []int) {
 			fmt.Printf("%#v\n", f(1, 2))
 		},
-		// Function generators are defined by their output parameters.
-		// For each output parameter a generator needs to be provided.
-		// In this example, function f return []int so corresponding
-		// generator needs to be provided.
 		generator.Func(generator.Slice(
-			generator.Int(constraints.Int{Min: 0, Max: 10}),
+			generator.Int(constraints.Int{
+				Min: 0,
+				Max: 10,
+			}),
 			constraints.Length{
 				Min: 2,
 				Max: 5,
 			},
 		)),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// []int{3, 3, 4, 9, 3}
 	// []int{10, 4}

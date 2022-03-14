@@ -3,20 +3,23 @@ package generator_test
 import (
 	"fmt"
 
-	"github.com/steffnova/go-check"
+	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/generator"
 )
 
+// This example demonstrates usage of Int() generator for generation of int values.
 func ExampleInt() {
-	// Streamer uses Int generator to generate int values.
-	check.Stream(check.Streamer(
+	streamer := check.Streamer(
 		func(n int) {
 			fmt.Printf("%d\n", n)
 		},
 		generator.Int(),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// -5339971465336467958
 	// 5036824528102830934
@@ -30,20 +33,22 @@ func ExampleInt() {
 	// -1089963290385541773
 }
 
-func ExampleInt_withConstraints() {
-	// Streamer uses Int generator to generate int values.
-	check.Stream(check.Streamer(
+// This example demonstrates usage of Int() generator with constraints for generation of int values.
+// Constraints defines range of generatable int values.
+func ExampleInt_constraints() {
+	streamer := check.Streamer(
 		func(n int) {
 			fmt.Printf("%d\n", n)
 		},
-		// Passing constraint.Int to Int generator defines
-		// range of generatable values [0, 10]
 		generator.Int(constraints.Int{
 			Min: 0,
 			Max: 10,
 		}),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// 5
 	// 2
@@ -57,15 +62,18 @@ func ExampleInt_withConstraints() {
 	// 4
 }
 
+// This example demonstrates usage of Int8() generator for generation of int8 values.
 func ExampleInt8() {
-	// Streamer uses Int8 generator to generate int values.
-	check.Stream(check.Streamer(
+	streamer := check.Streamer(
 		func(n int8) {
 			fmt.Printf("%d\n", n)
 		},
 		generator.Int8(),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// -16
 	// -91
@@ -79,20 +87,22 @@ func ExampleInt8() {
 	// 67
 }
 
-func ExampleInt8_withConstraints() {
-	// Streamer uses Int8 generator to generate int8 values.
-	check.Stream(check.Streamer(
+// This example demonstrates usage of Int8() generator with constraints for generation of int8 values.
+// Constraints defines range of generatable int8 values.
+func ExampleInt8_constraints() {
+	streamer := check.Streamer(
 		func(n int8) {
 			fmt.Printf("%d\n", n)
 		},
-		// Passing constraint.Int8 to Int8 generator defines
-		// range of generatable values [100, 127]
 		generator.Int8(constraints.Int8{
 			Min: 100,
 			Max: 127,
 		}),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// 121
 	// 118
@@ -106,15 +116,18 @@ func ExampleInt8_withConstraints() {
 	// 120
 }
 
+// This example demonstrates usage of Int16() generator for generation of int16 values.
 func ExampleInt16() {
-	// Streamer uses Int16 generator to generate int values.
-	check.Stream(check.Streamer(
+	streamer := check.Streamer(
 		func(n int16) {
 			fmt.Printf("%d\n", n)
 		},
 		generator.Int16(),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// -12790
 	// 13142
@@ -128,20 +141,22 @@ func ExampleInt16() {
 	// 1247
 }
 
-func ExampleInt16_withConstraints() {
-	// Streamer uses Int16 generator to generate int16 values.
-	check.Stream(check.Streamer(
+// This example demonstrates usage of Int16() generator with constraints for generation of int16 values.
+// Constraints defines range of generatable int16 values.
+func ExampleInt16_constraints() {
+	streamer := check.Streamer(
 		func(n int16) {
 			fmt.Printf("%d\n", n)
 		},
-		// Passing constraint.Int16 to Int16 generator defines
-		// range of generatable values [-200, -100]
 		generator.Int16(constraints.Int16{
 			Min: -200,
 			Max: -100,
 		}),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// -131
 	// -116
@@ -155,15 +170,18 @@ func ExampleInt16_withConstraints() {
 	// -130
 }
 
+// This example demonstrates usage of Int32() generator for generation of int32 values.
 func ExampleInt32() {
-	// Streamer uses Int32 generator to generate int values.
-	check.Stream(check.Streamer(
+	streamer := check.Streamer(
 		func(n int32) {
 			fmt.Printf("%d\n", n)
 		},
 		generator.Int32(),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// 1530763030
 	// -1726138304
@@ -177,20 +195,22 @@ func ExampleInt32() {
 	// 986604357
 }
 
-func ExampleInt32_withConstraints() {
-	// Streamer uses Int32 generator to generate int32 values.
-	check.Stream(check.Streamer(
+// This example demonstrates usage of Int32() generator with constraints for generation of int32 values.
+// Constraints defines range of generatable int32 values.
+func ExampleInt32_constraints() {
+	streamer := check.Streamer(
 		func(n int32) {
 			fmt.Printf("%d\n", n)
 		},
-		// Passing constraint.Int32 to Int32 generator defines
-		// range of generatable values [-5, 5]
 		generator.Int32(constraints.Int32{
 			Min: -5,
 			Max: 5,
 		}),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// 2
 	// 0
@@ -204,15 +224,18 @@ func ExampleInt32_withConstraints() {
 	// 4
 }
 
+// This example demonstrates usage of Int64() generator for generation of int64 values.
 func ExampleInt64() {
-	// Streamer uses Int64 generator to generate int values.
-	check.Stream(check.Streamer(
+	streamer := check.Streamer(
 		func(n int64) {
 			fmt.Printf("%d\n", n)
 		},
 		generator.Int64(),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// -5339971465336467958
 	// 5036824528102830934
@@ -226,20 +249,22 @@ func ExampleInt64() {
 	// -1089963290385541773
 }
 
-func ExampleInt64_withConstraints() {
-	// Streamer uses Int64 generator to generate int64 values.
-	check.Stream(check.Streamer(
+// This example demonstrates usage of Int64() generator with constraints for generation of int64 values.
+// Constraints defines range of generatable int64 values.
+func ExampleInt64_constraints() {
+	streamer := check.Streamer(
 		func(n int64) {
 			fmt.Printf("%d\n", n)
 		},
-		// Passing constraint.Int64 to Int64 generator defines
-		// range of generatable values [-1000, 1000]
 		generator.Int64(constraints.Int64{
 			Min: -1000,
 			Max: 1000,
 		}),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// -31
 	// -976

@@ -3,10 +3,12 @@ package generator_test
 import (
 	"fmt"
 
-	"github.com/steffnova/go-check"
+	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/generator"
 )
 
+// This example demonstrates usage of Any() generator for generation of values for
+// 3 types (int, uint and Point). Any() works for all go types except interfaces.
 func ExampleAny() {
 	type Point struct {
 		X int16
@@ -14,7 +16,6 @@ func ExampleAny() {
 		Z int8
 	}
 
-	// Streamer uses Any generator to generate int, uint and Point values.
 	streamer := check.Streamer(
 		func(i int, u uint, p Point) {
 			fmt.Printf("%d, %d, %#v\n", i, u, p)
@@ -27,7 +28,6 @@ func ExampleAny() {
 	if err := check.Stream(streamer, check.Config{Iterations: 10, Seed: 0}); err != nil {
 		panic(err)
 	}
-
 	// Output:
 	// -5339971465336467958, 12088744466886928415, generator_test.Point{X:13142, Y:15828, Z:-91}
 	// -1543285579645681342, 14677457169740829639, generator_test.Point{X:4175, Y:1247, Z:-116}

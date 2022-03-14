@@ -3,13 +3,15 @@ package generator_test
 import (
 	"fmt"
 
-	"github.com/steffnova/go-check"
+	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/generator"
 )
 
+// This example demonstrates how to use Ptr(Int()) generator for generation of *int values.
+// PtrTo requires a generator for type (int in this example) pointer points to, thus Int()
+// generator is used.
 func ExamplePtr() {
-	// Streamer uses Ptr generator to generate *int values.
-	check.Stream(check.Streamer(
+	streamer := check.Streamer(
 		func(n *int) {
 			if n != nil {
 				fmt.Printf("%v\n", *n)
@@ -17,12 +19,12 @@ func ExamplePtr() {
 				fmt.Printf("%v\n", n)
 			}
 		},
-		// Ptr generator requires a generator for type pointer
-		// points to. In this case generator for int values is
-		// used. Ptr will create nil or valid pointer
 		generator.Ptr(generator.Int()),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// -3087144572626463248
 	// <nil>
@@ -36,16 +38,20 @@ func ExamplePtr() {
 	// <nil>
 }
 
+// This example demonstrates how to use PtrTo(Int()) generator for generation of *int values.
+// PtrTo requires a generator for type (int in this example) pointer points to, thus Int()
+// generator is used.
 func ExamplePtrTo() {
-	// Streamer uses Ptr generator to generate *int values.
-	check.Stream(check.Streamer(
+	streamer := check.Streamer(
 		func(n *int) {
 			fmt.Printf("%v\n", *n)
 		},
-		// Unlike Ptr generator PtrTo will always create a non-nil pointer
 		generator.PtrTo(generator.Int()),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// -5339971465336467958
 	// 5036824528102830934

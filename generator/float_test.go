@@ -3,20 +3,23 @@ package generator_test
 import (
 	"fmt"
 
-	"github.com/steffnova/go-check"
+	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/generator"
 )
 
+// This example demonstrates usage of Float32() generator for generation of float32 values.
 func ExampleFloat32() {
-	// Streamer uses Float32 generator to generate float32 values.
-	check.Stream(check.Streamer(
+	streamer := check.Streamer(
 		func(f float32) {
-			fmt.Printf("%#v\n", f)
+			fmt.Printf("%g\n", f)
 		},
 		generator.Float32(),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// 6.5711266e-15
 	// -2.84718e-09
@@ -30,38 +33,47 @@ func ExampleFloat32() {
 	// 2.0516037e-32
 }
 
-func ExampleFloat32_withConstraints() {
-	// Streamer uses Float32 generator to generate float32 values.
-	check.Stream(check.Streamer(
+// This example demonstrates usage of Float32() generator with constraints for generation of float32 values.
+// Constraints defines range of generatable float32 values.
+func ExampleFloat32_constraints() {
+	streamer := check.Streamer(
 		func(f float32) {
-			fmt.Printf("%#v\n", f)
+			fmt.Printf("%g\n", f)
 		},
-		// Passing constraint.Float32 to Float32 generator defines
-		// range of generatable values [5, 10]
-		generator.Float32(constraints.Float32{Min: 5, Max: 10}),
-	), check.Config{Seed: 0, Iterations: 10})
+		generator.Float32(constraints.Float32{
+			Min: -2,
+			Max: -1,
+		}),
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
-	// 5.8185987
-	// 7.1142726
-	// 7.491882
-	// 9.854924
-	// 6.924693
-	// 8.8291445
-	// 7.6765633
-	// 8.598578
-	// 7.3062406
-	// 5.1824703
+	// -1.2046497
+	// -1.5285681
+	// -1.6229705
+	// -1.9818655
+	// -1.4811733
+	// -1.8536431
+	// -1.6691408
+	// -1.8248223
+	// -1.5765601
+	// -1.0456176
 }
 
+// This example demonstrates usage of Float64() generator for generation of float64 values.
 func ExampleFloat64() {
-	check.Stream(check.Streamer(
+	streamer := check.Streamer(
 		func(f float64) {
 			fmt.Printf("%#v\n", f)
 		},
 		generator.Float64(),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// -1.194033741351553e-241
 	// -3.93536176617243e-117
@@ -75,26 +87,31 @@ func ExampleFloat64() {
 	// -2.9721426814134555e-286
 }
 
-func ExampleFloat64_withConstraints() {
-	// Streamer uses Float64 generator to generate float64 values.
-	check.Stream(check.Streamer(
+// This example demonstrates usage of Float64() generator with constraints for generation of float64 values.
+// Constraints defines range of generatable float64 values.
+func ExampleFloat64_constraints() {
+	streamer := check.Streamer(
 		func(f float64) {
 			fmt.Printf("%#v\n", f)
 		},
-		// Passing constraint.Float64 to Float64 generator defines
-		// range of generatable values [5, 10]
-		generator.Float64(constraints.Float64{Min: 5, Max: 10}),
-	), check.Config{Seed: 0, Iterations: 10})
+		generator.Float64(constraints.Float64{
+			Min: 1,
+			Max: 5,
+		}),
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
-	// 7.369467376542149
-	// 5.96195675826496
-	// 6.598849677201391
-	// 9.80002295745996
-	// 6.266348980232071
-	// 8.472606737078344
-	// 8.519197152724251
-	// 7.558232886878557
-	// 5.6097133003104585
-	// 5.827915588435498
+	// 3.4237086631530884
+	// 1.24048918956624
+	// 2.967593950595308
+	// 2.138899399920753
+	// 3.365311348740657
+	// 1.809075842134793
+	// 1.1524283250776146
+	// 4.827915588435498
+	// 2.5447450908036644
+	// 2.197932525132764
 }

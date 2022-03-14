@@ -3,20 +3,23 @@ package generator_test
 import (
 	"fmt"
 
-	"github.com/steffnova/go-check"
+	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/generator"
 )
 
+// This example demonstrates usage of Complex64() generator for generation of complex64 values.
 func ExampleComplex64() {
-	// Streamer uses Complex64 generator to generate complex64 values
-	check.Stream(check.Streamer(
+	streamer := check.Streamer(
 		func(c complex64) {
-			fmt.Printf("%#v\n", c)
+			fmt.Printf("%g\n", c)
 		},
 		generator.Complex64(),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// (6.5711266e-15-2.84718e-09i)
 	// (1.841146e+06+3.9155332e-22i)
@@ -30,50 +33,53 @@ func ExampleComplex64() {
 	// (0.0015746137+1.0883707e+20i)
 }
 
-func ExampleComplex64_withConstraints() {
-	// Streamer uses Complex64 generator to generate complex64 values.
-	check.Stream(check.Streamer(
+// This example demonstrates usage of Complex64() generator with constraints for generation of complex64 values.
+// Constraints define range of generatable float32 values for real and imaginary parts of complex64 number.
+func ExampleComplex64_constraints() {
+	streamer := check.Streamer(
 		func(c complex64) {
-			fmt.Printf("%#v\n", c)
+			fmt.Printf("%g\n", c)
 		},
-		// Passing constraint.Complex64 to Coplex64 generator defines
-		// range of values for Real and Imaginary parts of complex number.
 		generator.Complex64(constraints.Complex64{
-			// Real part of complex64 will be from range [0,5]
 			Real: constraints.Float32{
-				Min: 0,
+				Min: -3,
+				Max: -1,
+			},
+			Imaginary: constraints.Float32{
+				Min: 3,
 				Max: 5,
 			},
-			// Imaginary part of complex64 will be from range [-5,0]
-			Imaginary: constraints.Float32{
-				Min: -5,
-				Max: 0,
-			},
 		}),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
-	// (6.5711266e-15-8.163024e-21i)
-	// (2.84718e-09-2.999585e-16i)
-	// (3.9155332e-22-3.9071593e-35i)
-	// (2.3398438e-37-1.0598745e-06i)
-	// (1.1053934e-10-6.6470676e-23i)
-	// (1.2988068e-15-4.679253e-29i)
-	// (3.644296e-16-2.0516037e-32i)
-	// (3.823536e-36-5.0049135e-38i)
-	// (1.9262444e-32-2.5963268e-11i)
-	// (7.02896e-34-6.9491065e-26i)
+	// (-1.2046497+4.1142726i)
+	// (-2.701786+3.1750083i)
+	// (-1.6229705+3.9623466i)
+	// (-2.4881487+3.222718i)
+	// (-2.5111911+3.9246528i)
+	// (-1.8536431+4.56498i)
+	// (-2.5411756+3.1288548i)
+	// (-1.6691408+3.4864495i)
+	// (-1.8248223+3.6883054i)
+	// (-1.5765601+3.0912352i)
 }
 
+// This example demonstrates usage of Complex128() generator for generation of complex128 values.
 func ExampleComplex128() {
-	// Streamer uses Complex128 generator to generate complex128 values
-	check.Stream(check.Streamer(
+	streamer := check.Streamer(
 		func(c complex128) {
-			fmt.Printf("%#v\n", c)
+			fmt.Printf("%g\n", c)
 		},
 		generator.Complex128(),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// (-1.194033741351553e-241-3.93536176617243e-117i)
 	// (-2.978088836427668e+188-64716.894033756i)
@@ -87,37 +93,37 @@ func ExampleComplex128() {
 	// (-7.908173283514067e+37-5.433575384625165e+75i)
 }
 
-func ExampleComplex128_withConstraints() {
-	// Streamer uses Complex128 generator to generate complex128 values
-	check.Stream(check.Streamer(
+// This example demonstrates usage of Complex128() generator with constraints for generation of complex128 values.
+// Constraints define range of generatable float64 values for real and imaginary parts of complex128 number.
+func ExampleComplex128_constraints() {
+	streamer := check.Streamer(
 		func(c complex128) {
-			fmt.Printf("%#v\n", c)
+			fmt.Printf("%g\n", c)
 		},
-		// Passing constraint.Complex128 to Coplex128 generator defines
-		// range of values for Real and Imaginary parts of complex number.
 		generator.Complex128(constraints.Complex128{
-			// Real part of complex128 will be 0
 			Real: constraints.Float64{
-				Min: 0,
-				Max: 0,
+				Min: 10,
+				Max: 20,
 			},
-			// Imaginary part of complex128 will be from range [-5,0]
 			Imaginary: constraints.Float64{
-				Min: -5,
-				Max: 0,
+				Min: -200,
+				Max: -100,
 			},
 		}),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
-	// (0-5.566863131315757e-260i)
-	// (0-1.6566169045618332e-120i)
-	// (0-3.5999967279572785e-304i)
-	// (0-3.290689787053985e-12i)
-	// (0-1.9905130526070908e-77i)
-	// (0-1.6727313548317884e-205i)
-	// (0-3.881227390501676e-204i)
-	// (0-2.332451080513663e-43i)
-	// (0-2.33038011922896e-289i)
-	// (0-9.142337453567358e-167i)
+	// (14.738934753084298-115.39130813223936i)
+	// (13.197699354402783-196.80036731935937i)
+	// (12.532697960464143-175.5617077932535i)
+	// (17.038394305448502-153.8634523801138i)
+	// (11.219426600620917-113.24664941496796i)
+	// (13.31424363947598-140.03814918293662i)
+	// (12.825849578744581-158.8143128221763i)
+	// (11.81996096177609-107.61529798063697i)
+	// (11.084114411123993-115.55906892458002i)
+	// (11.405528609648313-101.38558928949668i)
 }

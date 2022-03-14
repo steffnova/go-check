@@ -3,43 +3,47 @@ package generator_test
 import (
 	"fmt"
 
-	"github.com/steffnova/go-check"
+	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/generator"
 )
 
+// This example demonstrates usage of Constant() generator for generating string values.
 func ExampleConstant() {
-	// Streamer uses Constant generator to generate string values.
-	// Constant will always return the same value that is passed to it.
-	check.Stream(check.Streamer(
+	streamer := check.Streamer(
 		func(s string) {
 			fmt.Printf("%s\n", s)
 		},
-		generator.Constant("lorem ipsum"),
-	), check.Config{Seed: 0, Iterations: 10})
+		generator.Constant("I won't write test cases"),
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
-	// lorem ipsum
-	// lorem ipsum
-	// lorem ipsum
-	// lorem ipsum
-	// lorem ipsum
-	// lorem ipsum
-	// lorem ipsum
-	// lorem ipsum
-	// lorem ipsum
-	// lorem ipsum
+	// I won't write test cases
+	// I won't write test cases
+	// I won't write test cases
+	// I won't write test cases
+	// I won't write test cases
+	// I won't write test cases
+	// I won't write test cases
+	// I won't write test cases
+	// I won't write test cases
+	// I won't write test cases
 }
 
+// This example demonstrates usage of ConstantFrom() generator for generating string values.
 func ExampleConstantFrom() {
-	// Streamer uses ConstantFrom generator to generate string values.
-	// ConstantFrom will generate one of the values passed to it.
-	check.Stream(check.Streamer(
-		func(s string) {
-			fmt.Printf("%s\n", s)
+	streamer := check.Streamer(
+		func(in interface{}) {
+			fmt.Printf("%v\n", in)
 		},
 		generator.ConstantFrom("red", "green", "blue", "yellow", "black"),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// blue
 	// red

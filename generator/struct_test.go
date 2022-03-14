@@ -3,34 +3,36 @@ package generator_test
 import (
 	"fmt"
 
-	"github.com/steffnova/go-check"
+	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/generator"
 )
 
+// This example demonstrates how to use Struct() generator for generation of struct values.
+// Struct() generator requires map[string]Generator, where map's key-value pairs represent
+// struct's field generators. Provided field generator or Any() generator (if field generator
+// is not provided) will be used to generate data for struct's field. In this example generators
+// for fields X and Y are provided while for Z is ommited.
 func ExampleStruct() {
-	// Point struct will be used as an example
+	// Point struct will be used as struct example
 	type Point struct {
 		X int16
 		Y int16
 		Z int8
 	}
 
-	// Streamer uses Struct generator to generate Point values.
-	check.Stream(check.Streamer(
+	streamer := check.Streamer(
 		func(p Point) {
 			fmt.Printf("%#v\n", p)
 		},
-		// Struct generator accepts map where key is a string and value is
-		// generator.Generator, where map's keys represent struct fields. If
-		// generator for a field is not specified Any() generator is used.
-		// In this example generators for fields X and Y are defined, while
-		// for Z field it is ommited.
 		generator.Struct(map[string]generator.Generator{
 			"X": generator.Int16(),
 			"Y": generator.Int16(),
 		}),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// generator_test.Point{X:-12790, Y:13142, Z:-91}
 	// generator_test.Point{X:-3323, Y:16168, Z:104}

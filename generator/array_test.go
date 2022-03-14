@@ -3,22 +3,25 @@ package generator_test
 import (
 	"fmt"
 
-	"github.com/steffnova/go-check"
+	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/generator"
 )
 
+// This example demonstrates usage of Array(Int()) generator for generation of
+// array of integers with 5 elements. Array() requires a generator for it's
+// elements to be passed to it. Int() generator is used as an element generator.
 func ExampleArray() {
-	// Streamer uses Array generator to generate int array of 5 elements.
-	check.Stream(check.Streamer(
+	streamer := check.Streamer(
 		func(arr [5]int) {
 			fmt.Printf("%#v\n", arr)
 		},
-		// Array generator accepts a generator for it's elements,
-		// in this case Int generator
 		generator.Array(generator.Int()),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// [5]int{-5339971465336467958, 5036824528102830934, 4435185786993720788, 8071137008395949086, 2122761628320059770}
 	// [5]int{-5365688832259816617, -300681375570251064, -6485228379443441869, -8468275846115330281, -1089963290385541773}
@@ -32,14 +35,14 @@ func ExampleArray() {
 	// [5]int{7656290481659077236, 1073273973791335576, -331846068917293018, 1135614103155420740, 7031127273457604653}
 }
 
+// This example demonstrates usage of ArrayFrom() generator and Int() generator for generation
+// of array of integers with 5 elements. ArrayFrom() requires generator for each element of the
+// array to be passed to it. Five Int() generator are used for array elements.
 func ExampleArrayFrom() {
-	// Streamer uses ArrayFrom generator to generate int array of 5 elements
-	check.Stream(check.Streamer(
+	streamer := check.Streamer(
 		func(arr [5]int) {
 			fmt.Printf("%#v\n", arr)
 		},
-		// ArrayFrom generator requires generator for each element of the array.
-		// Number of generators passed must match size of the array.
 		generator.ArrayFrom(
 			generator.Int(constraints.Int{Min: 0, Max: 9}),
 			generator.Int(constraints.Int{Min: 10, Max: 19}),
@@ -47,8 +50,11 @@ func ExampleArrayFrom() {
 			generator.Int(constraints.Int{Min: 30, Max: 39}),
 			generator.Int(constraints.Int{Min: 40, Max: 49}),
 		),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// [5]int{5, 12, 26, 30, 40}
 	// [5]int{6, 11, 25, 36, 44}

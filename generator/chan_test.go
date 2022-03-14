@@ -3,20 +3,23 @@ package generator_test
 import (
 	"fmt"
 
-	"github.com/steffnova/go-check"
+	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/generator"
 )
 
+// This example demonstrates usage of Chan() generator for generation of chan int values.
 func ExampleChan() {
-	// Streamer uses Chan generator to generate chan int.
-	check.Stream(check.Streamer(
+	streamer := check.Streamer(
 		func(ch chan int) {
 			fmt.Printf("chan size: %d\n", cap(ch))
 		},
 		generator.Chan(),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// chan size: 31
 	// chan size: 16
@@ -30,21 +33,23 @@ func ExampleChan() {
 	// chan size: 30
 }
 
-func ExampleChan_withConstraints() {
-	// Streamer uses Chan generator to generate chan int.
-	check.Stream(check.Streamer(
+// This example demonstrates usage of Chan() generator with constraints for generation of
+// chan int values. Constraints define capacity of generated channel and in this example
+// generated channel will have capacity in range [0, 10]
+func ExampleChan_constraints() {
+	streamer := check.Streamer(
 		func(ch chan int) {
 			fmt.Printf("chan size: %d\n", cap(ch))
 		},
-		// Passing constraint.Length to Chan generator defines
-		// generatable channel's size
-		// In this example channel will have size in range [0, 10]
 		generator.Chan(constraints.Length{
 			Min: 0,
 			Max: 10,
 		}),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// chan size: 5
 	// chan size: 2
