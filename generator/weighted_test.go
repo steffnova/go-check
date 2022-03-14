@@ -3,13 +3,18 @@ package generator_test
 import (
 	"fmt"
 
-	"github.com/steffnova/go-check"
+	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/generator"
 )
 
+// This example demonstrates usage of Weighted() combinator and Nil() and PtrTo(Uint64())
+// generators for generation of *uint64 values. Weighted() will use one of the generators
+// passed to it based on generator's weight. Weights define how often a generator will be
+// selected by Weighted(). Selection chance is calculated as generator's weight devided by
+// summ of all weights and multiplied by 100. In this example Nil() generator will have 10%
+// selection chance (1/10 * 100) and PtrTo(Uint64()) will have 90% selection chance (9/10 * 100)
 func ExampleWeighted() {
-	// Streamer uses Weighted generator to generate *uint64 values.
-	check.Stream(check.Streamer(
+	streamer := check.Streamer(
 		func(n *uint64) {
 			if n == nil {
 				fmt.Printf("%v\n", n)
@@ -17,22 +22,16 @@ func ExampleWeighted() {
 				fmt.Printf("%d\n", *n)
 			}
 		},
-		// Weighted generator as a first parameter accepts slice of uint64
-		// values that define weights for each of generators passed to it.
-		// In this case weight 1 is assigned to generator.Nil(), and 9
-		// to generator.PtrTo(). Weights define frequency to determine
-		// which generator will be picked based on it's weight. To calculate
-		// the chance, all weights are summed together, and individiual chance
-		// for each generator is calculated as it's weight devided by sum of
-		// all weight and multiplied by 100. In this case generator.Nil() has
-		// 10% chance (1/10 * 100) and generator.PtrTo has 90% chance (9/10 * 100)
 		generator.Weighted(
 			[]uint64{1, 9},
 			generator.Nil(),
 			generator.PtrTo(generator.Uint64()),
 		),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// 1002466900374765554
 	// <nil>

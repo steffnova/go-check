@@ -3,20 +3,23 @@ package generator_test
 import (
 	"fmt"
 
-	"github.com/steffnova/go-check"
+	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/generator"
 )
 
+// This example demontrates how to use String() generator for generation of string values.
 func ExampleString() {
-	// Streamer uses String generator to generate rune values.
-	check.Stream(check.Streamer(
+	streamer := check.Streamer(
 		func(s string) {
 			fmt.Printf("%s\n", s)
 		},
 		generator.String(),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// 󎨐뿐򳍖󊷱󻵿󤄃𬟀띛󔐭𪊟򃼨𷺾򀡜񆀕򙏇󀴲򜲹񝛌񭇽򁁏񊻲􅌨󦍅𑖓粩򪱃󒀬𕻯򄤹􌴸𐀞
 	// 𣃍𴏯󌄏󦴴񃔳𔺢򏾁񖪍𺕿𫜬񻱖򫽄𙗔󡤨򥕸𔀓󜊹𥮙󴻓񱪋꥗񆽉񂍈󑴭􊟬򋐊񷙐񜁊񝇫񰴤񙚪򀋧񹢰򶝟󥁳􌜶񵌮󿗧򰰀򸢉򳵾򮕮􊆐󴻗򣗭磸񥜞󆠤񭘦󦗃󷅘󔶳񲤾𢙑󱱌򜅂􀨖󠍦矠鰮󰾕򿻙󼾌󪻾
@@ -30,15 +33,13 @@ func ExampleString() {
 	// 򶐛󼿗􄅅񄺠𳅸񛱎񢦀𪐳𒡉𞑧󨔚󺦘򤨧񃊯󥓀𠅅􎒢᛭򔞿ꢵ򅩲񲡅󡨩򊏁󘼙񗶐󅩅򸩅񃸤񔻥闽󅩑򶮣𼷄񟬍񆴘ᯀ󭱝򘆙熝򘗸󔪴𝡘󽿵򠠭򅱼𑮦񇨡򫞀󀒃𻄀𲅛񨐴󄴾𖝭򣃅򵁙󛎥𫨮󎅜񺌭򾃨󗰕񙃤𒢨󙿻󨍶𬢺򴼅򄎋󲼤�񙡌񼿥𗉘󚿫綤󹡺ꆓ򉿭󦃟󩀾򭥱󶫅񔏶󘽱񁭳󏮍􍇋𬤅
 }
 
-func ExampleString_withConstraints() {
-	// Streamer uses String generator to generate rune values.
-	check.Stream(check.Streamer(
+// This example demontrates how to use String() generator with constraints for generation of string
+// values. Constraints define range of generatables values for string's runes and string's size.
+func ExampleString_constraints() {
+	streamer := check.Streamer(
 		func(s string) {
 			fmt.Printf("%s\n", s)
 		},
-		// Passing constraint.String to String generator minimal and maximal unicode code point
-		// that will be used and minimal and maximal string length.
-		// In this example all rune value will be in range [a-z], and string length in range [2, 10]
 		generator.String(
 			constraints.String{
 				Rune: constraints.Rune{
@@ -51,8 +52,11 @@ func ExampleString_withConstraints() {
 				},
 			},
 		),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// swqqwrf
 	// udadnrii

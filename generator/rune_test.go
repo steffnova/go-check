@@ -3,20 +3,23 @@ package generator_test
 import (
 	"fmt"
 
-	"github.com/steffnova/go-check"
+	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/generator"
 )
 
+// This example demonstrates how to use Rune() generator for generation of rune values.
 func ExampleRune() {
-	// Streamer uses Rune generator to generate rune values.
-	check.Stream(check.Streamer(
+	streamer := check.Streamer(
 		func(r rune) {
 			fmt.Printf("%c\n", r)
 		},
 		generator.Rune(),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// 󋿲
 	// 𺠟
@@ -30,21 +33,22 @@ func ExampleRune() {
 	// 띛
 }
 
-func ExampleRune_withConstraints() {
-	// Streamer uses Rune generator to generate rune values.
-	check.Stream(check.Streamer(
+// This example demonstrates how to use Rune() generator with constraints for generation of rune values.
+// Constraints define range of generatble rune values.
+func ExampleRune_constraints() {
+	streamer := check.Streamer(
 		func(r rune) {
 			fmt.Printf("%c\n", r)
 		},
-		// Passing constraint.Rune to Rune generator defines minimal and maximal
-		// unicode code point for generated rune value.
-		// In this example all rune value will be in range [a-z]
 		generator.Rune(constraints.Rune{
 			MinCodePoint: 'a',
 			MaxCodePoint: 'z',
 		}),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// v
 	// s

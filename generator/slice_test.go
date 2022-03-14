@@ -3,14 +3,15 @@ package generator_test
 import (
 	"fmt"
 
-	"github.com/steffnova/go-check"
+	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/generator"
 )
 
+// This example demonstrates how to use Slice(Int()) generator for generation of []int values.
+// Slice requires generator for it's elements to be passed to it, thus Int() generator is used.
 func ExampleSlice() {
-	// Streamer uses Slice generator to generate []int.
-	check.Stream(check.Streamer(
+	streamer := check.Streamer(
 		func(ints []int) {
 			fmt.Printf("%#v\n", ints)
 		},
@@ -20,8 +21,11 @@ func ExampleSlice() {
 				Max: 100,
 			}),
 		),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// []int{16, 80, 86, 69, 22, 84, 3, 64, 30, 91, 3, 45, 81, 31, 40, 62, 92, 21, 71, 50, 57, 76, 79, 95, 40, 69, 19, 94, 73, 9, 9}
 	// []int{96, 81, 67, 36, 23, 59, 44, 52, 57, 56, 14, 30, 64, 77, 23, 29, 15, 52, 93, 51, 34, 1, 13, 44, 86, 68, 84, 40, 61, 19, 12, 57, 25, 83, 11, 0, 76, 87, 45, 73, 72}
@@ -35,15 +39,13 @@ func ExampleSlice() {
 	// []int{26, 71, 84, 83, 33, 60, 15, 68, 98, 5, 97, 10, 27, 88, 86, 20, 54, 84, 5, 59, 19, 77, 14, 1, 97, 67, 0, 99, 12, 44, 99, 84, 95, 11, 13, 96, 67, 69, 55, 88, 68, 25, 47, 66, 98, 78, 57, 73, 14, 3, 51, 77, 39, 25, 90, 53, 74, 84, 22, 51, 79, 81, 93, 79, 43, 7, 48, 83, 29, 61, 29, 24, 68, 60, 64, 56, 10, 33, 97, 61, 70, 68, 93, 77, 1, 19, 92, 21, 44, 86}
 }
 
-func ExampleSlice_withConstraints() {
-	// Streamer uses Slice generator to generate []int.
-	check.Stream(check.Streamer(
+// This example demonstrates how to use Slice(Int()) generator with constraints for generation of
+// []int values. Constraints define range of generatable values for slice's size.
+func ExampleSlice_constraints() {
+	streamer := check.Streamer(
 		func(ints []int) {
 			fmt.Printf("%#v\n", ints)
 		},
-		// Passing constraint.Slice to Slice generator as a second parameter
-		// defines slice size range.
-		// In this example slice size will be in range [0, 10]
 		generator.Slice(
 			generator.Int(constraints.Int{
 				Min: 0,
@@ -51,8 +53,11 @@ func ExampleSlice_withConstraints() {
 			}),
 			constraints.Length{Min: 0, Max: 10},
 		),
-	), check.Config{Seed: 0, Iterations: 10})
+	)
 
+	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+		panic(err)
+	}
 	// Output:
 	// []int{31, 16, 80, 86, 69}
 	// []int{84, 3, 64, 30, 91, 3}
