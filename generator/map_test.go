@@ -3,7 +3,6 @@ package generator_test
 import (
 	"fmt"
 
-	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/generator"
 )
@@ -12,7 +11,7 @@ import (
 // values. Map() generator requires generators for generating map's key-value pairs. In this example
 // Int8() is used as a key generator and bool is used as value generator.
 func ExampleMap() {
-	streamer := check.Streamer(
+	streamer := generator.Streamer(
 		func(m map[int8]bool) {
 			fmt.Printf("%#v\n", m)
 		},
@@ -22,7 +21,7 @@ func ExampleMap() {
 		),
 	)
 
-	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+	if err := generator.Stream(0, 10, streamer); err != nil {
 		panic(err)
 	}
 	// Output:
@@ -43,7 +42,7 @@ func ExampleMap() {
 // Int8() and Uint8() are used as map's key and value generators (respectively). Constraints define
 // range of generatable values for map's size.
 func ExampleMap_constraints() {
-	streamer := check.Streamer(
+	streamer := generator.Streamer(
 		func(m map[int8]uint8) {
 			fmt.Printf("%#v\n", m)
 		},
@@ -57,7 +56,7 @@ func ExampleMap_constraints() {
 		),
 	)
 
-	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+	if err := generator.Stream(0, 10, streamer); err != nil {
 		panic(err)
 	}
 	// Output:

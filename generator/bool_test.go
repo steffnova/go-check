@@ -3,20 +3,19 @@ package generator_test
 import (
 	"fmt"
 
-	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/generator"
 )
 
 // This example demonstrates usage of Bool() generator for generation of bool values.
 func ExampleBool() {
-	streamer := check.Streamer(
+	streamer := generator.Streamer(
 		func(b bool) {
 			fmt.Printf("%v\n", b)
 		},
 		generator.Bool(),
 	)
 
-	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+	if err := generator.Stream(0, 10, streamer); err != nil {
 		panic(err)
 	}
 	// Output:

@@ -3,21 +3,20 @@ package generator_test
 import (
 	"fmt"
 
-	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/generator"
 )
 
 // This example demonstrates usage of Complex64() generator for generation of complex64 values.
 func ExampleComplex64() {
-	streamer := check.Streamer(
+	streamer := generator.Streamer(
 		func(c complex64) {
 			fmt.Printf("%g\n", c)
 		},
 		generator.Complex64(),
 	)
 
-	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+	if err := generator.Stream(0, 10, streamer); err != nil {
 		panic(err)
 	}
 	// Output:
@@ -36,7 +35,7 @@ func ExampleComplex64() {
 // This example demonstrates usage of Complex64() generator with constraints for generation of complex64 values.
 // Constraints define range of generatable float32 values for real and imaginary parts of complex64 number.
 func ExampleComplex64_constraints() {
-	streamer := check.Streamer(
+	streamer := generator.Streamer(
 		func(c complex64) {
 			fmt.Printf("%g\n", c)
 		},
@@ -52,7 +51,7 @@ func ExampleComplex64_constraints() {
 		}),
 	)
 
-	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+	if err := generator.Stream(0, 10, streamer); err != nil {
 		panic(err)
 	}
 	// Output:
@@ -70,14 +69,14 @@ func ExampleComplex64_constraints() {
 
 // This example demonstrates usage of Complex128() generator for generation of complex128 values.
 func ExampleComplex128() {
-	streamer := check.Streamer(
+	streamer := generator.Streamer(
 		func(c complex128) {
 			fmt.Printf("%g\n", c)
 		},
 		generator.Complex128(),
 	)
 
-	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+	if err := generator.Stream(0, 10, streamer); err != nil {
 		panic(err)
 	}
 	// Output:
@@ -96,7 +95,7 @@ func ExampleComplex128() {
 // This example demonstrates usage of Complex128() generator with constraints for generation of complex128 values.
 // Constraints define range of generatable float64 values for real and imaginary parts of complex128 number.
 func ExampleComplex128_constraints() {
-	streamer := check.Streamer(
+	streamer := generator.Streamer(
 		func(c complex128) {
 			fmt.Printf("%g\n", c)
 		},
@@ -112,7 +111,7 @@ func ExampleComplex128_constraints() {
 		}),
 	)
 
-	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+	if err := generator.Stream(0, 10, streamer); err != nil {
 		panic(err)
 	}
 	// Output:

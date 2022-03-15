@@ -3,7 +3,6 @@ package generator_test
 import (
 	"fmt"
 
-	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/generator"
 )
@@ -12,14 +11,14 @@ import (
 // array of integers with 5 elements. Array() requires a generator for it's
 // elements to be passed to it. Int() generator is used as an element generator.
 func ExampleArray() {
-	streamer := check.Streamer(
+	streamer := generator.Streamer(
 		func(arr [5]int) {
 			fmt.Printf("%#v\n", arr)
 		},
 		generator.Array(generator.Int()),
 	)
 
-	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+	if err := generator.Stream(0, 10, streamer); err != nil {
 		panic(err)
 	}
 	// Output:
@@ -39,7 +38,7 @@ func ExampleArray() {
 // of array of integers with 5 elements. ArrayFrom() requires generator for each element of the
 // array to be passed to it. Five Int() generator are used for array elements.
 func ExampleArrayFrom() {
-	streamer := check.Streamer(
+	streamer := generator.Streamer(
 		func(arr [5]int) {
 			fmt.Printf("%#v\n", arr)
 		},
@@ -52,7 +51,7 @@ func ExampleArrayFrom() {
 		),
 	)
 
-	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+	if err := generator.Stream(0, 10, streamer); err != nil {
 		panic(err)
 	}
 	// Output:

@@ -3,7 +3,6 @@ package generator_test
 import (
 	"fmt"
 
-	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/generator"
 )
@@ -12,7 +11,7 @@ import (
 // Func() generator requires generators for it's output values to be passed to it. In this
 // example generated function will return []int, thus Slice(Int()) generator is used.
 func ExampleFunc() {
-	streamer := check.Streamer(
+	streamer := generator.Streamer(
 		func(f func(x, y int) []int) {
 			fmt.Printf("%#v\n", f(1, 2))
 		},
@@ -28,7 +27,7 @@ func ExampleFunc() {
 		)),
 	)
 
-	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+	if err := generator.Stream(0, 10, streamer); err != nil {
 		panic(err)
 	}
 	// Output:
