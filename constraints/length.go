@@ -1,8 +1,8 @@
 package constraints
 
 type Length struct {
-	Min int
-	Max int
+	Min uint64
+	Max uint64
 }
 
 func LengthDefault() Length {

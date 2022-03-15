@@ -33,7 +33,7 @@ func Func(outputs ...Generator) Generator {
 			generators[index] = generator
 			randoms[index] = random
 		}
-		randomInt64 := r.Int64(constraints.Int64Default())
+		randomInt64 := r.Uint64(constraints.Uint64Default())
 		return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
 			return arbitrary.Arbitrary{
 				Value: reflect.MakeFunc(target, func(inputs []reflect.Value) []reflect.Value {
@@ -41,7 +41,7 @@ func Func(outputs ...Generator) Generator {
 					// same signature but generate different ouput, random value is
 					// added to the hashed input parameters. This ensure that each
 					// function has differently seeded Random.
-					seed := int64(arbitrary.HashToInt64(inputs...)) + randomInt64
+					seed := int64(arbitrary.HashToInt64(inputs...)) + int64(randomInt64)
 
 					outputs := make(arbitrary.Arbitraries, target.NumOut())
 					for index, generate := range generators {
