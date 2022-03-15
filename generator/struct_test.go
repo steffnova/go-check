@@ -3,7 +3,6 @@ package generator_test
 import (
 	"fmt"
 
-	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/generator"
 )
 
@@ -20,7 +19,7 @@ func ExampleStruct() {
 		Z int8
 	}
 
-	streamer := check.Streamer(
+	streamer := generator.Streamer(
 		func(p Point) {
 			fmt.Printf("%#v\n", p)
 		},
@@ -30,7 +29,7 @@ func ExampleStruct() {
 		}),
 	)
 
-	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+	if err := generator.Stream(0, 10, streamer); err != nil {
 		panic(err)
 	}
 	// Output:

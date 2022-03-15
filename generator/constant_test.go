@@ -3,20 +3,19 @@ package generator_test
 import (
 	"fmt"
 
-	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/generator"
 )
 
 // This example demonstrates usage of Constant() generator for generating string values.
 func ExampleConstant() {
-	streamer := check.Streamer(
+	streamer := generator.Streamer(
 		func(s string) {
 			fmt.Printf("%s\n", s)
 		},
 		generator.Constant("I won't write test cases"),
 	)
 
-	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+	if err := generator.Stream(0, 10, streamer); err != nil {
 		panic(err)
 	}
 	// Output:
@@ -34,14 +33,14 @@ func ExampleConstant() {
 
 // This example demonstrates usage of ConstantFrom() generator for generating string values.
 func ExampleConstantFrom() {
-	streamer := check.Streamer(
+	streamer := generator.Streamer(
 		func(in interface{}) {
 			fmt.Printf("%v\n", in)
 		},
 		generator.ConstantFrom("red", "green", "blue", "yellow", "black"),
 	)
 
-	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+	if err := generator.Stream(0, 10, streamer); err != nil {
 		panic(err)
 	}
 	// Output:

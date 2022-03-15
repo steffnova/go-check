@@ -3,21 +3,20 @@ package generator_test
 import (
 	"fmt"
 
-	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/generator"
 )
 
 // This example demonstrates usage of Chan() generator for generation of chan int values.
 func ExampleChan() {
-	streamer := check.Streamer(
+	streamer := generator.Streamer(
 		func(ch chan int) {
 			fmt.Printf("chan size: %d\n", cap(ch))
 		},
 		generator.Chan(),
 	)
 
-	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+	if err := generator.Stream(0, 10, streamer); err != nil {
 		panic(err)
 	}
 	// Output:
@@ -37,7 +36,7 @@ func ExampleChan() {
 // chan int values. Constraints define capacity of generated channel and in this example
 // generated channel will have capacity in range [0, 10]
 func ExampleChan_constraints() {
-	streamer := check.Streamer(
+	streamer := generator.Streamer(
 		func(ch chan int) {
 			fmt.Printf("chan size: %d\n", cap(ch))
 		},
@@ -47,7 +46,7 @@ func ExampleChan_constraints() {
 		}),
 	)
 
-	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+	if err := generator.Stream(0, 10, streamer); err != nil {
 		panic(err)
 	}
 	// Output:

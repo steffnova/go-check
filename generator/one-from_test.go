@@ -3,7 +3,6 @@ package generator_test
 import (
 	"fmt"
 
-	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/generator"
 )
@@ -14,7 +13,7 @@ import (
 // constraints passed to OneFrom() generator, and every time a int value needs to be
 // generated one of them will be selected randomly.
 func ExampleOneFrom() {
-	streamer := check.Streamer(
+	streamer := generator.Streamer(
 		func(n int) {
 			fmt.Printf("%d\n", n)
 		},
@@ -26,7 +25,7 @@ func ExampleOneFrom() {
 		),
 	)
 
-	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+	if err := generator.Stream(0, 10, streamer); err != nil {
 		panic(err)
 	}
 	// Output:

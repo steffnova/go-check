@@ -3,7 +3,6 @@ package generator_test
 import (
 	"fmt"
 
-	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/generator"
 )
 
@@ -14,7 +13,7 @@ import (
 // summ of all weights and multiplied by 100. In this example Nil() generator will have 10%
 // selection chance (1/10 * 100) and PtrTo(Uint64()) will have 90% selection chance (9/10 * 100)
 func ExampleWeighted() {
-	streamer := check.Streamer(
+	streamer := generator.Streamer(
 		func(n *uint64) {
 			if n == nil {
 				fmt.Printf("%v\n", n)
@@ -29,7 +28,7 @@ func ExampleWeighted() {
 		),
 	)
 
-	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+	if err := generator.Stream(0, 10, streamer); err != nil {
 		panic(err)
 	}
 	// Output:

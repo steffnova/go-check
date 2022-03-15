@@ -3,7 +3,6 @@ package generator_test
 import (
 	"fmt"
 
-	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/generator"
 )
@@ -11,7 +10,7 @@ import (
 // This example demonstrates how to use Slice(Int()) generator for generation of []int values.
 // Slice requires generator for it's elements to be passed to it, thus Int() generator is used.
 func ExampleSlice() {
-	streamer := check.Streamer(
+	streamer := generator.Streamer(
 		func(ints []int) {
 			fmt.Printf("%#v\n", ints)
 		},
@@ -23,7 +22,7 @@ func ExampleSlice() {
 		),
 	)
 
-	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+	if err := generator.Stream(0, 10, streamer); err != nil {
 		panic(err)
 	}
 	// Output:
@@ -42,7 +41,7 @@ func ExampleSlice() {
 // This example demonstrates how to use Slice(Int()) generator with constraints for generation of
 // []int values. Constraints define range of generatable values for slice's size.
 func ExampleSlice_constraints() {
-	streamer := check.Streamer(
+	streamer := generator.Streamer(
 		func(ints []int) {
 			fmt.Printf("%#v\n", ints)
 		},
@@ -55,7 +54,7 @@ func ExampleSlice_constraints() {
 		),
 	)
 
-	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+	if err := generator.Stream(0, 10, streamer); err != nil {
 		panic(err)
 	}
 	// Output:

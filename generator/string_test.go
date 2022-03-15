@@ -3,21 +3,20 @@ package generator_test
 import (
 	"fmt"
 
-	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/generator"
 )
 
 // This example demontrates how to use String() generator for generation of string values.
 func ExampleString() {
-	streamer := check.Streamer(
+	streamer := generator.Streamer(
 		func(s string) {
 			fmt.Printf("%s\n", s)
 		},
 		generator.String(),
 	)
 
-	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+	if err := generator.Stream(0, 10, streamer); err != nil {
 		panic(err)
 	}
 	// Output:
@@ -36,7 +35,7 @@ func ExampleString() {
 // This example demontrates how to use String() generator with constraints for generation of string
 // values. Constraints define range of generatables values for string's runes and string's size.
 func ExampleString_constraints() {
-	streamer := check.Streamer(
+	streamer := generator.Streamer(
 		func(s string) {
 			fmt.Printf("%s\n", s)
 		},
@@ -54,7 +53,7 @@ func ExampleString_constraints() {
 		),
 	)
 
-	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+	if err := generator.Stream(0, 10, streamer); err != nil {
 		panic(err)
 	}
 	// Output:

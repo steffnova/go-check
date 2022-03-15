@@ -3,7 +3,6 @@ package generator_test
 import (
 	"fmt"
 
-	check "github.com/steffnova/go-check"
 	"github.com/steffnova/go-check/generator"
 )
 
@@ -11,7 +10,7 @@ import (
 // PtrTo requires a generator for type (int in this example) pointer points to, thus Int()
 // generator is used.
 func ExamplePtr() {
-	streamer := check.Streamer(
+	streamer := generator.Streamer(
 		func(n *int) {
 			if n != nil {
 				fmt.Printf("%v\n", *n)
@@ -22,7 +21,7 @@ func ExamplePtr() {
 		generator.Ptr(generator.Int()),
 	)
 
-	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+	if err := generator.Stream(0, 10, streamer); err != nil {
 		panic(err)
 	}
 	// Output:
@@ -42,14 +41,14 @@ func ExamplePtr() {
 // PtrTo requires a generator for type (int in this example) pointer points to, thus Int()
 // generator is used.
 func ExamplePtrTo() {
-	streamer := check.Streamer(
+	streamer := generator.Streamer(
 		func(n *int) {
 			fmt.Printf("%v\n", *n)
 		},
 		generator.PtrTo(generator.Int()),
 	)
 
-	if err := check.Stream(streamer, check.Config{Seed: 0, Iterations: 10}); err != nil {
+	if err := generator.Stream(0, 10, streamer); err != nil {
 		panic(err)
 	}
 	// Output:
