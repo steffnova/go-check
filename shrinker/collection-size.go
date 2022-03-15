@@ -12,9 +12,9 @@ func CollectionSize(arbs []arbitrary.Arbitrary, shrinkers []Shrinker, index int,
 		switch {
 		case len(shrinkers) != len(arbs):
 			return arbitrary.Arbitrary{}, nil, fmt.Errorf("shrinker, nodes miss match")
-		case index < 0 || index > limits.Max:
+		case index < 0 || index > int(limits.Max):
 			return arbitrary.Arbitrary{}, nil, fmt.Errorf("number of indexes out of range")
-		case limits.Min == len(arbs)-index:
+		case int(limits.Min) == len(arbs)-index:
 			shrinker := Chain(
 				CollectionElement(shrinkers...),
 				CollectionElements(shrinkers...),

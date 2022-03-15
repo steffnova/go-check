@@ -2,6 +2,7 @@ package generator
 
 import (
 	"fmt"
+	"math"
 	"reflect"
 
 	"github.com/steffnova/go-check/arbitrary"
@@ -30,6 +31,12 @@ func Map(key, value Generator, limits ...constraints.Length) Generator {
 		if target.Kind() != reflect.Map {
 			return nil, fmt.Errorf("can't use Map generator for %s type", target)
 		}
+		if constraint.Min > constraint.Max {
+			return nil, fmt.Errorf("minimal length value %d can't be greater than max length value %d", constraint.Min, constraint.Max)
+		}
+		if constraint.Max > uint64(math.MaxInt64) {
+			return nil, fmt.Errorf("max length %d can't be greater than %d", constraint.Max, uint64(math.MaxInt64))
+		}
 
 		generateKey, err := key(target.Key(), bias, r)
 		if err != nil {
@@ -42,9 +49,9 @@ func Map(key, value Generator, limits ...constraints.Length) Generator {
 		}
 
 		return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
-			size := r.Int64(constraints.Int64{
-				Min: int64(constraint.Min),
-				Max: int64(constraint.Max),
+			size := r.Uint64(constraints.Uint64{
+				Min: uint64(constraint.Min),
+				Max: uint64(constraint.Max),
 			})
 
 			arb := arbitrary.Arbitrary{
@@ -52,10 +59,10 @@ func Map(key, value Generator, limits ...constraints.Length) Generator {
 				Elements: make(arbitrary.Arbitraries, size),
 			}
 
-			shrinkers := make([]shrinker.Shrinker, int(size))
+			shrinkers := make([]shrinker.Shrinker, size)
 
 			filter := arbitrary.FilterPredicate(target, func(in reflect.Value) bool {
-				return in.Len() >= constraint.Min
+				return in.Len() >= int(constraint.Min)
 			})
 
 			for index := 0; index < int(size); index++ {

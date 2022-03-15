@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/steffnova/go-check/constraints"
+	"github.com/steffnova/go-check/generator"
 )
 
 var (
@@ -35,7 +36,7 @@ func Check(t *testing.T, property property, config ...Config) {
 		configuration = config[0]
 	}
 
-	random := Rng{
+	random := generator.RandomNumber{
 		Rand: rand.New(rand.NewSource(configuration.Seed)),
 	}
 

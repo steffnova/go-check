@@ -2,6 +2,7 @@ package generator
 
 import (
 	"fmt"
+	"math"
 	"reflect"
 
 	"github.com/steffnova/go-check/arbitrary"
@@ -23,6 +24,12 @@ func Slice(element Generator, limits ...constraints.Length) Generator {
 		if target.Kind() != reflect.Slice {
 			return nil, fmt.Errorf("can't use Slice generator for %s type", target)
 		}
+		if constraint.Min > constraint.Max {
+			return nil, fmt.Errorf("minimal length value %d can't be greater than max length value %d", constraint.Min, constraint.Max)
+		}
+		if constraint.Max > uint64(math.MaxInt64) {
+			return nil, fmt.Errorf("max length %d can't be greater than %d", constraint.Max, uint64(math.MaxInt64))
+		}
 
 		generator, err := element(target.Elem(), bias, r)
 		if err != nil {
@@ -30,11 +37,8 @@ func Slice(element Generator, limits ...constraints.Length) Generator {
 		}
 
 		return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
-			biasedConstraints := constraints.Int64{
-				Min: int64(constraint.Min),
-				Max: int64(constraint.Max),
-			}.Biased(bias)
-			size := r.Int64(biasedConstraints)
+			biasedConstraints := constraints.Uint64(constraint).Baised(bias)
+			size := r.Uint64(biasedConstraints)
 
 			shrinkers := make([]shrinker.Shrinker, size)
 
@@ -48,10 +52,7 @@ func Slice(element Generator, limits ...constraints.Length) Generator {
 				arb.Value.Index(index).Set(arb.Elements[index].Value)
 			}
 
-			return arb, shrinker.Slice(shrinker.CollectionSize(arb.Elements, shrinkers, 0, constraints.Length{
-				Min: int(biasedConstraints.Min),
-				Max: int(biasedConstraints.Max),
-			}))
+			return arb, shrinker.Slice(shrinker.CollectionSize(arb.Elements, shrinkers, 0, constraints.Length(biasedConstraints)))
 		}, nil
 	}
 
