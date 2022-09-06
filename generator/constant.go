@@ -12,14 +12,14 @@ import (
 // Constant returns generator that always generates the value passed to it via "constant"
 // parameter. Error is returned if value passed to generator doesn't match generator's target.
 func Constant(constant interface{}) Generator {
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, r Random) (Generate, error) {
 		switch {
 		case constant == nil:
-			return Nil()(target, bias, r)
+			return Nil()(target, r)
 		case target.Kind() == reflect.TypeOf(constant).Kind():
 			fallthrough
 		case target.Kind() == reflect.Interface && reflect.TypeOf(constant).Implements(target):
-			return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
+			return func(bias constraints.Bias) (arbitrary.Arbitrary, shrinker.Shrinker) {
 				return arbitrary.Arbitrary{
 					Value: reflect.ValueOf(constant),
 				}, nil

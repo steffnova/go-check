@@ -19,7 +19,7 @@ func Chan(limits ...constraints.Length) Generator {
 	if len(limits) > 0 {
 		constraint = limits[0]
 	}
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, r Random) (Generate, error) {
 		if target.Kind() != reflect.Chan {
 			return nil, fmt.Errorf("can't use Chan generator for %s type", target)
 		}
@@ -29,7 +29,7 @@ func Chan(limits ...constraints.Length) Generator {
 		if constraint.Max > uint64(math.MaxInt64) {
 			return nil, fmt.Errorf("max length %d can't be greater than %d", constraint.Max, uint64(math.MaxInt64))
 		}
-		return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
+		return func(bias constraints.Bias) (arbitrary.Arbitrary, shrinker.Shrinker) {
 			return arbitrary.Arbitrary{
 				Value: reflect.MakeChan(
 					reflect.ChanOf(reflect.BothDir, target.Elem()),

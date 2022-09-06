@@ -13,10 +13,10 @@ import (
 // are: chan, slice, map, func, interface and pointers. Error is returned if
 // target is not one of the supported types.
 func Nil() Generator {
-	return func(target reflect.Type, bias constraints.Bias, _ Random) (Generate, error) {
+	return func(target reflect.Type, _ Random) (Generate, error) {
 		switch target.Kind() {
 		case reflect.Chan, reflect.Slice, reflect.Map, reflect.Func, reflect.Interface, reflect.Ptr:
-			return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
+			return func(bias constraints.Bias) (arbitrary.Arbitrary, shrinker.Shrinker) {
 				return arbitrary.Arbitrary{
 					Value: reflect.Zero(target),
 				}, nil

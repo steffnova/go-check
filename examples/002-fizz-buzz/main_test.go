@@ -60,10 +60,7 @@ func TestFizzBuzz(t *testing.T) {
 			},
 			generator.Uint(constraints.Uint{Max: math.MaxUint / 3 / 5}).
 				Map(func(n uint) uint {
-					return n * 3
-				}).
-				Map(func(n uint) uint {
-					return n * 5
+					return n * 3 * 5
 				}),
 		))
 	})

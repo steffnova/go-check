@@ -18,7 +18,7 @@ func Int64(limits ...constraints.Int64) Generator {
 		constraint = limits[0]
 	}
 
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, r Random) (Generate, error) {
 		negativeMapper := arbitrary.Mapper(reflect.TypeOf(uint64(0)), target, func(in reflect.Value) reflect.Value {
 			return reflect.ValueOf(int64(-in.Uint())).Convert(target)
 		})
@@ -34,10 +34,10 @@ func Int64(limits ...constraints.Int64) Generator {
 			return nil, fmt.Errorf("lower limit: %d cannot be greater than upper limit: %d", constraint.Min, constraint.Max)
 		case constraint.Max < 0:
 			return Uint64(constraints.Uint64{Min: uint64(-constraint.Max), Max: uint64(-constraint.Min)}).
-				Map(negativeMapper)(target, bias, r)
+				Map(negativeMapper)(target, r)
 		case constraint.Min >= 0:
 			return Uint64(constraints.Uint64{Min: uint64(constraint.Min), Max: uint64(constraint.Max)}).
-				Map(positiveMapper)(target, bias, r)
+				Map(positiveMapper)(target, r)
 		default:
 			return Weighted(
 				[]uint64{uint64(-(constraint.Min)), uint64(constraint.Max) + 1},
@@ -45,7 +45,7 @@ func Int64(limits ...constraints.Int64) Generator {
 					Map(negativeMapper),
 				Uint64(constraints.Uint64{Min: 0, Max: uint64(constraint.Max)}).
 					Map(positiveMapper),
-			)(target, bias, r)
+			)(target, r)
 		}
 	}
 
@@ -60,7 +60,7 @@ func Int32(limits ...constraints.Int32) Generator {
 	if len(limits) > 0 {
 		constraint = limits[0]
 	}
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, r Random) (Generate, error) {
 		if target.Kind() != reflect.Int32 {
 			return nil, fmt.Errorf("can't use Int32 generator for %s type", target)
 		}
@@ -71,7 +71,7 @@ func Int32(limits ...constraints.Int32) Generator {
 		return Int64(constraints.Int64{
 			Min: int64(constraint.Min),
 			Max: int64(constraint.Max),
-		}).Map(mapper)(target, bias, r)
+		}).Map(mapper)(target, r)
 	}
 }
 
@@ -84,7 +84,7 @@ func Int16(limits ...constraints.Int16) Generator {
 	if len(limits) > 0 {
 		constraint = limits[0]
 	}
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, r Random) (Generate, error) {
 		if target.Kind() != reflect.Int16 {
 			return nil, fmt.Errorf("can't use Int16 generator for %s type", target)
 		}
@@ -95,7 +95,7 @@ func Int16(limits ...constraints.Int16) Generator {
 		return Int64(constraints.Int64{
 			Min: int64(constraint.Min),
 			Max: int64(constraint.Max),
-		}).Map(mapper)(target, bias, r)
+		}).Map(mapper)(target, r)
 	}
 }
 
@@ -109,7 +109,7 @@ func Int8(limits ...constraints.Int8) Generator {
 		constraint = limits[0]
 	}
 
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, r Random) (Generate, error) {
 		if target.Kind() != reflect.Int8 {
 			return nil, fmt.Errorf("can't use Int8 generator for %s type", target)
 		}
@@ -120,7 +120,7 @@ func Int8(limits ...constraints.Int8) Generator {
 		return Int64(constraints.Int64{
 			Min: int64(constraint.Min),
 			Max: int64(constraint.Max),
-		}).Map(mapper)(target, bias, r)
+		}).Map(mapper)(target, r)
 	}
 }
 
@@ -134,7 +134,7 @@ func Int(limits ...constraints.Int) Generator {
 		constraint.Min, constraint.Max = limits[0].Min, limits[0].Max
 	}
 
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, r Random) (Generate, error) {
 		if target.Kind() != reflect.Int {
 			return nil, fmt.Errorf("can't use Int generator for %s type", target)
 		}
@@ -145,6 +145,6 @@ func Int(limits ...constraints.Int) Generator {
 		return Int64(constraints.Int64{
 			Min: int64(constraint.Min),
 			Max: int64(constraint.Max),
-		}).Map(mapper)(target, bias, r)
+		}).Map(mapper)(target, r)
 	}
 }

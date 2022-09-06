@@ -11,7 +11,7 @@ import (
 // Bool returns generator of bool types. Error is returned if generator's
 // target is not bool type.
 func Bool() Generator {
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, r Random) (Generate, error) {
 		switch {
 		case target.Kind() != reflect.Bool:
 			return nil, fmt.Errorf("can't use Bool generator for %s type", target)
@@ -22,7 +22,7 @@ func Bool() Generator {
 			return Uint64(constraints.Uint64{
 				Min: 0,
 				Max: 1,
-			}).Map(mapper)(target, bias, r)
+			}).Map(mapper)(target, r)
 		}
 	}
 }

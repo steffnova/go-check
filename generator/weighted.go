@@ -25,7 +25,7 @@ func Weighted(weights []uint64, generators ...Generator) Generator {
 	case len(weights) != len(generators):
 		return Invalid(fmt.Errorf("number of weights and generators must be the same"))
 	default:
-		return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+		return func(target reflect.Type, r Random) (Generate, error) {
 			totalWeight := uint64(0)
 
 			weightsIndex := make([]uint64, len(generators))
@@ -35,7 +35,7 @@ func Weighted(weights []uint64, generators ...Generator) Generator {
 				if weights[index] < 1 {
 					return nil, fmt.Errorf("weight can't be less than 1: %d", weights[index])
 				}
-				gen, err := generator(target, bias, r)
+				gen, err := generator(target, r)
 				if err != nil {
 					return nil, fmt.Errorf("faile to instantiate generator with index: %d. %s", index, err)
 				}
@@ -52,7 +52,7 @@ func Weighted(weights []uint64, generators ...Generator) Generator {
 				generates[index] = gen
 			}
 
-			return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
+			return func(bias constraints.Bias) (arbitrary.Arbitrary, shrinker.Shrinker) {
 				x := r.Uint64(constraints.Uint64{Min: 0, Max: uint64(totalWeight)})
 				generator := generates[0]
 				for index, weight := range weightsIndex {
@@ -62,7 +62,7 @@ func Weighted(weights []uint64, generators ...Generator) Generator {
 					}
 				}
 
-				return generator()
+				return generator(bias)
 			}, nil
 		}
 	}

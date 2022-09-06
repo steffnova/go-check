@@ -23,7 +23,7 @@ import (
 // number of unique values equal to map's maximum length value defined by
 // limits parameter, otherwise map generation will be stuck in endless loop.
 func Map(key, value Generator, limits ...constraints.Length) Generator {
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, r Random) (Generate, error) {
 		constraint := constraints.LengthDefault()
 		if len(limits) != 0 {
 			constraint = limits[0]
@@ -38,17 +38,17 @@ func Map(key, value Generator, limits ...constraints.Length) Generator {
 			return nil, fmt.Errorf("max length %d can't be greater than %d", constraint.Max, uint64(math.MaxInt64))
 		}
 
-		generateKey, err := key(target.Key(), bias, r)
+		generateKey, err := key(target.Key(), r)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create map's Key generator. %s", err)
 		}
 
-		generateValue, err := value(target.Elem(), bias, r)
+		generateValue, err := value(target.Elem(), r)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create map's Value generator. %s", err)
 		}
 
-		return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
+		return func(bias constraints.Bias) (arbitrary.Arbitrary, shrinker.Shrinker) {
 			size := r.Uint64(constraints.Uint64{
 				Min: uint64(constraint.Min),
 				Max: uint64(constraint.Max),
@@ -66,11 +66,11 @@ func Map(key, value Generator, limits ...constraints.Length) Generator {
 			})
 
 			for index := 0; index < int(size); index++ {
-				key, keyShrinker := generateKey()
-				value, valueShrinker := generateValue()
+				key, keyShrinker := generateKey(bias)
+				value, valueShrinker := generateValue(bias)
 
 				for arb.Value.MapIndex(key.Value).IsValid() {
-					key, keyShrinker = generateKey()
+					key, keyShrinker = generateKey(bias)
 				}
 
 				arb.Elements[index] = arbitrary.Arbitrary{

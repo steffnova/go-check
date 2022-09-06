@@ -3,14 +3,12 @@ package generator
 import (
 	"fmt"
 	"reflect"
-
-	"github.com/steffnova/go-check/constraints"
 )
 
 // Any returns generator with default constraints for a type specified by generator's target.
 // Unsupported target: interface{}
 func Any() Generator {
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, r Random) (Generate, error) {
 		var generator Generator
 		switch target.Kind() {
 		case reflect.Array:
@@ -67,6 +65,6 @@ func Any() Generator {
 			return nil, fmt.Errorf("no support for generating values for kind: %s", target.Kind())
 		}
 
-		return generator(target, bias, r)
+		return generator(target, r)
 	}
 }

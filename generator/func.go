@@ -15,7 +15,7 @@ import (
 // function, len(outputs) doesn't match number of function output values, or
 // generator for any of output values returns an error.
 func Func(outputs ...Generator) Generator {
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, r Random) (Generate, error) {
 		if target.Kind() != reflect.Func {
 			return nil, fmt.Errorf("can't use Func generator for %s type", target)
 		}
@@ -26,7 +26,7 @@ func Func(outputs ...Generator) Generator {
 		randoms := make([]Random, len(outputs))
 		for index, arb := range outputs {
 			random := r.Split()
-			generator, err := arb(target.Out(index), bias, random)
+			generator, err := arb(target.Out(index), random)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create generator for output[%d]. %s", index, err)
 			}
@@ -34,7 +34,7 @@ func Func(outputs ...Generator) Generator {
 			randoms[index] = random
 		}
 		randomInt64 := r.Uint64(constraints.Uint64Default())
-		return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
+		return func(bias constraints.Bias) (arbitrary.Arbitrary, shrinker.Shrinker) {
 			return arbitrary.Arbitrary{
 				Value: reflect.MakeFunc(target, func(inputs []reflect.Value) []reflect.Value {
 					// In order to create 2 different pure functions that have the
@@ -46,7 +46,7 @@ func Func(outputs ...Generator) Generator {
 					outputs := make(arbitrary.Arbitraries, target.NumOut())
 					for index, generate := range generators {
 						randoms[index].Seed(seed)
-						outputs[index], _ = generate()
+						outputs[index], _ = generate(bias)
 					}
 
 					return outputs.Values()

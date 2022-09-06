@@ -20,7 +20,7 @@ func Float64(limits ...constraints.Float64) Generator {
 		constraint = limits[0]
 	}
 
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, r Random) (Generate, error) {
 		mapper := arbitrary.Mapper(reflect.TypeOf(uint64(0)), target, func(in reflect.Value) reflect.Value {
 			return reflect.ValueOf(math.Float64frombits(in.Uint())).Convert(target)
 		})
@@ -39,12 +39,12 @@ func Float64(limits ...constraints.Float64) Generator {
 				constraints.Uint64{
 					Min: math.Float64bits(constraint.Min),
 					Max: math.Float64bits(constraint.Max),
-				}).Map(mapper)(target, bias, r)
+				}).Map(mapper)(target, r)
 		case constraint.Max <= math.Copysign(0, -1):
 			return Uint64(constraints.Uint64{
 				Min: math.Float64bits(math.Copysign(constraint.Max, -1)),
 				Max: math.Float64bits(constraint.Min),
-			}).Map(mapper)(target, bias, r)
+			}).Map(mapper)(target, r)
 		default:
 			return Weighted(
 				[]uint64{
@@ -59,7 +59,7 @@ func Float64(limits ...constraints.Float64) Generator {
 					Min: 0,
 					Max: math.Float64bits(constraint.Max),
 				}).Map(mapper),
-			)(target, bias, r)
+			)(target, r)
 		}
 	}
 }
@@ -75,7 +75,7 @@ func Float32(limits ...constraints.Float32) Generator {
 		constraint = limits[0]
 	}
 
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, r Random) (Generate, error) {
 		mapper := arbitrary.Mapper(reflect.TypeOf(uint32(0)), target, func(in reflect.Value) reflect.Value {
 			return reflect.ValueOf(math.Float32frombits(uint32(in.Uint()))).Convert(target)
 		})
@@ -93,12 +93,12 @@ func Float32(limits ...constraints.Float32) Generator {
 			return Uint32(constraints.Uint32{
 				Min: math.Float32bits(constraint.Min),
 				Max: math.Float32bits(constraint.Max),
-			}).Map(mapper)(target, bias, r)
+			}).Map(mapper)(target, r)
 		case constraint.Max <= 0:
 			return Uint32(constraints.Uint32{
 				Min: math.Float32bits(float32(math.Copysign(float64(constraint.Max), -1))),
 				Max: math.Float32bits(constraint.Min),
-			}).Map(mapper)(target, bias, r)
+			}).Map(mapper)(target, r)
 		default:
 			return Weighted(
 				[]uint64{
@@ -113,7 +113,7 @@ func Float32(limits ...constraints.Float32) Generator {
 					Min: 0,
 					Max: math.Float32bits(constraint.Max),
 				}).Map(mapper),
-			)(target, bias, r)
+			)(target, r)
 		}
 	}
 }

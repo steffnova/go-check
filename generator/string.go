@@ -17,13 +17,13 @@ func String(limits ...constraints.String) Generator {
 		constraint = limits[0]
 	}
 
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, r Random) (Generate, error) {
 		mapper := arbitrary.Mapper(reflect.TypeOf([]rune{}), target, func(in reflect.Value) reflect.Value {
 			return in.Convert(target)
 		})
 		return Slice(
 			Rune(constraint.Rune),
 			constraint.Length,
-		).Map(mapper)(target, bias, r)
+		).Map(mapper)(target, r)
 	}
 }

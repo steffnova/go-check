@@ -19,7 +19,7 @@ func Rune(limits ...constraints.Rune) Generator {
 		constraint = limits[0]
 	}
 
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, r Random) (Generate, error) {
 		switch {
 		case target.Kind() != reflect.Int32:
 			return nil, fmt.Errorf("can't use Rune generator for %s type", target)
@@ -36,7 +36,7 @@ func Rune(limits ...constraints.Rune) Generator {
 			return Int32(constraints.Int32{
 				Max: constraint.MaxCodePoint,
 				Min: constraint.MinCodePoint,
-			}).Map(mapper)(target, bias, r)
+			}).Map(mapper)(target, r)
 		}
 	}
 }

@@ -33,7 +33,7 @@ func Property(predicate interface{}, arbGenerators ...generator.Generator) prope
 			return fmt.Errorf("predicate's output parameter type must be error")
 		default:
 			for index, arbGenerator := range arbGenerators {
-				generate, err := arbGenerator(t.In(index), bias, r)
+				generate, err := arbGenerator(t.In(index), r)
 				if err != nil {
 					return fmt.Errorf("failed to use generator for property parameter at index %d. %s", index+1, err)
 				}
@@ -45,7 +45,7 @@ func Property(predicate interface{}, arbGenerators ...generator.Generator) prope
 		shrinkers := make([]shrinker.Shrinker, len(generators))
 
 		for index, generate := range generators {
-			inputs[index], shrinkers[index] = generate()
+			inputs[index], shrinkers[index] = generate(bias)
 		}
 
 		outputs := predicateVal.Call(inputs.Values())

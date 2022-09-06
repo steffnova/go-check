@@ -18,7 +18,7 @@ func Complex128(limits ...constraints.Complex128) Generator {
 	if len(limits) != 0 {
 		constraint = limits[0]
 	}
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, r Random) (Generate, error) {
 		switch {
 		case target.Kind() != reflect.Complex128:
 			return nil, fmt.Errorf("can't use Complex128 generator for %s type", target)
@@ -34,7 +34,7 @@ func Complex128(limits ...constraints.Complex128) Generator {
 			return ArrayFrom(
 				Float64(constraint.Real),
 				Float64(constraint.Imaginary),
-			).Map(mapper)(target, bias, r)
+			).Map(mapper)(target, r)
 		}
 	}
 }
@@ -49,7 +49,7 @@ func Complex64(limits ...constraints.Complex64) Generator {
 	if len(limits) != 0 {
 		constraint = limits[0]
 	}
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, r Random) (Generate, error) {
 		switch {
 		case target.Kind() != reflect.Complex64:
 			return nil, fmt.Errorf("can't use Complex64 generator for %s type", target)
@@ -65,7 +65,7 @@ func Complex64(limits ...constraints.Complex64) Generator {
 			return ArrayFrom(
 				Float32(constraint.Real),
 				Float32(constraint.Imaginary),
-			).Map(mapper)(target, bias, r)
+			).Map(mapper)(target, r)
 		}
 	}
 }

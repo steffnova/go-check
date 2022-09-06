@@ -6,7 +6,7 @@ import (
 
 func fizzBuzz(n uint) string {
 	switch {
-	case n%3 == 0 && n%5 == 0:
+	case n%15 == 0:
 		return "Fizz Buzz"
 	case n%3 == 0:
 		return "Fizz"

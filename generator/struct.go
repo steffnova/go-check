@@ -20,7 +20,7 @@ func Struct(fields ...map[string]Generator) Generator {
 		fieldGenerators = fields[0]
 	}
 
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, r Random) (Generate, error) {
 		if target.Kind() != reflect.Struct {
 			return nil, fmt.Errorf("can't use Struct generator for %s type", target)
 		}
@@ -34,14 +34,14 @@ func Struct(fields ...map[string]Generator) Generator {
 			if !exists {
 				generator = Any()
 			}
-			generate, err := generator(field.Type, bias, r)
+			generate, err := generator(field.Type, r)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create generator for field: %s. %s", field.Name, err)
 			}
 			generators[index] = generate
 		}
 
-		return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
+		return func(bias constraints.Bias) (arbitrary.Arbitrary, shrinker.Shrinker) {
 			arb := arbitrary.Arbitrary{
 				Value:    reflect.New(target).Elem(),
 				Elements: make(arbitrary.Arbitraries, target.NumField()),
@@ -49,7 +49,7 @@ func Struct(fields ...map[string]Generator) Generator {
 
 			shrinkers := make([]shrinker.Shrinker, target.NumField())
 			for index, generator := range generators {
-				arb.Elements[index], shrinkers[index] = generator()
+				arb.Elements[index], shrinkers[index] = generator(bias)
 				arb.Value.Field(index).Set(arb.Elements[index].Value)
 			}
 			return arb, shrinker.Struct(shrinker.Chain(shrinker.CollectionElement(shrinkers...), shrinker.CollectionElements(shrinkers...)))
