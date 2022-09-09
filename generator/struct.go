@@ -3,6 +3,7 @@ package generator
 import (
 	"fmt"
 	"reflect"
+	"unsafe"
 
 	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
@@ -11,9 +12,9 @@ import (
 
 // Struct returns generator for struct types. Generators for struct fields can be
 // passed through "fields" parameter. If generator for a field is not provided, Any()
-// generator is used for that field. Struct generator can only be used for structs that
-// has all fields exported. Error is returned if generator's target is not struct,
-// struct has unexported fields, or any of the field generators returns an error.
+// generator is used for that field. Error is returned if generator's target is not
+// struct, generator for a field that struct doesn't contain is specified or any of
+// the field generators returns an error.
 func Struct(fields ...map[string]Generator) Generator {
 	fieldGenerators := map[string]Generator{}
 	if len(fields) != 0 {
@@ -24,12 +25,16 @@ func Struct(fields ...map[string]Generator) Generator {
 		if target.Kind() != reflect.Struct {
 			return nil, fmt.Errorf("can't use Struct generator for %s type", target)
 		}
+
+		for fieldName := range fieldGenerators {
+			if _, exists := target.FieldByName(fieldName); !exists {
+				return nil, fmt.Errorf("%s doesn't have a field: %s", target.String(), fieldName)
+			}
+		}
+
 		generators := make([]Generate, target.NumField())
 		for index := range generators {
 			field := target.Field(index)
-			if field.PkgPath != "" {
-				return nil, fmt.Errorf("can't generate struct with unexported fields")
-			}
 			generator, exists := fieldGenerators[field.Name]
 			if !exists {
 				generator = Any()
@@ -50,8 +55,12 @@ func Struct(fields ...map[string]Generator) Generator {
 			shrinkers := make([]shrinker.Shrinker, target.NumField())
 			for index, generator := range generators {
 				arb.Elements[index], shrinkers[index] = generator()
-				arb.Value.Field(index).Set(arb.Elements[index].Value)
+				reflect.NewAt(
+					arb.Value.Field(index).Type(),
+					unsafe.Pointer(arb.Value.Field(index).UnsafeAddr()),
+				).Elem().Set(arb.Elements[index].Value)
 			}
+
 			return arb, shrinker.Struct(shrinker.Chain(shrinker.CollectionElement(shrinkers...), shrinker.CollectionElements(shrinkers...)))
 		}, nil
 	}
