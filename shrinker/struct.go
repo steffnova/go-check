@@ -3,6 +3,7 @@ package shrinker
 import (
 	"fmt"
 	"reflect"
+	"unsafe"
 
 	"github.com/steffnova/go-check/arbitrary"
 )
@@ -28,8 +29,11 @@ func Struct(shrinker Shrinker) Shrinker {
 			}
 
 			next.Value = reflect.New(val.Value.Type()).Elem()
-			for index, node := range val.Elements {
-				next.Value.Field(index).Set(node.Value)
+			for index, element := range val.Elements {
+				reflect.NewAt(
+					next.Value.Field(index).Type(),
+					unsafe.Pointer(next.Value.Field(index).UnsafeAddr()),
+				).Elem().Set(element.Value)
 			}
 
 			return next, Struct(shrinker), nil
