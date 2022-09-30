@@ -6,6 +6,7 @@ import (
 
 	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
+	"github.com/steffnova/go-check/shrinker"
 )
 
 // Complex128 is generator for complex128 types. Range of complex128 values that can be generated
@@ -18,14 +19,14 @@ func Complex128(limits ...constraints.Complex128) Generator {
 	if len(limits) != 0 {
 		constraint = limits[0]
 	}
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, bias constraints.Bias, r Random) (arbitrary.Arbitrary, shrinker.Shrinker, error) {
 		switch {
 		case target.Kind() != reflect.Complex128:
-			return nil, fmt.Errorf("can't use Complex128 generator for %s type", target)
+			return arbitrary.Arbitrary{}, nil, fmt.Errorf("can't use Complex128 generator for %s type", target)
 		case constraint.Real.Min > constraint.Real.Max:
-			return nil, fmt.Errorf("lower limit of complex's real part can't be higher that it's upper limit")
+			return arbitrary.Arbitrary{}, nil, fmt.Errorf("lower limit of complex's real part can't be higher that it's upper limit")
 		case constraint.Imaginary.Min > constraint.Imaginary.Max:
-			return nil, fmt.Errorf("lower limit of complex's imaginary part can't be higher that it's upper limit")
+			return arbitrary.Arbitrary{}, nil, fmt.Errorf("lower limit of complex's imaginary part can't be higher that it's upper limit")
 		default:
 			mapper := arbitrary.Mapper(reflect.TypeOf([2]float64{}), target, func(in reflect.Value) reflect.Value {
 				parts := in.Interface().([2]float64)
@@ -49,14 +50,14 @@ func Complex64(limits ...constraints.Complex64) Generator {
 	if len(limits) != 0 {
 		constraint = limits[0]
 	}
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, bias constraints.Bias, r Random) (arbitrary.Arbitrary, shrinker.Shrinker, error) {
 		switch {
 		case target.Kind() != reflect.Complex64:
-			return nil, fmt.Errorf("can't use Complex64 generator for %s type", target)
+			return arbitrary.Arbitrary{}, nil, fmt.Errorf("can't use Complex64 generator for %s type", target)
 		case constraint.Real.Min > constraint.Real.Max:
-			return nil, fmt.Errorf("lower limit of complex's real part can't be higher that it's upper limit")
+			return arbitrary.Arbitrary{}, nil, fmt.Errorf("lower limit of complex's real part can't be higher that it's upper limit")
 		case constraint.Imaginary.Min > constraint.Imaginary.Max:
-			return nil, fmt.Errorf("lower limit of complex's imaginary part can't be higher that it's upper limit")
+			return arbitrary.Arbitrary{}, nil, fmt.Errorf("lower limit of complex's imaginary part can't be higher that it's upper limit")
 		default:
 			mapper := arbitrary.Mapper(reflect.TypeOf([2]float32{}), target, func(in reflect.Value) reflect.Value {
 				parts := in.Interface().([2]float32)

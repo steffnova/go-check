@@ -6,6 +6,7 @@ import (
 
 	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
+	"github.com/steffnova/go-check/shrinker"
 )
 
 // Ptr is Arbitrary that creates pointer Generator. Generator will return
@@ -20,9 +21,9 @@ func Ptr(arb Generator) Generator {
 // if target's reflect.Kind is not Ptr, or creation of arb's Generator
 // fails.
 func PtrTo(arb Generator) Generator {
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, bias constraints.Bias, r Random) (arbitrary.Arbitrary, shrinker.Shrinker, error) {
 		if target.Kind() != reflect.Ptr {
-			return nil, fmt.Errorf("can't use Ptr generator for %s type", target)
+			return arbitrary.Arbitrary{}, nil, fmt.Errorf("can't use Ptr generator for %s type", target)
 		}
 
 		mapper := arbitrary.Mapper(target.Elem(), target, func(in reflect.Value) reflect.Value {

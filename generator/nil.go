@@ -13,16 +13,14 @@ import (
 // are: chan, slice, map, func, interface and pointers. Error is returned if
 // target is not one of the supported types.
 func Nil() Generator {
-	return func(target reflect.Type, bias constraints.Bias, _ Random) (Generate, error) {
+	return func(target reflect.Type, bias constraints.Bias, _ Random) (arbitrary.Arbitrary, shrinker.Shrinker, error) {
 		switch target.Kind() {
 		case reflect.Chan, reflect.Slice, reflect.Map, reflect.Func, reflect.Interface, reflect.Ptr:
-			return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
-				return arbitrary.Arbitrary{
-					Value: reflect.Zero(target),
-				}, nil
-			}, nil
+			return arbitrary.Arbitrary{
+				Value: reflect.Zero(target),
+			}, nil, nil
 		default:
-			return nil, fmt.Errorf("can't use Nil generator for %s type", target)
+			return arbitrary.Arbitrary{}, nil, fmt.Errorf("can't use Nil generator for %s type", target)
 		}
 	}
 }

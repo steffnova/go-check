@@ -7,6 +7,7 @@ import (
 
 	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
+	"github.com/steffnova/go-check/shrinker"
 )
 
 // Float64 returns generator for float64 types. Range of float64 values that can be generated is
@@ -20,20 +21,20 @@ func Float64(limits ...constraints.Float64) Generator {
 		constraint = limits[0]
 	}
 
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, bias constraints.Bias, r Random) (arbitrary.Arbitrary, shrinker.Shrinker, error) {
 		mapper := arbitrary.Mapper(reflect.TypeOf(uint64(0)), target, func(in reflect.Value) reflect.Value {
 			return reflect.ValueOf(math.Float64frombits(in.Uint())).Convert(target)
 		})
 
 		switch {
 		case target.Kind() != reflect.Float64:
-			return nil, fmt.Errorf("can't use Float64 generator for %s type", target)
+			return arbitrary.Arbitrary{}, nil, fmt.Errorf("can't use Float64 generator for %s type", target)
 		case constraint.Min < -math.MaxFloat64:
-			return nil, fmt.Errorf("lower range value can't be lower then %f", -math.MaxFloat64)
+			return arbitrary.Arbitrary{}, nil, fmt.Errorf("lower range value can't be lower then %f", -math.MaxFloat64)
 		case constraint.Max > math.MaxFloat64:
-			return nil, fmt.Errorf("upper range value can't be greater then %f", math.MaxFloat64)
+			return arbitrary.Arbitrary{}, nil, fmt.Errorf("upper range value can't be greater then %f", math.MaxFloat64)
 		case constraint.Max < constraint.Min:
-			return nil, fmt.Errorf("lower range value can't be greater then upper range value")
+			return arbitrary.Arbitrary{}, nil, fmt.Errorf("lower range value can't be greater then upper range value")
 		case constraint.Min >= math.Copysign(0, 1):
 			return Uint64(
 				constraints.Uint64{
@@ -75,20 +76,20 @@ func Float32(limits ...constraints.Float32) Generator {
 		constraint = limits[0]
 	}
 
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, bias constraints.Bias, r Random) (arbitrary.Arbitrary, shrinker.Shrinker, error) {
 		mapper := arbitrary.Mapper(reflect.TypeOf(uint32(0)), target, func(in reflect.Value) reflect.Value {
 			return reflect.ValueOf(math.Float32frombits(uint32(in.Uint()))).Convert(target)
 		})
 
 		switch {
 		case target.Kind() != reflect.Float32:
-			return nil, fmt.Errorf("can't use Float32 generator for %s type", target)
+			return arbitrary.Arbitrary{}, nil, fmt.Errorf("can't use Float32 generator for %s type", target)
 		case constraint.Min < -math.MaxFloat32:
-			return nil, fmt.Errorf("lower range value can't be lower then %f", -math.MaxFloat64)
+			return arbitrary.Arbitrary{}, nil, fmt.Errorf("lower range value can't be lower then %f", -math.MaxFloat64)
 		case constraint.Max > math.MaxFloat32:
-			return nil, fmt.Errorf("upper range value can't be greater then %f", math.MaxFloat64)
+			return arbitrary.Arbitrary{}, nil, fmt.Errorf("upper range value can't be greater then %f", math.MaxFloat64)
 		case constraint.Max < constraint.Min:
-			return nil, fmt.Errorf("lower range value can't be greater then upper range value")
+			return arbitrary.Arbitrary{}, nil, fmt.Errorf("lower range value can't be greater then upper range value")
 		case constraint.Min >= 0:
 			return Uint32(constraints.Uint32{
 				Min: math.Float32bits(constraint.Min),

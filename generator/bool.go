@@ -6,15 +6,16 @@ import (
 
 	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
+	"github.com/steffnova/go-check/shrinker"
 )
 
 // Bool returns generator of bool types. Error is returned if generator's
 // target is not bool type.
 func Bool() Generator {
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, bias constraints.Bias, r Random) (arbitrary.Arbitrary, shrinker.Shrinker, error) {
 		switch {
 		case target.Kind() != reflect.Bool:
-			return nil, fmt.Errorf("can't use Bool generator for %s type", target)
+			return arbitrary.Arbitrary{}, nil, fmt.Errorf("can't use Bool generator for %s type", target)
 		default:
 			mapper := arbitrary.Mapper(reflect.TypeOf(uint64(0)), target, func(in reflect.Value) reflect.Value {
 				return reflect.ValueOf(in.Uint() != 0).Convert(target)

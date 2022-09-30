@@ -17,35 +17,30 @@ type property func(constraints.Bias, generator.Random) error
 // Predicate must be a function that can have any number of input values, and must
 // have only one output value of error type. Number of predicate's input parameters
 // must match number of generators.
-func Property(predicate interface{}, arbGenerators ...generator.Generator) property {
+func Property(predicate interface{}, generators ...generator.Generator) property {
 	return func(bias constraints.Bias, r generator.Random) error {
-		generators := make([]generator.Generate, len(arbGenerators))
 		predicateVal := reflect.ValueOf(predicate)
 
 		switch t := reflect.TypeOf(predicate); {
 		case t.Kind() != reflect.Func:
 			return fmt.Errorf("predicate must be a function")
-		case t.NumIn() != len(arbGenerators):
+		case t.NumIn() != len(generators):
 			return fmt.Errorf("number of predicate input parameters (%d) doesn't match number of generators (%d)", t.NumIn(), len(generators))
 		case t.NumOut() != 1:
 			return fmt.Errorf("number of predicate output parameters must be 1")
 		case !t.Out(0).Implements(reflect.TypeOf((*error)(nil)).Elem()):
 			return fmt.Errorf("predicate's output parameter type must be error")
-		default:
-			for index, arbGenerator := range arbGenerators {
-				generate, err := arbGenerator(t.In(index), bias, r)
-				if err != nil {
-					return fmt.Errorf("failed to use generator for property parameter at index %d. %s", index+1, err)
-				}
-				generators[index] = generate
-			}
 		}
 
 		inputs := make(arbitrary.Arbitraries, len(generators))
 		shrinkers := make([]shrinker.Shrinker, len(generators))
 
 		for index, generate := range generators {
-			inputs[index], shrinkers[index] = generate()
+			input, shrinker, err := generate(predicateVal.Type().In(index), bias, r)
+			if err != nil {
+				return fmt.Errorf("failed to use generator for property parameter at index %d. %s", index+1, err)
+			}
+			inputs[index], shrinkers[index] = input, shrinker
 		}
 
 		outputs := predicateVal.Call(inputs.Values())
@@ -72,7 +67,7 @@ func Property(predicate interface{}, arbGenerators ...generator.Generator) prope
 
 		return fmt.Errorf(strings.Join([]string{
 			propertyFailed(inputs.Values()).Error(),
-			fmt.Sprintf("Shrink %d time(s)", numberOfShrinks),
+			fmt.Sprintf("Shrunk %d time(s)", numberOfShrinks),
 			fmt.Sprintf("Failure reason: %s", outputs[0].Interface().(error)),
 		}, "\n"))
 	}

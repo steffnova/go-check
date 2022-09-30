@@ -22,68 +22,66 @@ import (
 // existing map key's. Pool of values from which keys are generated must have
 // number of unique values equal to map's maximum length value defined by
 // limits parameter, otherwise map generation will be stuck in endless loop.
-func Map(key, value Generator, limits ...constraints.Length) Generator {
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+func Map(keyGen, valueGen Generator, limits ...constraints.Length) Generator {
+	return func(target reflect.Type, bias constraints.Bias, r Random) (arbitrary.Arbitrary, shrinker.Shrinker, error) {
 		constraint := constraints.LengthDefault()
 		if len(limits) != 0 {
 			constraint = limits[0]
 		}
 		if target.Kind() != reflect.Map {
-			return nil, fmt.Errorf("can't use Map generator for %s type", target)
+			return arbitrary.Arbitrary{}, nil, fmt.Errorf("can't use Map generator for %s type", target)
 		}
 		if constraint.Min > constraint.Max {
-			return nil, fmt.Errorf("minimal length value %d can't be greater than max length value %d", constraint.Min, constraint.Max)
+			return arbitrary.Arbitrary{}, nil, fmt.Errorf("minimal length value %d can't be greater than max length value %d", constraint.Min, constraint.Max)
 		}
 		if constraint.Max > uint64(math.MaxInt64) {
-			return nil, fmt.Errorf("max length %d can't be greater than %d", constraint.Max, uint64(math.MaxInt64))
+			return arbitrary.Arbitrary{}, nil, fmt.Errorf("max length %d can't be greater than %d", constraint.Max, uint64(math.MaxInt64))
 		}
 
-		generateKey, err := key(target.Key(), bias, r)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create map's Key generator. %s", err)
+		size := r.Uint64(constraints.Uint64{
+			Min: uint64(constraint.Min),
+			Max: uint64(constraint.Max),
+		})
+
+		arb := arbitrary.Arbitrary{
+			Value:    reflect.MakeMap(target),
+			Elements: make(arbitrary.Arbitraries, size),
 		}
 
-		generateValue, err := value(target.Elem(), bias, r)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create map's Value generator. %s", err)
-		}
+		shrinkers := make([]shrinker.Shrinker, size)
 
-		return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
-			size := r.Uint64(constraints.Uint64{
-				Min: uint64(constraint.Min),
-				Max: uint64(constraint.Max),
-			})
+		filter := arbitrary.FilterPredicate(target, func(in reflect.Value) bool {
+			return in.Len() >= int(constraint.Min)
+		})
 
-			arb := arbitrary.Arbitrary{
-				Value:    reflect.MakeMap(target),
-				Elements: make(arbitrary.Arbitraries, size),
+		for index := 0; index < int(size); index++ {
+			key, keyShrinker, err := keyGen(target.Key(), bias, r)
+			if err != nil {
+				return arbitrary.Arbitrary{}, nil, fmt.Errorf("failed to create map's Key generator. %s", err)
 			}
 
-			shrinkers := make([]shrinker.Shrinker, size)
-
-			filter := arbitrary.FilterPredicate(target, func(in reflect.Value) bool {
-				return in.Len() >= int(constraint.Min)
-			})
-
-			for index := 0; index < int(size); index++ {
-				key, keyShrinker := generateKey()
-				value, valueShrinker := generateValue()
-
-				for arb.Value.MapIndex(key.Value).IsValid() {
-					key, keyShrinker = generateKey()
-				}
-
-				arb.Elements[index] = arbitrary.Arbitrary{
-					Elements: arbitrary.Arbitraries{key, value},
-				}
-				shrinkers[index] = shrinker.Chain(
-					shrinker.CollectionElement(keyShrinker, valueShrinker),
-					shrinker.CollectionElements(keyShrinker, valueShrinker),
-				)
-
-				arb.Value.SetMapIndex(key.Value, value.Value)
+			value, valueShrinker, err := valueGen(target.Elem(), bias, r)
+			if err != nil {
+				return arbitrary.Arbitrary{}, nil, fmt.Errorf("failed to create map's Value generator. %s", err)
 			}
-			return arb, shrinker.Map(shrinker.CollectionSize(arb.Elements, shrinkers, 0, constraint)).Filter(arb, filter)
-		}, nil
+
+			for arb.Value.MapIndex(key.Value).IsValid() {
+				key, keyShrinker, err = keyGen(target.Key(), bias, r)
+				if err != nil {
+					return arbitrary.Arbitrary{}, nil, fmt.Errorf("failed to create map's Key generator. %s", err)
+				}
+			}
+
+			arb.Elements[index] = arbitrary.Arbitrary{
+				Elements: arbitrary.Arbitraries{key, value},
+			}
+			shrinkers[index] = shrinker.Chain(
+				shrinker.CollectionElement(keyShrinker, valueShrinker),
+				shrinker.CollectionElements(keyShrinker, valueShrinker),
+			)
+
+			arb.Value.SetMapIndex(key.Value, value.Value)
+		}
+		return arb, shrinker.Map(shrinker.CollectionSize(arb.Elements, shrinkers, 0, constraint)).Filter(arb, filter), nil
 	}
 }

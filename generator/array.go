@@ -13,13 +13,9 @@ import (
 // parameter. Error is returned if generator's target is not array type or element's generator
 // returns an error.
 func Array(element Generator) Generator {
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, bias constraints.Bias, r Random) (arbitrary.Arbitrary, shrinker.Shrinker, error) {
 		if target.Kind() != reflect.Array {
-			return nil, fmt.Errorf("can't use Array generator for %s type", target)
-		}
-
-		if _, err := element(target.Elem(), bias, r); err != nil {
-			return nil, fmt.Errorf("can't use array generator for %s type. %s", target, err)
+			return arbitrary.Arbitrary{}, nil, fmt.Errorf("can't use Array generator for %s type", target)
 		}
 
 		generators := make([]Generator, target.Len())
@@ -40,40 +36,33 @@ func Array(element Generator) Generator {
 // of element generators doesn't match the size of the array, or any of the element generators
 // return an error.
 func ArrayFrom(elements ...Generator) Generator {
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, bias constraints.Bias, r Random) (arbitrary.Arbitrary, shrinker.Shrinker, error) {
 		if target.Kind() != reflect.Array {
-			return nil, fmt.Errorf("target arbitrary's kind must be Array. Got: %s", target.Kind())
+			return arbitrary.Arbitrary{}, nil, fmt.Errorf("target arbitrary's kind must be Array. Got: %s", target.Kind())
 		}
 		if target.Len() != len(elements) {
-			return nil, fmt.Errorf("invalid number of arbs. Expected: %d", target.Len())
+			return arbitrary.Arbitrary{}, nil, fmt.Errorf("invalid number of arbs. Expected: %d", target.Len())
 		}
 
-		generators := make([]Generate, target.Len())
-		for index := range generators {
-			generator, err := elements[index](target.Elem(), bias, r)
+		arb := arbitrary.Arbitrary{
+			Value:    reflect.New(target).Elem(),
+			Elements: make(arbitrary.Arbitraries, target.Len()),
+		}
+
+		shrinkers := make([]shrinker.Shrinker, target.Len())
+
+		for index, generator := range elements {
+			value, shrinker, err := generator(target.Elem(), bias, r)
 			if err != nil {
-				return nil, fmt.Errorf("failed to create element's generator. %s", err)
+				return arbitrary.Arbitrary{}, nil, fmt.Errorf("failed to create element's generator. %s", err)
 			}
-			generators[index] = generator
+			arb.Elements[index], shrinkers[index] = value, shrinker
+			arb.Value.Index(index).Set(arb.Elements[index].Value)
 		}
 
-		return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
-			arb := arbitrary.Arbitrary{
-				Value:    reflect.New(target).Elem(),
-				Elements: make(arbitrary.Arbitraries, target.Len()),
-			}
-
-			shrinkers := make([]shrinker.Shrinker, target.Len())
-
-			for index, generator := range generators {
-				arb.Elements[index], shrinkers[index] = generator()
-				arb.Value.Index(index).Set(arb.Elements[index].Value)
-			}
-
-			return arb, shrinker.Array(shrinker.Chain(
-				shrinker.CollectionElement(shrinkers...),
-				shrinker.CollectionElements(shrinkers...),
-			))
-		}, nil
+		return arb, shrinker.Array(shrinker.Chain(
+			shrinker.CollectionElement(shrinkers...),
+			shrinker.CollectionElements(shrinkers...),
+		)), nil
 	}
 }

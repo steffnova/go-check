@@ -5,6 +5,7 @@ import (
 
 	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
+	"github.com/steffnova/go-check/shrinker"
 )
 
 // String returns generator for string types. Range of slice size is defined by
@@ -17,7 +18,7 @@ func String(limits ...constraints.String) Generator {
 		constraint = limits[0]
 	}
 
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, bias constraints.Bias, r Random) (arbitrary.Arbitrary, shrinker.Shrinker, error) {
 		mapper := arbitrary.Mapper(reflect.TypeOf([]rune{}), target, func(in reflect.Value) reflect.Value {
 			return in.Convert(target)
 		})

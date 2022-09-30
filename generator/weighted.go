@@ -25,19 +25,14 @@ func Weighted(weights []uint64, generators ...Generator) Generator {
 	case len(weights) != len(generators):
 		return Invalid(fmt.Errorf("number of weights and generators must be the same"))
 	default:
-		return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+		return func(target reflect.Type, bias constraints.Bias, r Random) (arbitrary.Arbitrary, shrinker.Shrinker, error) {
 			totalWeight := uint64(0)
 
 			weightsIndex := make([]uint64, len(generators))
-			generates := make([]Generate, len(generators))
 
-			for index, generator := range generators {
+			for index := range generators {
 				if weights[index] < 1 {
-					return nil, fmt.Errorf("weight can't be less than 1: %d", weights[index])
-				}
-				gen, err := generator(target, bias, r)
-				if err != nil {
-					return nil, fmt.Errorf("faile to instantiate generator with index: %d. %s", index, err)
+					return arbitrary.Arbitrary{}, nil, fmt.Errorf("weight can't be less than 1: %d", weights[index])
 				}
 
 				prevWeight := totalWeight
@@ -46,24 +41,21 @@ func Weighted(weights []uint64, generators ...Generator) Generator {
 					totalWeight -= 1
 				}
 				if prevWeight > totalWeight {
-					return nil, fmt.Errorf("total weght overflow. (sum of all weights can't exceed %d)", uint(math.MaxUint64))
+					return arbitrary.Arbitrary{}, nil, fmt.Errorf("total weght overflow. (sum of all weights can't exceed %d)", uint(math.MaxUint64))
 				}
 				weightsIndex[index] = totalWeight
-				generates[index] = gen
 			}
 
-			return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
-				x := r.Uint64(constraints.Uint64{Min: 0, Max: uint64(totalWeight)})
-				generator := generates[0]
-				for index, weight := range weightsIndex {
-					if weight >= x {
-						generator = generates[index]
-						break
-					}
+			x := r.Uint64(constraints.Uint64{Min: 0, Max: uint64(totalWeight)})
+			generator := generators[0]
+			for index, weight := range weightsIndex {
+				if weight >= x {
+					generator = generators[index]
+					break
 				}
+			}
 
-				return generator()
-			}, nil
+			return generator(target, bias, r)
 		}
 	}
 }

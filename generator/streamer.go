@@ -29,11 +29,11 @@ func Streamer(target interface{}, generators ...Generator) streamer {
 
 		arbs := make(arbitrary.Arbitraries, len(generators))
 		for index, generator := range generators {
-			generate, err := generator(targetVal.Type().In(index), constraints.Bias{Size: 100, Scaling: 1}, r)
+			val, _, err := generator(targetVal.Type().In(index), constraints.Bias{Size: 100, Scaling: 1}, r)
 			if err != nil {
 				return fmt.Errorf("failed to generate input parameter: %d. %s", index, err)
 			}
-			arbs[index], _ = generate()
+			arbs[index] = val
 		}
 
 		targetVal.Call(arbs.Values())

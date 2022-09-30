@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
+	"github.com/steffnova/go-check/shrinker"
 )
 
 // Any returns generator with default constraints for a type specified by generator's target.
 // Unsupported target: interface{}
 func Any() Generator {
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, bias constraints.Bias, r Random) (arbitrary.Arbitrary, shrinker.Shrinker, error) {
 		var generator Generator
 		switch target.Kind() {
 		case reflect.Array:
@@ -64,7 +66,7 @@ func Any() Generator {
 		case reflect.String:
 			generator = String()
 		default:
-			return nil, fmt.Errorf("no support for generating values for kind: %s", target.Kind())
+			return arbitrary.Arbitrary{}, nil, fmt.Errorf("no support for generating values for kind: %s", target.Kind())
 		}
 
 		return generator(target, bias, r)
