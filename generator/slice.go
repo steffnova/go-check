@@ -41,12 +41,13 @@ func Slice(element Generator, limits ...constraints.Length) Generator {
 			Elements: make([]arbitrary.Arbitrary, int(size)),
 		}
 
+		baseSpeed := 1
 		for index := range shrinkers {
-			elem, shrinker, err := element(target.Elem(), bias, r)
+			elem, shrinker, err := element(target.Elem(), bias.Speed(baseSpeed), r)
 			if err != nil {
 				return arbitrary.Arbitrary{}, nil, fmt.Errorf("failed to create generator for slice elements: %s", err)
 			}
-			arb.Elements[index], shrinkers[index] = elem, shrinker
+			arb.Elements[index], shrinkers[index], baseSpeed = elem, shrinker, baseSpeed*2
 			arb.Value.Index(index).Set(arb.Elements[index].Value)
 		}
 

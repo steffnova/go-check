@@ -48,8 +48,9 @@ func Struct(fields ...map[string]Generator) Generator {
 		}
 
 		shrinkers := make([]shrinker.Shrinker, target.NumField())
+		baseSpeed := 1
 		for index, generator := range generators {
-			element, shrinker, err := generator(target.Field(index).Type, bias, r)
+			element, shrinker, err := generator(target.Field(index).Type, bias.Speed(baseSpeed), r)
 			if err != nil {
 				return arbitrary.Arbitrary{}, nil, fmt.Errorf("failed to create generator for field: %s. %s", target.Field(index).Name, err)
 			}
@@ -58,6 +59,7 @@ func Struct(fields ...map[string]Generator) Generator {
 				arb.Value.Field(index).Type(),
 				unsafe.Pointer(arb.Value.Field(index).UnsafeAddr()),
 			).Elem().Set(arb.Elements[index].Value)
+			baseSpeed *= 2
 		}
 
 		return arb, shrinker.Struct(shrinker.Chain(shrinker.CollectionElement(shrinkers...), shrinker.CollectionElements(shrinkers...))), nil

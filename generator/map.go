@@ -41,7 +41,7 @@ func Map(keyGen, valueGen Generator, limits ...constraints.Length) Generator {
 		size := r.Uint64(constraints.Uint64{
 			Min: uint64(constraint.Min),
 			Max: uint64(constraint.Max),
-		})
+		}.Baised(bias))
 
 		arb := arbitrary.Arbitrary{
 			Value:    reflect.MakeMap(target),
@@ -55,12 +55,12 @@ func Map(keyGen, valueGen Generator, limits ...constraints.Length) Generator {
 		})
 
 		for index := 0; index < int(size); index++ {
-			key, keyShrinker, err := keyGen(target.Key(), bias, r)
+			key, keyShrinker, err := keyGen(target.Key(), bias.Speed(2), r)
 			if err != nil {
 				return arbitrary.Arbitrary{}, nil, fmt.Errorf("failed to create map's Key generator. %s", err)
 			}
 
-			value, valueShrinker, err := valueGen(target.Elem(), bias, r)
+			value, valueShrinker, err := valueGen(target.Elem(), bias.Speed(4), r)
 			if err != nil {
 				return arbitrary.Arbitrary{}, nil, fmt.Errorf("failed to create map's Value generator. %s", err)
 			}

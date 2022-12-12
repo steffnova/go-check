@@ -75,6 +75,10 @@ func (generator Generator) Filter(predicate interface{}) Generator {
 				if outputs[0].Bool() {
 					return arb, shrinker.Filter(arb, predicate), nil
 				}
+
+				if bias.Scaling != 1 {
+					bias.Scaling--
+				}
 			}
 		}
 	}
@@ -127,5 +131,17 @@ func (generator Generator) Bind(binder interface{}) Generator {
 		return boundVal, sourceShrinker.
 			Retry(100, 100, sourceArb).
 			Bind(binder, boundShrinker, boundShrinker), nil
+	}
+}
+
+type logger func(interface{}, reflect.Type, constraints.Bias)
+
+func (generator Generator) Log(logger logger) Generator {
+	return func(target reflect.Type, bias constraints.Bias, r Random) (arbitrary.Arbitrary, shrinker.Shrinker, error) {
+		arb, shrinker, err := generator(target, bias, r)
+
+		logger(arb.Value.Interface(), target, bias)
+
+		return arb, shrinker, err
 	}
 }

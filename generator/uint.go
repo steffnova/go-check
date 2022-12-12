@@ -24,7 +24,7 @@ func Uint64(limits ...constraints.Uint64) Generator {
 			return arbitrary.Arbitrary{}, nil, fmt.Errorf("can't use Uint64 generator for %s type", target)
 		}
 
-		n := r.Uint64(constraint)
+		n := r.Uint64(constraint.Baised(bias))
 		nVal := reflect.ValueOf(n).Convert(target)
 		return arbitrary.Arbitrary{
 			Value: nVal,
@@ -50,14 +50,6 @@ func Uint32(limits ...constraints.Uint32) Generator {
 			Min: uint64(constraint.Min),
 			Max: uint64(constraint.Max),
 		}).Map(mapper)(target, bias, r)
-
-		// return func() (arbitrary.Arbitrary, shrinker.Shrinker, error) {
-		// 	// if target.Kind() != reflect.Uint32 {
-		// 	// 	return arbitrary.Arbitrary{}, nil, fmt.Errorf("can't use Uint32 generator for %s type", target)
-		// 	// }
-
-		// 	return generator()()
-		// }
 	}
 
 }
