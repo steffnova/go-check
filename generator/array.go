@@ -14,22 +14,12 @@ import (
 // returns an error.
 func Array(element Generator) Generator {
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
-		if target.Kind() != reflect.Array {
-			return nil, fmt.Errorf("can't use Array generator for %s type", target)
-		}
-
-		if _, err := element(target.Elem(), bias, r); err != nil {
-			return nil, fmt.Errorf("can't use array generator for %s type. %s", target, err)
-		}
-
 		generators := make([]Generator, target.Len())
 		for index := range generators {
 			generators[index] = element
 		}
 
-		generator := ArrayFrom(generators...)
-
-		return generator(target, bias, r)
+		return ArrayFrom(generators...)(target, bias, r)
 	}
 }
 
@@ -42,17 +32,17 @@ func Array(element Generator) Generator {
 func ArrayFrom(elements ...Generator) Generator {
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		if target.Kind() != reflect.Array {
-			return nil, fmt.Errorf("target arbitrary's kind must be Array. Got: %s", target.Kind())
+			return nil, NewErrorInvalidTarget(target, "Array")
 		}
 		if target.Len() != len(elements) {
-			return nil, fmt.Errorf("invalid number of arbs. Expected: %d", target.Len())
+			return nil, NewErrorInvalidCollectionSize(target.Len(), len(elements))
 		}
 
 		generators := make([]Generate, target.Len())
 		for index := range generators {
 			generator, err := elements[index](target.Elem(), bias, r)
 			if err != nil {
-				return nil, fmt.Errorf("failed to create element's generator. %s", err)
+				return nil, fmt.Errorf("%w. Failed to use gerator for array's (%s) element %d.", err, target.Kind(), index)
 			}
 			generators[index] = generator
 		}

@@ -1,57 +1,65 @@
-package generator_test
+package generator
 
 import (
-	"fmt"
-
-	"github.com/steffnova/go-check/generator"
+	"errors"
+	"testing"
 )
 
-// This example demonstrates usage of Constant() generator for generating string values.
-func ExampleConstant() {
-	streamer := generator.Streamer(
-		func(s string) {
-			fmt.Printf("%s\n", s)
+func TestConstant(t *testing.T) {
+	testCases := map[string]func(t *testing.T){
+		"Nil": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(in []int) {
+					if in != nil {
+						t.Fatalf("Failed to generate nil slice")
+					}
+				},
+				Constant(nil),
+			))
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
 		},
-		generator.Constant("I won't write test cases"),
-	)
+		"Int": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(in int) {
+					if in != 20 {
+						t.Fatalf("Invalid generated constant value: %d", in)
+					}
+				},
+				Constant(20),
+			))
 
-	if err := generator.Stream(0, 10, streamer); err != nil {
-		panic(err)
-	}
-	// Output:
-	// I won't write test cases
-	// I won't write test cases
-	// I won't write test cases
-	// I won't write test cases
-	// I won't write test cases
-	// I won't write test cases
-	// I won't write test cases
-	// I won't write test cases
-	// I won't write test cases
-	// I won't write test cases
-}
-
-// This example demonstrates usage of ConstantFrom() generator for generating string values.
-func ExampleConstantFrom() {
-	streamer := generator.Streamer(
-		func(in interface{}) {
-			fmt.Printf("%v\n", in)
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
 		},
-		generator.ConstantFrom("red", "green", "blue", "yellow", "black"),
-	)
-
-	if err := generator.Stream(0, 10, streamer); err != nil {
-		panic(err)
+		"Interface": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(in error) {
+					if in != ErrorInvalidTarget {
+						t.Fatalf("invalid generated constant value: %d", in)
+					}
+				},
+				Constant(ErrorInvalidTarget),
+			))
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
+		"InvalidType": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(n int) {},
+				Constant(0.5),
+			))
+			if !errors.Is(err, ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s':", ErrorInvalidTarget)
+			}
+		},
 	}
-	// Output:
-	// blue
-	// red
-	// red
-	// green
-	// black
-	// yellow
-	// red
-	// yellow
-	// yellow
-	// green
+
+	for name, testCase := range testCases {
+		t.Run(name, testCase)
+	}
 }

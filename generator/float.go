@@ -27,13 +27,13 @@ func Float64(limits ...constraints.Float64) Generator {
 
 		switch {
 		case target.Kind() != reflect.Float64:
-			return nil, fmt.Errorf("can't use Float64 generator for %s type", target)
+			return nil, NewErrorInvalidTarget(target, "Float64")
 		case constraint.Min < -math.MaxFloat64:
-			return nil, fmt.Errorf("lower range value can't be lower then %f", -math.MaxFloat64)
+			return nil, fmt.Errorf("%w. Lower range value can't be lower then %f", ErrorInvalidConstraints, -math.MaxFloat64)
 		case constraint.Max > math.MaxFloat64:
-			return nil, fmt.Errorf("upper range value can't be greater then %f", math.MaxFloat64)
+			return nil, fmt.Errorf("%w. Upper range value can't be greater then %f", ErrorInvalidConstraints, math.MaxFloat64)
 		case constraint.Max < constraint.Min:
-			return nil, fmt.Errorf("lower range value can't be greater then upper range value")
+			return nil, fmt.Errorf("%w. Lower range value can't be greater then upper range value", ErrorInvalidConstraints)
 		case constraint.Min >= math.Copysign(0, 1):
 			return Uint64(
 				constraints.Uint64{
@@ -82,13 +82,13 @@ func Float32(limits ...constraints.Float32) Generator {
 
 		switch {
 		case target.Kind() != reflect.Float32:
-			return nil, fmt.Errorf("can't use Float32 generator for %s type", target)
+			return nil, NewErrorInvalidTarget(target, "Float32")
 		case constraint.Min < -math.MaxFloat32:
-			return nil, fmt.Errorf("lower range value can't be lower then %f", -math.MaxFloat64)
+			return nil, fmt.Errorf("%w. Lower range value can't be lower then %f", ErrorInvalidConstraints, -math.MaxFloat32)
 		case constraint.Max > math.MaxFloat32:
-			return nil, fmt.Errorf("upper range value can't be greater then %f", math.MaxFloat64)
+			return nil, fmt.Errorf("%w. Upper range value can't be greater then %f", ErrorInvalidConstraints, math.MaxFloat32)
 		case constraint.Max < constraint.Min:
-			return nil, fmt.Errorf("lower range value can't be greater then upper range value")
+			return nil, fmt.Errorf("%w. Lower range value can't be greater then upper range value", ErrorInvalidConstraints)
 		case constraint.Min >= 0:
 			return Uint32(constraints.Uint32{
 				Min: math.Float32bits(constraint.Min),

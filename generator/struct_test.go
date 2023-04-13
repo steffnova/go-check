@@ -1,46 +1,56 @@
-package generator_test
+package generator
 
 import (
-	"fmt"
-
-	"github.com/steffnova/go-check/generator"
+	"errors"
+	"testing"
 )
 
-// This example demonstrates how to use Struct() generator for generation of struct values.
-// Struct() generator requires map[string]Generator, where map's key-value pairs represent
-// struct's field generators. Provided field generator or Any() generator (if field generator
-// is not provided) will be used to generate data for struct's field. In this example generators
-// for fields X and Y are provided while for Z is ommited.
-func ExampleStruct() {
-	// Point struct will be used as struct example
-	type Point struct {
-		X int16
-		Y int16
-		Z int8
-	}
+func TestStruct(t *testing.T) {
+	testCases := map[string]func(*testing.T){
+		"InvalidTarget": func(t *testing.T) {
+			err := Stream(0, 10, Streamer(
+				func(int) {},
+				Struct(),
+			))
 
-	streamer := generator.Streamer(
-		func(p Point) {
-			fmt.Printf("%#v\n", p)
+			if !errors.Is(err, ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s'", ErrorInvalidTarget)
+			}
 		},
-		generator.Struct(map[string]generator.Generator{
-			"X": generator.Int16(),
-			"Y": generator.Int16(),
-		}),
-	)
+		"InvalidFieldName": func(t *testing.T) {
+			err := Stream(0, 10, Streamer(
+				func(struct{}) {},
+				Struct(map[string]Generator{"X": Int()}),
+			))
 
-	if err := generator.Stream(0, 10, streamer); err != nil {
-		panic(err)
+			if !errors.Is(err, ErrorInvalidConfig) {
+				t.Fatalf("Expected error: '%s'", ErrorInvalidConfig)
+			}
+		},
+		"InvalidFieldTarget": func(t *testing.T) {
+			err := Stream(0, 10, Streamer(
+				func(struct{ X int }) {},
+				Struct(map[string]Generator{"X": Uint()}),
+			))
+
+			if !errors.Is(err, ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s'", ErrorInvalidTarget)
+			}
+		},
+		"UnderlyingType": func(t *testing.T) {
+			type testStruct struct{ X int }
+			err := Stream(0, 100, Streamer(
+				func(testStruct) {},
+				Struct(),
+			))
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
 	}
-	// Output:
-	// generator_test.Point{X:-12790, Y:13142, Z:-91}
-	// generator_test.Point{X:-3323, Y:16168, Z:104}
-	// generator_test.Point{X:-24597, Y:-4175, Z:40}
-	// generator_test.Point{X:-5523, Y:5629, Z:-116}
-	// generator_test.Point{X:-31913, Y:20516, Z:-57}
-	// generator_test.Point{X:6926, Y:-17391, Z:23}
-	// generator_test.Point{X:-27956, Y:13619, Z:127}
-	// generator_test.Point{X:6440, Y:21880, Z:-12}
-	// generator_test.Point{X:-20179, Y:28489, Z:10}
-	// generator_test.Point{X:26139, Y:-3364, Z:7}
+
+	for name, testCase := range testCases {
+		t.Run(name, testCase)
+	}
 }

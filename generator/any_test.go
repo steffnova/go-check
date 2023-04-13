@@ -1,41 +1,260 @@
-package generator_test
+package generator
 
 import (
-	"fmt"
-
-	"github.com/steffnova/go-check/generator"
+	"errors"
+	"testing"
 )
 
-// This example demonstrates usage of Any() generator for generation of values for
-// 3 types (int, uint and Point). Any() works for all go types except interfaces.
-func ExampleAny() {
-	type Point struct {
-		X int16
-		Y int16
-		Z int8
-	}
+func TestAny(t *testing.T) {
+	testCases := map[string]func(*testing.T){
+		"InvalidTarget": func(t *testing.T) {
+			err := Stream(0, 10, Streamer(
+				func(uintptr) {},
+				Any(),
+			))
 
-	streamer := generator.Streamer(
-		func(i int, u uint, p Point) {
-			fmt.Printf("%d, %d, %#v\n", i, u, p)
+			if !errors.Is(err, ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s'", ErrorInvalidTarget)
+			}
 		},
-		generator.Any(),
-		generator.Any(),
-		generator.Any(),
-	)
+		"Array": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func([10]int) {},
+				Any(),
+			))
 
-	if err := generator.Stream(0, 10, streamer); err != nil {
-		panic(err)
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
+		"Bool": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(bool) {},
+				Any(),
+			))
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
+		"Complex64": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(complex64) {},
+				Any(),
+			))
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
+		"Complex128": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(complex128) {},
+				Any(),
+			))
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
+		"Chan": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(chan int) {},
+				Any(),
+			))
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
+		"Float32": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(float32) {},
+				Any(),
+			))
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
+		"Float64": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(float64) {},
+				Any(),
+			))
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
+		"Int": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(int) {},
+				Any(),
+			))
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
+		"Int8": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(int8) {},
+				Any(),
+			))
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
+		"Int16": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(int16) {},
+				Any(),
+			))
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
+		"Int32": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(int32) {},
+				Any(),
+			))
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
+		"Int64": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(int64) {},
+				Any(),
+			))
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
+		"Uint": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(uint) {},
+				Any(),
+			))
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
+		"Uint8": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(uint8) {},
+				Any(),
+			))
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
+		"Uint16": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(uint16) {},
+				Any(),
+			))
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
+		"Uint32": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(uint32) {},
+				Any(),
+			))
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
+		"Uint64": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(uint64) {},
+				Any(),
+			))
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
+		"Func": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(func(int) string) {},
+				Any(),
+			))
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
+		"Map": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(map[string]int) {},
+				Any(),
+			))
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
+		"Ptr": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(*int) {},
+				Any(),
+			))
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
+		"Struct": func(t *testing.T) {
+			type st struct {
+				a int
+				b string
+				c bool
+			}
+			err := Stream(0, 100, Streamer(
+				func(st) {},
+				Any(),
+			))
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
+		"Slice": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func([]int) {},
+				Any(),
+			))
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
+		"String": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(string) {},
+				Any(),
+			))
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
 	}
-	// Output:
-	// -5339971465336467958, 12088744466886928415, generator_test.Point{X:13142, Y:15828, Z:-91}
-	// -1543285579645681342, 14677457169740829639, generator_test.Point{X:4175, Y:1247, Z:-116}
-	// -300681375570251064, 5606570076237929230, generator_test.Point{X:-17391, Y:-25836, Z:-51}
-	// -2023352169218621252, 9491810378858993108, generator_test.Point{X:21880, Y:23449, Z:120}
-	// -7819249545370605693, 10732944964382368089, generator_test.Point{X:2272, Y:-30288, Z:-64}
-	// -6787183051953194503, 15169603299902489319, generator_test.Point{X:-26463, Y:-21294, Z:0}
-	// 9177598355735269079, 14220942032815928813, generator_test.Point{X:-26660, Y:17945, Z:25}
-	// 9050008079631751930, 16728535719694244940, generator_test.Point{X:-870, Y:-12674, Z:-128}
-	// -7056120859908864934, 1861954357100430827, generator_test.Point{X:15652, Y:-24979, Z:40}
-	// -4265511144525599390, 11116133554876932735, generator_test.Point{X:-12306, Y:9628, Z:-74}
+
+	for name, testCase := range testCases {
+		t.Run(name, testCase)
+	}
 }

@@ -1,7 +1,6 @@
 package generator
 
 import (
-	"fmt"
 	"reflect"
 
 	"github.com/steffnova/go-check/arbitrary"
@@ -22,7 +21,7 @@ func Nil() Generator {
 				}, nil
 			}, nil
 		default:
-			return nil, fmt.Errorf("can't use Nil generator for %s type", target)
+			return nil, NewErrorInvalidTarget(target, "Nil")
 		}
 	}
 }

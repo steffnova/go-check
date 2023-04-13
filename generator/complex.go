@@ -21,11 +21,11 @@ func Complex128(limits ...constraints.Complex128) Generator {
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		switch {
 		case target.Kind() != reflect.Complex128:
-			return nil, fmt.Errorf("can't use Complex128 generator for %s type", target)
+			return nil, NewErrorInvalidTarget(target, "Complex128")
 		case constraint.Real.Min > constraint.Real.Max:
-			return nil, fmt.Errorf("lower limit of complex's real part can't be higher that it's upper limit")
+			return nil, fmt.Errorf("%w. Lower limit of complex's real part can't be higher that it's upper limit", ErrorInvalidConstraints)
 		case constraint.Imaginary.Min > constraint.Imaginary.Max:
-			return nil, fmt.Errorf("lower limit of complex's imaginary part can't be higher that it's upper limit")
+			return nil, fmt.Errorf("%w. Lower limit of complex's imaginary part can't be higher that it's upper limit", ErrorInvalidConstraints)
 		default:
 			mapper := arbitrary.Mapper(reflect.TypeOf([2]float64{}), target, func(in reflect.Value) reflect.Value {
 				parts := in.Interface().([2]float64)
@@ -52,11 +52,11 @@ func Complex64(limits ...constraints.Complex64) Generator {
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		switch {
 		case target.Kind() != reflect.Complex64:
-			return nil, fmt.Errorf("can't use Complex64 generator for %s type", target)
+			return nil, NewErrorInvalidTarget(target, "Complex64")
 		case constraint.Real.Min > constraint.Real.Max:
-			return nil, fmt.Errorf("lower limit of complex's real part can't be higher that it's upper limit")
+			return nil, fmt.Errorf("%w. Lower limit of complex's real part can't be higher that it's upper limit", ErrorInvalidConstraints)
 		case constraint.Imaginary.Min > constraint.Imaginary.Max:
-			return nil, fmt.Errorf("lower limit of complex's imaginary part can't be higher that it's upper limit")
+			return nil, fmt.Errorf("%w. Lower limit of complex's imaginary part can't be higher that it's upper limit", ErrorInvalidConstraints)
 		default:
 			mapper := arbitrary.Mapper(reflect.TypeOf([2]float32{}), target, func(in reflect.Value) reflect.Value {
 				parts := in.Interface().([2]float32)

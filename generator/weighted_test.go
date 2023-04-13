@@ -1,45 +1,76 @@
-package generator_test
+package generator
 
 import (
-	"fmt"
-
-	"github.com/steffnova/go-check/generator"
+	"errors"
+	"math"
+	"testing"
 )
 
-// This example demonstrates usage of Weighted() combinator and Nil() and PtrTo(Uint64())
-// generators for generation of *uint64 values. Weighted() will use one of the generators
-// passed to it based on generator's weight. Weights define how often a generator will be
-// selected by Weighted(). Selection chance is calculated as generator's weight devided by
-// summ of all weights and multiplied by 100. In this example Nil() generator will have 10%
-// selection chance (1/10 * 100) and PtrTo(Uint64()) will have 90% selection chance (9/10 * 100)
-func ExampleWeighted() {
-	streamer := generator.Streamer(
-		func(n *uint64) {
-			if n == nil {
-				fmt.Printf("%v\n", n)
-			} else {
-				fmt.Printf("%d\n", *n)
+func TestWeighted(t *testing.T) {
+	testCases := map[string]func(*testing.T){
+		"NoWeights": func(t *testing.T) {
+			err := Stream(0, 10, Streamer(
+				func(int) {},
+				Weighted(nil, Int()),
+			))
+
+			if !errors.Is(err, ErrorInvalidConfig) {
+				t.Fatalf("Expected error: '%s'", ErrorInvalidConfig)
 			}
 		},
-		generator.Weighted(
-			[]uint64{1, 9},
-			generator.Nil(),
-			generator.PtrTo(generator.Uint64()),
-		),
-	)
+		"NoGenerators": func(t *testing.T) {
+			err := Stream(0, 10, Streamer(
+				func(int) {},
+				Weighted([]uint64{5}),
+			))
 
-	if err := generator.Stream(0, 10, streamer); err != nil {
-		panic(err)
+			if !errors.Is(err, ErrorInvalidConfig) {
+				t.Fatalf("Expected error: '%s'", ErrorInvalidConfig)
+			}
+		},
+		"InvalidConfiguration": func(t *testing.T) {
+			err := Stream(0, 10, Streamer(
+				func(int) {},
+				Weighted([]uint64{5, 4}, Int()),
+			))
+
+			if !errors.Is(err, ErrorInvalidConfig) {
+				t.Fatalf("Expected error: '%s'", ErrorInvalidConfig)
+			}
+		},
+		"InvalidWieight": func(t *testing.T) {
+			err := Stream(0, 10, Streamer(
+				func(int) {},
+				Weighted([]uint64{0}, Int()),
+			))
+
+			if !errors.Is(err, ErrorInvalidConfig) {
+				t.Fatalf("Expected error: '%s'", ErrorInvalidConfig)
+			}
+		},
+		"WeightOverflow": func(t *testing.T) {
+			err := Stream(0, 10, Streamer(
+				func(int) {},
+				Weighted([]uint64{10, math.MaxUint64}, Int(), Int()),
+			))
+
+			if !errors.Is(err, ErrorInvalidConfig) {
+				t.Fatalf("Expected error: '%s'", ErrorInvalidConfig)
+			}
+		},
+		"InvalidTarget": func(t *testing.T) {
+			err := Stream(0, 10, Streamer(
+				func(uint) {},
+				Weighted([]uint64{1}, Int()),
+			))
+
+			if !errors.Is(err, ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s'", ErrorInvalidTarget)
+			}
+		},
 	}
-	// Output:
-	// 1002466900374765554
-	// <nil>
-	// <nil>
-	// 14746210962209877445
-	// 12784885724210938115
-	// 11116474692239114024
-	// 15398783846516204029
-	// 14677457169740829639
-	// 9472434474353809100
-	// 2396012503939351775
+
+	for name, testCase := range testCases {
+		t.Run(name, testCase)
+	}
 }

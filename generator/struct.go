@@ -23,12 +23,12 @@ func Struct(fields ...map[string]Generator) Generator {
 
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		if target.Kind() != reflect.Struct {
-			return nil, fmt.Errorf("can't use Struct generator for %s type", target)
+			return nil, NewErrorInvalidTarget(target, "Struct")
 		}
 
 		for fieldName := range fieldGenerators {
 			if _, exists := target.FieldByName(fieldName); !exists {
-				return nil, fmt.Errorf("%s doesn't have a field: %s", target.String(), fieldName)
+				return nil, fmt.Errorf("%w. %s doesn't have a field: %s", ErrorInvalidConfig, target, fieldName)
 			}
 		}
 
@@ -41,7 +41,7 @@ func Struct(fields ...map[string]Generator) Generator {
 			}
 			generate, err := generator(field.Type, bias, r)
 			if err != nil {
-				return nil, fmt.Errorf("failed to create generator for field: %s. %s", field.Name, err)
+				return nil, fmt.Errorf("Failed to use generator for field: %s. %w", field.Name, err)
 			}
 			generators[index] = generate
 		}

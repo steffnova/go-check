@@ -21,13 +21,13 @@ func Chan(limits ...constraints.Length) Generator {
 	}
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		if target.Kind() != reflect.Chan {
-			return nil, fmt.Errorf("can't use Chan generator for %s type", target)
+			return nil, NewErrorInvalidTarget(target, "Chan")
 		}
 		if constraint.Min > constraint.Max {
-			return nil, fmt.Errorf("minimal length value %d can't be greater than max length value %d", constraint.Min, constraint.Max)
+			return nil, fmt.Errorf("%w. Minimal length value %d can't be greater than max length value %d", ErrorInvalidConstraints, constraint.Min, constraint.Max)
 		}
 		if constraint.Max > uint64(math.MaxInt64) {
-			return nil, fmt.Errorf("max length %d can't be greater than %d", constraint.Max, uint64(math.MaxInt64))
+			return nil, fmt.Errorf("%w. Max length %d can't be greater than %d", ErrorInvalidConstraints, constraint.Max, uint64(math.MaxInt64))
 		}
 		return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
 			return arbitrary.Arbitrary{

@@ -1,62 +1,74 @@
-package generator_test
+package generator
 
 import (
-	"fmt"
+	"errors"
+	"math"
+	"testing"
 
 	"github.com/steffnova/go-check/constraints"
-	"github.com/steffnova/go-check/generator"
 )
 
-// This example demonstrates how to use Rune() generator for generation of rune values.
-func ExampleRune() {
-	streamer := generator.Streamer(
-		func(r rune) {
-			fmt.Printf("%c\n", r)
+func TestRune(t *testing.T) {
+	testCases := map[string]func(*testing.T){
+		"InvalidType": func(t *testing.T) {
+			err := Stream(0, 10, Streamer(
+				func(string) {},
+				Rune(),
+			))
+
+			if !errors.Is(err, ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s'", ErrorInvalidTarget)
+			}
 		},
-		generator.Rune(),
-	)
+		"InvalidConstraints": func(t *testing.T) {
+			err := Stream(0, 10, Streamer(
+				func(rune) {},
+				Rune(constraints.Rune{MinCodePoint: 100, MaxCodePoint: 0}),
+			))
 
-	if err := generator.Stream(0, 10, streamer); err != nil {
-		panic(err)
-	}
-	// Output:
-	// 󋿲
-	// 𺠟
-	// 󎨐
-	// 뿐
-	// 򳍖
-	// 󊷱
-	// 󻵿
-	// 󤄃
-	// 𬟀
-	// 띛
-}
-
-// This example demonstrates how to use Rune() generator with constraints for generation of rune values.
-// Constraints define range of generatble rune values.
-func ExampleRune_constraints() {
-	streamer := generator.Streamer(
-		func(r rune) {
-			fmt.Printf("%c\n", r)
+			if !errors.Is(err, ErrorInvalidConstraints) {
+				t.Fatalf("Expected error: '%s'", ErrorInvalidConstraints)
+			}
 		},
-		generator.Rune(constraints.Rune{
-			MinCodePoint: 'a',
-			MaxCodePoint: 'z',
-		}),
-	)
+		"InvalidMaxCodePoint": func(t *testing.T) {
+			err := Stream(0, 10, Streamer(
+				func(rune) {},
+				Rune(constraints.Rune{MaxCodePoint: math.MaxInt32}),
+			))
 
-	if err := generator.Stream(0, 10, streamer); err != nil {
-		panic(err)
+			if !errors.Is(err, ErrorInvalidConstraints) {
+				t.Fatalf("Expected error: '%s'", ErrorInvalidConstraints)
+			}
+		},
+		"InvalidMinCodePoint": func(t *testing.T) {
+			err := Stream(0, 10, Streamer(
+				func(rune) {},
+				Rune(constraints.Rune{MinCodePoint: math.MinInt32}),
+			))
+
+			if !errors.Is(err, ErrorInvalidConstraints) {
+				t.Fatalf("Expected error: '%s'", ErrorInvalidConstraints)
+			}
+		},
+		"WithinConstraints": func(t *testing.T) {
+			// Constraints are from uppercase A-Z
+			constraint := constraints.Rune{MinCodePoint: 65, MaxCodePoint: 90}
+			err := Stream(0, 100, Streamer(
+				func(c rune) {
+					if int32(c) < constraint.MinCodePoint || int32(c) > constraint.MaxCodePoint {
+						t.Fatalf("Rune %c is not within constraints: [%c-%c]", c, constraint.MinCodePoint, constraint.MaxCodePoint)
+					}
+				},
+				Rune(constraint),
+			))
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
 	}
-	// Output:
-	// v
-	// s
-	// w
-	// q
-	// q
-	// w
-	// r
-	// f
-	// w
-	// u
+
+	for name, testCase := range testCases {
+		t.Run(name, testCase)
+	}
 }

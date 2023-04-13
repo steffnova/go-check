@@ -1,7 +1,6 @@
 package generator
 
 import (
-	"fmt"
 	"reflect"
 
 	"github.com/steffnova/go-check/arbitrary"
@@ -14,7 +13,7 @@ func Bool() Generator {
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		switch {
 		case target.Kind() != reflect.Bool:
-			return nil, fmt.Errorf("can't use Bool generator for %s type", target)
+			return nil, NewErrorInvalidTarget(target, "Bool")
 		default:
 			mapper := arbitrary.Mapper(reflect.TypeOf(uint64(0)), target, func(in reflect.Value) reflect.Value {
 				return reflect.ValueOf(in.Uint() != 0).Convert(target)

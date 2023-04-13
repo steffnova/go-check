@@ -12,10 +12,11 @@ import (
 // Constant returns generator that always generates the value passed to it via "constant"
 // parameter. Error is returned if value passed to generator doesn't match generator's target.
 func Constant(constant interface{}) Generator {
+	if constant == nil {
+		return Nil()
+	}
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		switch {
-		case constant == nil:
-			return Nil()(target, bias, r)
 		case target.Kind() == reflect.TypeOf(constant).Kind():
 			fallthrough
 		case target.Kind() == reflect.Interface && reflect.TypeOf(constant).Implements(target):
@@ -25,21 +26,18 @@ func Constant(constant interface{}) Generator {
 				}, nil
 			}, nil
 		default:
-			return nil, fmt.Errorf("constant %s doesn't match the target's type: %s", reflect.TypeOf(constant).Kind().String(), target.String())
+			return nil, fmt.Errorf("%w. Constant %s doesn't match the target's type: %s", ErrorInvalidTarget, reflect.TypeOf(constant).Kind().String(), target.String())
 		}
 	}
 }
 
 // Constant returns generator that returns one of the constants. Error is returned if
 // number of constants is 0 or chosen constant doesn't match generator's target
-func ConstantFrom(constants ...interface{}) Generator {
-	if len(constants) == 0 {
-		return Invalid(fmt.Errorf("number of constants must be greater than 0"))
-	}
-	generators := make([]Generator, len(constants))
-	for index, constant := range constants {
+func ConstantFrom(constant interface{}, constants ...interface{}) Generator {
+	generators := make([]Generator, len(constants)+1)
+	for index, constant := range append([]interface{}{constant}, constants...) {
 		generators[index] = Constant(constant)
 	}
 
-	return OneFrom(generators...)
+	return OneFrom(generators[0], generators[1:]...)
 }

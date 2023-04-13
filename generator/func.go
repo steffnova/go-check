@@ -17,10 +17,10 @@ import (
 func Func(outputs ...Generator) Generator {
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		if target.Kind() != reflect.Func {
-			return nil, fmt.Errorf("can't use Func generator for %s type", target)
+			return nil, NewErrorInvalidTarget(target, "Func")
 		}
 		if len(outputs) != target.NumOut() {
-			return nil, fmt.Errorf("invalid number of output parameters")
+			return nil, fmt.Errorf("%w. Invalid number of generators (%d) used for generating function outputs, expected %d", ErrorInvalidConfig, len(outputs), target.NumOut())
 		}
 		generators := make([]Generate, len(outputs))
 		randoms := make([]Random, len(outputs))
@@ -28,7 +28,7 @@ func Func(outputs ...Generator) Generator {
 			random := r.Split()
 			generator, err := arb(target.Out(index), bias, random)
 			if err != nil {
-				return nil, fmt.Errorf("failed to create generator for output[%d]. %s", index, err)
+				return nil, fmt.Errorf("Can't use generator for generating output at index [%d]. %w", index, err)
 			}
 			generators[index] = generator
 			randoms[index] = random
