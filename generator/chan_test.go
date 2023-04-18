@@ -1,63 +1,61 @@
-package generator_test
+package generator
 
 import (
-	"fmt"
+	"errors"
+	"math"
+	"testing"
 
 	"github.com/steffnova/go-check/constraints"
-	"github.com/steffnova/go-check/generator"
 )
 
-// This example demonstrates usage of Chan() generator for generation of chan int values.
-func ExampleChan() {
-	streamer := generator.Streamer(
-		func(ch chan int) {
-			fmt.Printf("chan size: %d\n", cap(ch))
+func TestChan(t *testing.T) {
+	testCases := map[string]func(*testing.T){
+		"InvalidType": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(int) {},
+				Chan(),
+			))
+			if !errors.Is(err, ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s'", ErrorInvalidTarget)
+			}
 		},
-		generator.Chan(),
-	)
+		"InvalidConstraints1": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(chan int) {},
+				Chan(constraints.Length{Min: 10, Max: 0}),
+			))
 
-	if err := generator.Stream(0, 10, streamer); err != nil {
-		panic(err)
-	}
-	// Output:
-	// chan size: 31
-	// chan size: 16
-	// chan size: 80
-	// chan size: 86
-	// chan size: 69
-	// chan size: 22
-	// chan size: 84
-	// chan size: 3
-	// chan size: 64
-	// chan size: 30
-}
-
-// This example demonstrates usage of Chan() generator with constraints for generation of
-// chan int values. Constraints define capacity of generated channel and in this example
-// generated channel will have capacity in range [0, 10]
-func ExampleChan_constraints() {
-	streamer := generator.Streamer(
-		func(ch chan int) {
-			fmt.Printf("chan size: %d\n", cap(ch))
+			if !errors.Is(err, ErrorInvalidConstraints) {
+				t.Fatalf("Expected error: '%s'", ErrorInvalidConstraints)
+			}
 		},
-		generator.Chan(constraints.Length{
-			Min: 0,
-			Max: 10,
-		}),
-	)
+		"InvalidConstraints2": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(chan int) {},
+				Chan(constraints.Length{Min: 10, Max: uint64(math.MaxInt64) + 1}),
+			))
 
-	if err := generator.Stream(0, 10, streamer); err != nil {
-		panic(err)
+			if !errors.Is(err, ErrorInvalidConstraints) {
+				t.Fatalf("Expected error: '%s'", ErrorInvalidConstraints)
+			}
+		},
+		"WithinConstraints": func(t *testing.T) {
+			err := Stream(0, 100, Streamer(
+				func(ch chan int) {
+					if cap(ch) < 5 || cap(ch) > 20 {
+						t.Errorf("Invalid channel capacity")
+					}
+				},
+				Chan(constraints.Length{Min: 5, Max: 20}),
+			))
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
 	}
-	// Output:
-	// chan size: 5
-	// chan size: 2
-	// chan size: 6
-	// chan size: 0
-	// chan size: 0
-	// chan size: 6
-	// chan size: 1
-	// chan size: 5
-	// chan size: 6
-	// chan size: 4
+
+	for name, testCase := range testCases {
+		t.Run(name, testCase)
+	}
 }

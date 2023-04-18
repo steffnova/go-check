@@ -1,7 +1,6 @@
 package generator
 
 import (
-	"fmt"
 	"reflect"
 
 	"github.com/steffnova/go-check/arbitrary"
@@ -22,7 +21,7 @@ func Ptr(arb Generator) Generator {
 func PtrTo(arb Generator) Generator {
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		if target.Kind() != reflect.Ptr {
-			return nil, fmt.Errorf("can't use Ptr generator for %s type", target)
+			return nil, NewErrorInvalidTarget(target, "PtrTo")
 		}
 
 		mapper := arbitrary.Mapper(target.Elem(), target, func(in reflect.Value) reflect.Value {

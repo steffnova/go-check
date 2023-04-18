@@ -22,13 +22,13 @@ func Rune(limits ...constraints.Rune) Generator {
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		switch {
 		case target.Kind() != reflect.Int32:
-			return nil, fmt.Errorf("can't use Rune generator for %s type", target)
+			return nil, NewErrorInvalidTarget(target, "Rune")
 		case constraint.MinCodePoint > constraint.MaxCodePoint:
-			return nil, fmt.Errorf("minimal code point %d can't be greater than maximal code point: %d", constraint.MinCodePoint, constraint.MaxCodePoint)
+			return nil, fmt.Errorf("%w. Minimal code point %d can't be greater than maximal code point: %d", ErrorInvalidConstraints, constraint.MinCodePoint, constraint.MaxCodePoint)
 		case constraint.MinCodePoint < 0:
-			return nil, fmt.Errorf("minimal code point must be greater then or equal to 0")
+			return nil, fmt.Errorf("%w. Minimal code point must be greater then or equal to 0", ErrorInvalidConstraints)
 		case constraint.MaxCodePoint > 0x10ffff:
-			return nil, fmt.Errorf("maximal code point must be lower then or equal to 0x10ffff")
+			return nil, fmt.Errorf("%w. Maximal code point must be lower then or equal to 0x10ffff", ErrorInvalidConstraints)
 		default:
 			mapper := arbitrary.Mapper(reflect.TypeOf(int32(0)), target, func(in reflect.Value) reflect.Value {
 				return reflect.ValueOf(rune(int32(in.Int()))).Convert(target)

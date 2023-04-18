@@ -15,7 +15,7 @@ func Stream(seed, count uint64, streamer streamer) error {
 
 	for i := uint64(0); i < count; i++ {
 		if err := streamer(random); err != nil {
-			return fmt.Errorf("failed to run stream: %s", err)
+			return fmt.Errorf("failed to run stream. %w", err)
 		}
 	}
 

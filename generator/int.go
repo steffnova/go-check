@@ -29,9 +29,9 @@ func Int64(limits ...constraints.Int64) Generator {
 
 		switch {
 		case target.Kind() != reflect.Int64:
-			return nil, fmt.Errorf("can't use Int64 generator for %s type", target)
+			return nil, NewErrorInvalidTarget(target, "Int64")
 		case constraint.Min > constraint.Max:
-			return nil, fmt.Errorf("lower limit: %d cannot be greater than upper limit: %d", constraint.Min, constraint.Max)
+			return nil, fmt.Errorf("%w. Lower limit: %d cannot be greater than upper limit: %d", ErrorInvalidConstraints, constraint.Min, constraint.Max)
 		case constraint.Max < 0:
 			return Uint64(constraints.Uint64{Min: uint64(-constraint.Max), Max: uint64(-constraint.Min)}).
 				Map(negativeMapper)(target, bias, r)
@@ -62,7 +62,7 @@ func Int32(limits ...constraints.Int32) Generator {
 	}
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		if target.Kind() != reflect.Int32 {
-			return nil, fmt.Errorf("can't use Int32 generator for %s type", target)
+			return nil, NewErrorInvalidTarget(target, "Int32")
 		}
 
 		mapper := arbitrary.Mapper(reflect.TypeOf(int64(0)), target, func(in reflect.Value) reflect.Value {
@@ -86,7 +86,7 @@ func Int16(limits ...constraints.Int16) Generator {
 	}
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		if target.Kind() != reflect.Int16 {
-			return nil, fmt.Errorf("can't use Int16 generator for %s type", target)
+			return nil, NewErrorInvalidTarget(target, "Int16")
 		}
 
 		mapper := arbitrary.Mapper(reflect.TypeOf(int64(0)), target, func(in reflect.Value) reflect.Value {
@@ -111,7 +111,7 @@ func Int8(limits ...constraints.Int8) Generator {
 
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		if target.Kind() != reflect.Int8 {
-			return nil, fmt.Errorf("can't use Int8 generator for %s type", target)
+			return nil, NewErrorInvalidTarget(target, "Int8")
 		}
 
 		mapper := arbitrary.Mapper(reflect.TypeOf(int64(0)), target, func(in reflect.Value) reflect.Value {
@@ -136,7 +136,7 @@ func Int(limits ...constraints.Int) Generator {
 
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		if target.Kind() != reflect.Int {
-			return nil, fmt.Errorf("can't use Int generator for %s type", target)
+			return nil, NewErrorInvalidTarget(target, "Int")
 		}
 
 		mapper := arbitrary.Mapper(reflect.TypeOf(int64(0)), target, func(in reflect.Value) reflect.Value {

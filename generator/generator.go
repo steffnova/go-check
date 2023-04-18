@@ -25,18 +25,18 @@ func (generator Generator) Map(mapper interface{}) Generator {
 		val := reflect.ValueOf(mapper)
 		switch {
 		case val.Kind() != reflect.Func:
-			return nil, fmt.Errorf("mapper must be a function")
+			return nil, fmt.Errorf("%w. Mapper must be a function", ErrorMapper)
 		case val.Type().NumOut() != 1:
-			return nil, fmt.Errorf("mapper must have 1 output value")
+			return nil, fmt.Errorf("%w. Mapper must have 1 output value", ErrorMapper)
 		case val.Type().NumIn() != 1:
-			return nil, fmt.Errorf("mapper must have 1 input value")
+			return nil, fmt.Errorf("%w. Mapper must have 1 input value", ErrorMapper)
 		case val.Type().Out(0).Kind() != target.Kind():
-			return nil, fmt.Errorf("mappers output kind: %s must match target's kind. Got: %s", val.Type().Out(0).Kind(), target.Kind())
+			return nil, fmt.Errorf("%w. Mappers output kind: %s must match target's kind. Got: %s", ErrorMapper, val.Type().Out(0).Kind(), target.Kind())
 		}
 
 		generate, err := generator(val.Type().In(0), bias, r)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create base generator. %s", err)
+			return nil, fmt.Errorf("Failed to use base generator. %w", err)
 		}
 
 		return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
@@ -61,15 +61,15 @@ func (generator Generator) Filter(predicate interface{}) Generator {
 		generate, err := generator(target, bias, r)
 		switch val := reflect.ValueOf(predicate); {
 		case err != nil:
-			return nil, fmt.Errorf("failed to create base generator. %s", err)
+			return nil, fmt.Errorf("Failed to use base generator. %w", err)
 		case val.Kind() != reflect.Func:
-			return nil, fmt.Errorf("predicate must be a function")
+			return nil, fmt.Errorf("%w. Filter predicate must be a function", ErrorFilter)
 		case val.Type().NumIn() != 1:
-			return nil, fmt.Errorf("predicate must have one input value")
+			return nil, fmt.Errorf("%w. Filter predicate must have one input value", ErrorFilter)
 		case val.Type().NumOut() != 1:
-			return nil, fmt.Errorf("predicate must have one output value")
+			return nil, fmt.Errorf("%w. Filter predicate must have one output value", ErrorFilter)
 		case val.Type().Out(0).Kind() != reflect.Bool:
-			return nil, fmt.Errorf("predicate must have bool as a output type")
+			return nil, fmt.Errorf("%w. Filter predicate must have bool as a output type", ErrorFilter)
 		}
 
 		return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
@@ -95,43 +95,39 @@ func (generator Generator) Bind(binder interface{}) Generator {
 		binderVal := reflect.ValueOf(binder)
 		switch t := reflect.TypeOf(binder); {
 		case t.Kind() != reflect.Func:
-			return nil, fmt.Errorf("binder must be a function")
+			return nil, fmt.Errorf("%w. Binder must be a function", ErrorBinder)
 		case t.NumIn() != 1:
-			return nil, fmt.Errorf("binder must have one input value")
+			return nil, fmt.Errorf("%w. Binder must have one input value", ErrorBinder)
 		case t.NumOut() != 1:
-			return nil, fmt.Errorf("binder must have one output values")
+			return nil, fmt.Errorf("%w. Binder must have one output values", ErrorBinder)
 		case t.Out(0) != reflect.TypeOf(Generator(nil)):
-			return nil, fmt.Errorf("binder's output type must be generator.Generator")
+			return nil, fmt.Errorf("%w. Binder's output type must be generator.Generator", ErrorBinder)
 		}
 
 		generate, err := generator(binderVal.Type().In(0), bias, r)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create base generator: %s", err)
+			return nil, fmt.Errorf("Failed to use base generator: %w", err)
 		}
 		sourceArb, sourceShrinker := generate()
 
-		boundGenerator := binderVal.Call([]reflect.Value{sourceArb.Value})[0].Interface().(Generator)
-		generate, err = boundGenerator(target, bias, r)
+		binder := func(source arbitrary.Arbitrary) (arbitrary.Arbitrary, shrinker.Shrinker, error) {
+			generator := binderVal.Call([]reflect.Value{source.Value})[0].Interface().(Generator)
+			generate, err := generator(target, bias, r)
+			if err != nil {
+				return arbitrary.Arbitrary{}, nil, fmt.Errorf("Generator Binding failed (%s -> %s): %w", binderVal.Type().In(0), target, err)
+			}
+
+			val, shrinker := generate()
+			val.Precursors = []arbitrary.Arbitrary{source}
+			return val, shrinker, nil
+		}
+
+		boundVal, boundShrinker, err := binder(sourceArb)
 		if err != nil {
-			return nil, fmt.Errorf("generator composition failed: %s", err)
+			return nil, err
 		}
 
 		return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
-			boundVal, boundShrinker := generate()
-
-			binder := func(source arbitrary.Arbitrary) (arbitrary.Arbitrary, shrinker.Shrinker, error) {
-				generator := binderVal.Call([]reflect.Value{source.Value})[0].Interface().(Generator)
-				generate, err := generator(target, bias, r)
-				if err != nil {
-					return arbitrary.Arbitrary{}, nil, fmt.Errorf("generator binding failed: %s", err)
-				}
-
-				val, shrinker := generate()
-				return val, shrinker, nil
-			}
-
-			boundVal.Precursors = []arbitrary.Arbitrary{sourceArb}
-
 			return boundVal, sourceShrinker.
 				Retry(100, 100, sourceArb).
 				Bind(binder, boundShrinker, boundShrinker)

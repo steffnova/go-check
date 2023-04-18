@@ -23,29 +23,29 @@ import (
 // number of unique values equal to map's maximum length value defined by
 // limits parameter, otherwise map generation will be stuck in endless loop.
 func Map(key, value Generator, limits ...constraints.Length) Generator {
+	constraint := constraints.LengthDefault()
+	if len(limits) != 0 {
+		constraint = limits[0]
+	}
+
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
-		constraint := constraints.LengthDefault()
-		if len(limits) != 0 {
-			constraint = limits[0]
-		}
-		if target.Kind() != reflect.Map {
-			return nil, fmt.Errorf("can't use Map generator for %s type", target)
-		}
-		if constraint.Min > constraint.Max {
-			return nil, fmt.Errorf("minimal length value %d can't be greater than max length value %d", constraint.Min, constraint.Max)
-		}
-		if constraint.Max > uint64(math.MaxInt64) {
-			return nil, fmt.Errorf("max length %d can't be greater than %d", constraint.Max, uint64(math.MaxInt64))
+		switch {
+		case target.Kind() != reflect.Map:
+			return nil, NewErrorInvalidTarget(target, "Map")
+		case constraint.Min > constraint.Max:
+			return nil, fmt.Errorf("%w. Minimal length value %d can't be greater than max length value %d", ErrorInvalidConstraints, constraint.Min, constraint.Max)
+		case constraint.Max > uint64(math.MaxInt64):
+			return nil, fmt.Errorf("%w. max length %d can't be greater than %d", ErrorInvalidConstraints, constraint.Max, uint64(math.MaxInt64))
 		}
 
 		generateKey, err := key(target.Key(), bias, r)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create map's Key generator. %s", err)
+			return nil, fmt.Errorf("Failed to use map's Key generator. %w", err)
 		}
 
 		generateValue, err := value(target.Elem(), bias, r)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create map's Value generator. %s", err)
+			return nil, fmt.Errorf("Failed to use map's Value generator. %w", err)
 		}
 
 		return func() (arbitrary.Arbitrary, shrinker.Shrinker) {

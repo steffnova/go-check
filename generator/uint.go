@@ -21,7 +21,10 @@ func Uint64(limits ...constraints.Uint64) Generator {
 
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		if target.Kind() != reflect.Uint64 {
-			return nil, fmt.Errorf("can't use Uint64 generator for %s type", target)
+			return nil, NewErrorInvalidTarget(target, "Uint64")
+		}
+		if constraint.Min > constraint.Max {
+			return nil, fmt.Errorf("%w. Lower limit: %d cannot be greater than upper limit: %d", ErrorInvalidConstraints, constraint.Min, constraint.Max)
 		}
 		return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
 			n := r.Uint64(constraint)
@@ -44,7 +47,7 @@ func Uint32(limits ...constraints.Uint32) Generator {
 	}
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		if target.Kind() != reflect.Uint32 {
-			return nil, fmt.Errorf("can't use Uint32 generator for %s type", target)
+			return nil, NewErrorInvalidTarget(target, "Uint32")
 		}
 
 		mapper := arbitrary.Mapper(reflect.TypeOf(uint64(0)), target, func(in reflect.Value) reflect.Value {
@@ -69,7 +72,7 @@ func Uint16(limits ...constraints.Uint16) Generator {
 	}
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		if target.Kind() != reflect.Uint16 {
-			return nil, fmt.Errorf("can't use Uint16 generator for %s type", target)
+			return nil, NewErrorInvalidTarget(target, "Uint16")
 		}
 
 		mapper := arbitrary.Mapper(reflect.TypeOf(uint64(0)), target, func(in reflect.Value) reflect.Value {
@@ -93,7 +96,7 @@ func Uint8(limits ...constraints.Uint8) Generator {
 	}
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		if target.Kind() != reflect.Uint8 {
-			return nil, fmt.Errorf("can't use Uint8 generator for %s type", target)
+			return nil, NewErrorInvalidTarget(target, "Uint8")
 		}
 		mapper := arbitrary.Mapper(reflect.TypeOf(uint64(0)), target, func(in reflect.Value) reflect.Value {
 			return reflect.ValueOf(uint8(in.Uint())).Convert(target)
@@ -116,7 +119,7 @@ func Uint(limits ...constraints.Uint) Generator {
 	}
 	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
 		if target.Kind() != reflect.Uint {
-			return nil, fmt.Errorf("can't use Uint generator for %s type", target)
+			return nil, NewErrorInvalidTarget(target, "Uint")
 		}
 
 		mapper := arbitrary.Mapper(reflect.TypeOf(uint64(0)), target, func(in reflect.Value) reflect.Value {

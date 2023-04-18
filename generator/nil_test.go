@@ -1,37 +1,54 @@
-package generator_test
+package generator
 
 import (
-	"fmt"
-
-	"github.com/steffnova/go-check/generator"
+	"errors"
+	"testing"
 )
 
-// This example demonstrates how to use Nil() generator for generating nil values
-// for channels, pointers, slices, maps and interfaces.
-func ExampleNil() {
-	streamer := generator.Streamer(
-		func(p1 chan int, p2 *int, p3 []int, p4 map[string]int, p5 interface{}) {
-			fmt.Printf("%#v, %#v, %#v, %#v, %#v\n", p1, p2, p3, p4, p5)
-		},
-		generator.Nil(),
-		generator.Nil(),
-		generator.Nil(),
-		generator.Nil(),
-		generator.Nil(),
-	)
+func TestNil(t *testing.T) {
+	testCases := map[string]func(*testing.T){
+		"InvalidTarget": func(t *testing.T) {
+			err := Stream(0, 10, Streamer(
+				func(int) {},
+				Nil(),
+			))
 
-	if err := generator.Stream(0, 10, streamer); err != nil {
-		panic(err)
+			if !errors.Is(err, ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s'", ErrorInvalidTarget)
+			}
+		},
+		"Nil": func(t *testing.T) {
+			err := Stream(0, 10, Streamer(
+				func(ch chan int, n *int, m map[int]int, slice []int, in interface{}, fn func()) {
+					switch {
+					case ch != nil:
+						t.Fatalf("Expected channel to be nil")
+					case n != nil:
+						t.Fatalf("Expected pointer to be nil")
+					case m != nil:
+						t.Fatalf("Expected map to be nil")
+					case slice != nil:
+						t.Fatalf("Expected slice to be nil")
+					case in != nil:
+						t.Fatalf("Expected interface to be nil")
+					case fn != nil:
+						t.Fatalf("Expected function to be nil")
+					}
+				},
+				Nil(),
+				Nil(),
+				Nil(),
+				Nil(),
+				Nil(),
+				Nil(),
+			))
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+		},
 	}
-	// Output:
-	// (chan int)(nil), (*int)(nil), []int(nil), map[string]int(nil), <nil>
-	// (chan int)(nil), (*int)(nil), []int(nil), map[string]int(nil), <nil>
-	// (chan int)(nil), (*int)(nil), []int(nil), map[string]int(nil), <nil>
-	// (chan int)(nil), (*int)(nil), []int(nil), map[string]int(nil), <nil>
-	// (chan int)(nil), (*int)(nil), []int(nil), map[string]int(nil), <nil>
-	// (chan int)(nil), (*int)(nil), []int(nil), map[string]int(nil), <nil>
-	// (chan int)(nil), (*int)(nil), []int(nil), map[string]int(nil), <nil>
-	// (chan int)(nil), (*int)(nil), []int(nil), map[string]int(nil), <nil>
-	// (chan int)(nil), (*int)(nil), []int(nil), map[string]int(nil), <nil>
-	// (chan int)(nil), (*int)(nil), []int(nil), map[string]int(nil), <nil>
+
+	for name, testCase := range testCases {
+		t.Run(name, testCase)
+	}
 }
