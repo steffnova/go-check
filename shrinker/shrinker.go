@@ -10,24 +10,27 @@ import (
 type Shrinker func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, Shrinker, error)
 
 func (shrinker Shrinker) Map(mapper interface{}) Shrinker {
-	if shrinker == nil {
+	mapperVal := reflect.ValueOf(mapper)
+	switch {
+	case mapperVal.Kind() != reflect.Func:
+		return Fail(fmt.Errorf("mapper must be a function"))
+	case mapperVal.Type().NumIn() != 1:
+		return Fail(fmt.Errorf("mapper must have 1 input value"))
+	case mapperVal.Type().NumOut() != 1:
+		return Fail(fmt.Errorf("mapper must have 1 output value"))
+	case shrinker == nil:
 		return nil
-	}
-	return func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, Shrinker, error) {
-		shrink, shrinker, err := shrinker(arb.Precursors[0], propertyFailed)
+	default:
+		return func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, Shrinker, error) {
+			if mapperVal.Type().In(0) != arb.Precursors[0].Value.Type() {
+				return arbitrary.Arbitrary{}, nil, fmt.Errorf("mapper input type must match shrink type")
+			}
 
-		switch mapperVal := reflect.ValueOf(mapper); {
-		case mapperVal.Kind() != reflect.Func:
-			return arbitrary.Arbitrary{}, nil, fmt.Errorf("mapper must be a function")
-		case mapperVal.Type().NumIn() != 1:
-			return arbitrary.Arbitrary{}, nil, fmt.Errorf("mapper must have 1 input value")
-		case mapperVal.Type().NumOut() != 1:
-			return arbitrary.Arbitrary{}, nil, fmt.Errorf("mapper must have 1 output value")
-		case mapperVal.Type().In(0) != arb.Precursors[0].Value.Type():
-			return arbitrary.Arbitrary{}, nil, fmt.Errorf("mapper input type must match shrink type")
-		case err != nil:
-			return arbitrary.Arbitrary{}, nil, err
-		default:
+			shrink, shrinker, err := shrinker(arb.Precursors[0], propertyFailed)
+			if err != nil {
+				return arbitrary.Arbitrary{}, nil, err
+			}
+
 			return arbitrary.Arbitrary{
 				Value:      mapperVal.Call([]reflect.Value{shrink.Value})[0],
 				Precursors: []arbitrary.Arbitrary{shrink},
@@ -50,31 +53,34 @@ func (shrinker Shrinker) Or(next Shrinker) Shrinker {
 }
 
 func (shrinker Shrinker) Filter(defaultValue arbitrary.Arbitrary, predicate interface{}) Shrinker {
-	if shrinker == nil {
+	val := reflect.ValueOf(predicate)
+	switch {
+	case val.Kind() != reflect.Func:
+		return Fail(fmt.Errorf("predicate must be a function"))
+	case val.Type().NumIn() != 1:
+		return Fail(fmt.Errorf("predicate must have one input value"))
+	case val.Type().NumOut() != 1:
+		return Fail(fmt.Errorf("predicate must have one output value"))
+	case val.Type().Out(0).Kind() != reflect.Bool:
+		return Fail(fmt.Errorf("predicate must have bool as a output value"))
+	case shrinker == nil:
 		return nil
-	}
-	return func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, Shrinker, error) {
-		shrink, nextShrinker, err := shrinker(arb, propertyFailed)
-
-		switch val := reflect.ValueOf(predicate); {
-		case err != nil:
-			return arbitrary.Arbitrary{}, nil, err
-		case val.Kind() != reflect.Func:
-			return arbitrary.Arbitrary{}, nil, fmt.Errorf("predicate must be a function")
-		case val.Type().NumIn() != 1:
-			return arbitrary.Arbitrary{}, nil, fmt.Errorf("predicate must have one input value")
-		case val.Type().NumOut() != 1:
-			return arbitrary.Arbitrary{}, nil, fmt.Errorf("predicate must have one output value")
-		case val.Type().Out(0).Kind() != reflect.Bool:
-			return arbitrary.Arbitrary{}, nil, fmt.Errorf("predicate must have bool as a output value")
-		case val.Call([]reflect.Value{shrink.Value})[0].Bool():
-			return shrink, nextShrinker.Filter(shrink, predicate), nil
-		case nextShrinker == nil:
-			return defaultValue, nil, nil
-		default:
-			return nextShrinker.Filter(defaultValue, predicate)(shrink, false)
+	default:
+		return func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, Shrinker, error) {
+			shrink, nextShrinker, err := shrinker(arb, propertyFailed)
+			switch {
+			case err != nil:
+				return arbitrary.Arbitrary{}, nil, err
+			case val.Call([]reflect.Value{shrink.Value})[0].Bool():
+				return shrink, nextShrinker.Filter(shrink, predicate), nil
+			case nextShrinker == nil:
+				return shrink, nil, nil
+			default:
+				return nextShrinker.Filter(defaultValue, predicate)(shrink, false)
+			}
 		}
 	}
+
 }
 
 // Retry returns a shrinker that returns retryValue, and shrinker receiver until either
