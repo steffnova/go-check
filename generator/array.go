@@ -60,10 +60,7 @@ func ArrayFrom(elements ...Generator) Generator {
 				arb.Value.Index(index).Set(arb.Elements[index].Value)
 			}
 
-			return arb, shrinker.Array(shrinker.Chain(
-				shrinker.CollectionElement(shrinkers...),
-				shrinker.CollectionElements(shrinkers...),
-			))
+			return arb, shrinker.Array(arb, shrinkers)
 		}, nil
 	}
 }

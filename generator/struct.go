@@ -61,7 +61,7 @@ func Struct(fields ...map[string]Generator) Generator {
 				).Elem().Set(arb.Elements[index].Value)
 			}
 
-			return arb, shrinker.Struct(shrinker.Chain(shrinker.CollectionElement(shrinkers...), shrinker.CollectionElements(shrinkers...)))
+			return arb, shrinker.Struct(arb, shrinkers)
 		}, nil
 	}
 }

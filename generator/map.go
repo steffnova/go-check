@@ -59,11 +59,7 @@ func Map(key, value Generator, limits ...constraints.Length) Generator {
 				Elements: make(arbitrary.Arbitraries, size),
 			}
 
-			shrinkers := make([]shrinker.Shrinker, size)
-
-			filter := arbitrary.FilterPredicate(target, func(in reflect.Value) bool {
-				return in.Len() >= int(constraint.Min)
-			})
+			shrinkers := make([][2]shrinker.Shrinker, size)
 
 			for index := 0; index < int(size); index++ {
 				key, keyShrinker := generateKey()
@@ -76,14 +72,15 @@ func Map(key, value Generator, limits ...constraints.Length) Generator {
 				arb.Elements[index] = arbitrary.Arbitrary{
 					Elements: arbitrary.Arbitraries{key, value},
 				}
-				shrinkers[index] = shrinker.Chain(
-					shrinker.CollectionElement(keyShrinker, valueShrinker),
-					shrinker.CollectionElements(keyShrinker, valueShrinker),
-				)
+				shrinkers[index] = [2]shrinker.Shrinker{
+					keyShrinker,
+					valueShrinker,
+				}
 
 				arb.Value.SetMapIndex(key.Value, value.Value)
 			}
-			return arb, shrinker.Map(shrinker.CollectionSize(arb.Elements, shrinkers, 0, constraint)).Filter(arb, filter)
+
+			return arb, shrinker.Map(arb, shrinkers, constraint)
 		}, nil
 	}
 }

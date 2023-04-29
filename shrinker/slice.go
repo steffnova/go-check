@@ -5,30 +5,18 @@ import (
 	"reflect"
 
 	"github.com/steffnova/go-check/arbitrary"
+	"github.com/steffnova/go-check/constraints"
 )
 
-func Slice(shrinker Shrinker) Shrinker {
-	if shrinker == nil {
-		return nil
-	}
-	return func(val arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, Shrinker, error) {
-		switch {
-		case val.Value.Kind() != reflect.Slice:
-			return arbitrary.Arbitrary{}, nil, fmt.Errorf("slice shrinker cannot shrink %s", val.Value.Kind().String())
-		case val.Value.Len() != len(val.Elements):
-			return arbitrary.Arbitrary{}, nil, fmt.Errorf("number of elements %d must match size of the array %d", len(val.Elements), val.Value.Len())
-		default:
-			next, shrinker, err := shrinker(val, propertyFailed)
-			if err != nil {
-				return arbitrary.Arbitrary{}, nil, err
-			}
-
-			next.Value = reflect.MakeSlice(val.Value.Type(), len(next.Elements), len(next.Elements))
-			for index, element := range next.Elements {
-				next.Value.Index(index).Set(element.Value)
-			}
-
-			return next, Slice(shrinker), nil
-		}
+func Slice(original arbitrary.Arbitrary, shrinkers []Shrinker, con constraints.Length) Shrinker {
+	switch {
+	case original.Value.Kind() != reflect.Slice:
+		return Fail(fmt.Errorf("slice shrinker cannot shrink %s", original.Value.Kind().String()))
+	case original.Value.Len() != len(original.Elements):
+		return Fail(fmt.Errorf("number of elements %d must match size of the array %d", len(original.Elements), original.Value.Len()))
+	default:
+		return CollectionSize(original.Elements, shrinkers, 0, con).
+			Validate(arbitrary.ValidateSlice()).
+			Transform(arbitrary.NewSlice(original.Value.Type()))
 	}
 }

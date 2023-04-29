@@ -37,7 +37,7 @@ func Slice(element Generator, limits ...constraints.Length) Generator {
 		}
 
 		return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
-			biasedConstraints := constraints.Uint64(constraint).Baised(bias)
+			biasedConstraints := constraints.Uint64(constraint) //.Baised(bias)
 			size := r.Uint64(biasedConstraints)
 
 			shrinkers := make([]shrinker.Shrinker, size)
@@ -52,7 +52,7 @@ func Slice(element Generator, limits ...constraints.Length) Generator {
 				arb.Value.Index(index).Set(arb.Elements[index].Value)
 			}
 
-			return arb, shrinker.Slice(shrinker.CollectionSize(arb.Elements, shrinkers, 0, constraints.Length(biasedConstraints)))
+			return arb, shrinker.Slice(arb, shrinkers, constraints.Length(biasedConstraints))
 		}, nil
 	}
 

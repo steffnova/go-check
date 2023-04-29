@@ -133,3 +133,33 @@ func (shrinker Shrinker) Bind(binder binder, next, lastFailing Shrinker) Shrinke
 		return boundValue, sourceShrinker.Bind(binder, boundShrinker, lastFailing), nil
 	}
 }
+
+func (shrinker Shrinker) Transform(transformer func(arbitrary.Arbitrary) arbitrary.Arbitrary) Shrinker {
+	if shrinker == nil {
+		return nil
+	}
+	return func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, Shrinker, error) {
+		arb, shrinker, err := shrinker(arb, propertyFailed)
+		if err != nil {
+			return arbitrary.Arbitrary{}, nil, err
+		}
+		return transformer(arb), shrinker.Transform(transformer), nil
+	}
+}
+
+func (shrinker Shrinker) Validate(validation func(arbitrary.Arbitrary) error) Shrinker {
+	if shrinker == nil {
+		return nil
+	}
+	return func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, Shrinker, error) {
+		if err := validation(arb); err != nil {
+			return arbitrary.Arbitrary{}, nil, err
+		}
+		arb, shrinker, err := shrinker(arb, propertyFailed)
+		if err != nil {
+			return arbitrary.Arbitrary{}, nil, err
+		}
+
+		return arb, shrinker.Validate(validation), nil
+	}
+}

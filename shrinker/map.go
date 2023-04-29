@@ -5,29 +5,32 @@ import (
 	"reflect"
 
 	"github.com/steffnova/go-check/arbitrary"
+	"github.com/steffnova/go-check/constraints"
 )
 
-func Map(shrinker Shrinker) Shrinker {
-	if shrinker == nil {
-		return nil
-	}
-	return func(val arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, Shrinker, error) {
-		switch {
-		case val.Value.Kind() != reflect.Map:
-			return arbitrary.Arbitrary{}, nil, fmt.Errorf("map shrinker cannot shrink %s", val.Value.Kind().String())
-		default:
-			next, shrinker, err := shrinker(val, propertyFailed)
-			if err != nil {
-				return arbitrary.Arbitrary{}, nil, err
-			}
-
-			next.Value = reflect.MakeMap(val.Value.Type())
-			for _, node := range next.Elements {
-				key, value := node.Elements[0], node.Elements[1]
-				next.Value.SetMapIndex(key.Value, value.Value)
-			}
-
-			return next, Map(shrinker), nil
+func Map(original arbitrary.Arbitrary, keyValueShrinkers [][2]Shrinker, con constraints.Length) Shrinker {
+	switch {
+	case original.Value.Kind() != reflect.Map:
+		return Fail(fmt.Errorf("map shrinker cannot shrink %s", original.Value.Kind().String()))
+	case original.Value.Len() != len(original.Elements):
+		return Fail(fmt.Errorf("number of map's key-value pairs %d must match size of the map %d", len(original.Elements), original.Value.Len()))
+	default:
+		shrinkers := make([]Shrinker, len(keyValueShrinkers))
+		for index := range keyValueShrinkers {
+			key, value := keyValueShrinkers[index][0], keyValueShrinkers[index][1]
+			shrinkers[index] = Chain(
+				CollectionElement(key, value),
+				CollectionElements(key, value),
+			)
 		}
+
+		filter := arbitrary.FilterPredicate(original.Value.Type(), func(in reflect.Value) bool {
+			return in.Len() >= int(con.Min)
+		})
+
+		return CollectionSize(original.Elements, shrinkers, 0, con).
+			Validate(arbitrary.ValidateMap()).
+			Transform(arbitrary.NewMap(original.Value.Type())).
+			Filter(original, filter)
 	}
 }
