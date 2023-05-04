@@ -17,6 +17,6 @@ func Slice(original arbitrary.Arbitrary, shrinkers []Shrinker, con constraints.L
 	default:
 		return CollectionSize(original.Elements, shrinkers, 0, con).
 			Validate(arbitrary.ValidateSlice()).
-			Transform(arbitrary.NewSlice(original.Value.Type()))
+			transformAfter(arbitrary.NewSlice(original.Value.Type()))
 	}
 }

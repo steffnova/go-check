@@ -39,20 +39,7 @@ func (shrinker Shrinker) Map(mapper interface{}) Shrinker {
 	}
 }
 
-func (shrinker Shrinker) Or(next Shrinker) Shrinker {
-	if shrinker == nil {
-		return next
-	}
-
-	return func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, Shrinker, error) {
-		if !propertyFailed {
-			return next(arb, !propertyFailed)
-		}
-		return shrinker(arb, propertyFailed)
-	}
-}
-
-func (shrinker Shrinker) Filter(defaultValue arbitrary.Arbitrary, predicate interface{}) Shrinker {
+func (shrinker Shrinker) Filter(predicate interface{}) Shrinker {
 	val := reflect.ValueOf(predicate)
 	switch {
 	case val.Kind() != reflect.Func:
@@ -72,15 +59,106 @@ func (shrinker Shrinker) Filter(defaultValue arbitrary.Arbitrary, predicate inte
 			case err != nil:
 				return arbitrary.Arbitrary{}, nil, err
 			case val.Call([]reflect.Value{shrink.Value})[0].Bool():
-				return shrink, nextShrinker.Filter(shrink, predicate), nil
+				return shrink, nextShrinker.Filter(predicate), nil
 			case nextShrinker == nil:
 				return shrink, nil, nil
 			default:
-				return nextShrinker.Filter(defaultValue, predicate)(shrink, false)
+				return nextShrinker.Filter(predicate)(shrink, false)
 			}
 		}
 	}
 
+}
+
+type binder func(arbitrary.Arbitrary) (arbitrary.Arbitrary, Shrinker, error)
+
+// Bind returns a shrinker that uses the shrunk value to generate shrink returned by
+// binder. Binder is not guaranteed to be deterministic, as it returns new result value
+// based on root shrinker's shrink and it should be considered non-deterministic. Two
+// shrinkers needs to be passed alongside binder, next and lastFailing. Next shrinker
+// is the shrinker from the previous iteration of shrinking is shrinkering where lastFail
+// that caused last property falsification. Because of "non-deterministic" property of
+// binder, Bind is best paired with Retry combinator that can improve shrinking efficiency.
+func (shrinker Shrinker) Bind(binder binder, last arbitrary.Arbitrary, next, lastFailing Shrinker) Shrinker {
+	if binder == nil {
+		return Fail(fmt.Errorf("binder is nil"))
+	}
+	return func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, Shrinker, error) {
+		if propertyFailed {
+			lastFailing = next
+			last = arb
+		}
+
+		if shrinker == nil {
+			after := func(in arbitrary.Arbitrary) arbitrary.Arbitrary {
+				in.Precursors = append(in.Precursors, last.Precursors[len(last.Precursors)-1])
+				return in
+			}
+			before := func(in arbitrary.Arbitrary) arbitrary.Arbitrary {
+				in.Precursors = in.Precursors[:len(arb.Precursors)-1]
+				return in
+			}
+			return last, lastFailing.transformBefore(before).transformAfter(after), nil
+		}
+
+		source, sourceShrinker, err := shrinker(arb.Precursors[len(arb.Precursors)-1], propertyFailed)
+		// time.Sleep(1 * time.Second)
+		if err != nil {
+			return arbitrary.Arbitrary{}, nil, err
+		}
+
+		boundValue, boundShrinker, err := binder(source)
+		if err != nil {
+			return arbitrary.Arbitrary{}, nil, err
+		}
+		return boundValue, sourceShrinker.Bind(binder, last, boundShrinker, lastFailing), nil
+	}
+}
+
+type transform func(arbitrary.Arbitrary) arbitrary.Arbitrary
+
+func (shrinker Shrinker) transformAfter(transformer transform) Shrinker {
+	if transformer == nil {
+		return Fail(fmt.Errorf("transformer is nil"))
+	}
+	if shrinker == nil {
+		return nil
+	}
+	return func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, Shrinker, error) {
+		arb, shrinker, err := shrinker(arb, propertyFailed)
+		if err != nil {
+			return arbitrary.Arbitrary{}, nil, err
+		}
+		return transformer(arb), shrinker.transformAfter(transformer), nil
+	}
+}
+
+func (shrinker Shrinker) transformBefore(transformer transform) Shrinker {
+	if transformer == nil {
+		return Fail(fmt.Errorf("transformer is nil"))
+	}
+	if shrinker == nil {
+		return nil
+	}
+	return func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, Shrinker, error) {
+		arb, shrinker, err := shrinker(transformer(arb), propertyFailed)
+		if err != nil {
+			return arbitrary.Arbitrary{}, nil, err
+		}
+		return arb, shrinker.transformBefore(transformer), nil
+	}
+}
+
+func (shrinker Shrinker) Or(next Shrinker) Shrinker {
+	if shrinker == nil {
+		return next
+	}
+	return func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, Shrinker, error) {
+		if !propertyFailed {
+			return next(arb, !propertyFailed)
+		}
+		return shrinker(arb, propertyFailed)
+	}
 }
 
 // Retry returns a shrinker that returns retryValue, and shrinker receiver until either
@@ -105,55 +183,10 @@ func (shrinker Shrinker) Retry(maxRetries, remainingRetries uint, retryValue arb
 	}
 }
 
-type binder func(arbitrary.Arbitrary) (arbitrary.Arbitrary, Shrinker, error)
-
-// Bind returns a shrinker that uses the shrunk value to generate shrink returned by
-// binder. Binder is not guaranteed to be deterministic, as it returns new result value
-// based on root shrinker's shrink and it should be considered non-deterministic. Two
-// shrinkers needs to be passed alongside binder, next and lastFailing. Next shrinker
-// is the shrinker from the previous iteration of shrinking where lastFailing is shrinker
-// that caused last property falsification. Because of "non-deterministic" property of
-// binder, Bind is best paired with Retry combinator that can improve shrinking efficiency.
-func (shrinker Shrinker) Bind(binder binder, next, lastFailing Shrinker) Shrinker {
-	return func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, Shrinker, error) {
-		if propertyFailed {
-			lastFailing = next
-		}
-
-		// if shrinker is exhausted, call the lastShrinker that falsified the
-		// property with propertyFailed set to true, to continue shrinking process
-		if shrinker == nil {
-			return lastFailing(arb, true)
-		}
-
-		source, sourceShrinker, err := shrinker(arb.Precursors[0], propertyFailed)
-		if err != nil {
-			return arbitrary.Arbitrary{}, nil, err
-		}
-		boundValue, boundShrinker, err := binder(source)
-		if err != nil {
-			return arbitrary.Arbitrary{}, nil, err
-		}
-		boundValue.Precursors = arbitrary.Arbitraries{source}
-
-		return boundValue, sourceShrinker.Bind(binder, boundShrinker, lastFailing), nil
-	}
-}
-
-func (shrinker Shrinker) Transform(transformer func(arbitrary.Arbitrary) arbitrary.Arbitrary) Shrinker {
-	if shrinker == nil {
-		return nil
-	}
-	return func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, Shrinker, error) {
-		arb, shrinker, err := shrinker(arb, propertyFailed)
-		if err != nil {
-			return arbitrary.Arbitrary{}, nil, err
-		}
-		return transformer(arb), shrinker.Transform(transformer), nil
-	}
-}
-
 func (shrinker Shrinker) Validate(validation func(arbitrary.Arbitrary) error) Shrinker {
+	if validation == nil {
+		return Fail(fmt.Errorf("validation is nil"))
+	}
 	if shrinker == nil {
 		return nil
 	}

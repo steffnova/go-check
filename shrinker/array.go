@@ -11,7 +11,7 @@ func Array(original arbitrary.Arbitrary, shrinkers []Shrinker) Shrinker {
 			CollectionElement(shrinkers...),
 			CollectionElements(shrinkers...),
 		).
-			Transform(arbitrary.NewArray(original.Value.Type())).
+			transformAfter(arbitrary.NewArray(original.Value.Type())).
 			Validate(arbitrary.ValidateArray())
 	}
 }
