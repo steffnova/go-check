@@ -121,12 +121,14 @@ func (generator Generator) Bind(binder interface{}) Generator {
 			return val, shrinker, nil
 		}
 
+		sourceArb, sourceShrinker := generate()
+		boundVal, boundShrinker, err := binder(sourceArb)
+		if err != nil {
+			return nil, err
+		}
+
 		return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
-			sourceArb, sourceShrinker := generate()
-			boundVal, boundShrinker, err := binder(sourceArb)
-			if err != nil {
-				panic(err)
-			}
+
 			return boundVal, sourceShrinker.
 				Bind(binder, boundVal, boundShrinker, boundShrinker)
 		}, nil
