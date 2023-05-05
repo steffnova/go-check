@@ -77,7 +77,7 @@ func (generator Generator) Filter(predicate interface{}) Generator {
 				arb, shrinker := generate()
 				outputs := reflect.ValueOf(predicate).Call([]reflect.Value{arb.Value})
 				if outputs[0].Bool() {
-					return arb, shrinker.Filter(arb, predicate)
+					return arb, shrinker.Filter(predicate)
 				}
 			}
 		}, nil
@@ -108,7 +108,6 @@ func (generator Generator) Bind(binder interface{}) Generator {
 		if err != nil {
 			return nil, fmt.Errorf("Failed to use base generator: %w", err)
 		}
-		sourceArb, sourceShrinker := generate()
 
 		binder := func(source arbitrary.Arbitrary) (arbitrary.Arbitrary, shrinker.Shrinker, error) {
 			generator := binderVal.Call([]reflect.Value{source.Value})[0].Interface().(Generator)
@@ -118,19 +117,20 @@ func (generator Generator) Bind(binder interface{}) Generator {
 			}
 
 			val, shrinker := generate()
-			val.Precursors = []arbitrary.Arbitrary{source}
+			val.Precursors = append(val.Precursors, source)
 			return val, shrinker, nil
 		}
 
+		sourceArb, sourceShrinker := generate()
 		boundVal, boundShrinker, err := binder(sourceArb)
 		if err != nil {
 			return nil, err
 		}
 
 		return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
+
 			return boundVal, sourceShrinker.
-				Retry(100, 100, sourceArb).
-				Bind(binder, boundShrinker, boundShrinker)
+				Bind(binder, boundVal, boundShrinker, boundShrinker)
 		}, nil
 	}
 }

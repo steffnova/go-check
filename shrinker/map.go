@@ -30,7 +30,7 @@ func Map(original arbitrary.Arbitrary, keyValueShrinkers [][2]Shrinker, con cons
 
 		return CollectionSize(original.Elements, shrinkers, 0, con).
 			Validate(arbitrary.ValidateMap()).
-			Transform(arbitrary.NewMap(original.Value.Type())).
-			Filter(original, filter)
+			transformAfter(arbitrary.NewMap(original.Value.Type())).
+			Filter(filter)
 	}
 }

@@ -11,7 +11,7 @@ func ValidateSlice() Validate {
 	return func(arb Arbitrary) error {
 		switch {
 		case arb.Value.Kind() != reflect.Slice:
-			return fmt.Errorf("arb is not a slice")
+			return fmt.Errorf("arb :%s is not a slice", arb.Value.Type())
 		case arb.Value.Len() != len(arb.Elements):
 			return fmt.Errorf("number of elements %d must match size of the slice %d", len(arb.Elements), arb.Value.Len())
 		default:

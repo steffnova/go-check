@@ -1,6 +1,7 @@
 package arbitrary
 
 import (
+	"fmt"
 	"reflect"
 	"unsafe"
 )
@@ -10,6 +11,22 @@ type Arbitrary struct {
 	Value      reflect.Value // Final value
 	Elements   Arbitraries   // Arbitrary for each element in collection
 	Precursors Arbitraries   // Precursor arbitraries from which this one is generated
+}
+
+func (arb Arbitrary) CompareType(target Arbitrary) error {
+	if arb.Value.Type() != target.Value.Type() {
+		return fmt.Errorf("invalid type")
+	}
+	if len(arb.Precursors) != len(target.Precursors) {
+		return fmt.Errorf("invalid type")
+	}
+	for index := range arb.Precursors {
+		if err := arb.Precursors[index].CompareType(target.Precursors[index]); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 type Arbitraries []Arbitrary

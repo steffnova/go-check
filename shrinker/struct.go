@@ -24,7 +24,7 @@ func Struct(original arbitrary.Arbitrary, shrinkers []Shrinker) Shrinker {
 			CollectionElement(shrinkers...),
 			CollectionElements(shrinkers...),
 		).
-			Transform(arbitrary.NewStruct(original.Value.Type())).
+			transformAfter(arbitrary.NewStruct(original.Value.Type())).
 			Validate(arbitrary.ValidateStruct())
 	}
 }
