@@ -11,6 +11,7 @@ type Arbitrary struct {
 	Value      reflect.Value // Final value
 	Elements   Arbitraries   // Arbitrary for each element in collection
 	Precursors Arbitraries   // Precursor arbitraries from which this one is generated
+	Shrinker   Shrinker
 }
 
 func (arb Arbitrary) CompareType(target Arbitrary) error {
@@ -27,6 +28,26 @@ func (arb Arbitrary) CompareType(target Arbitrary) error {
 	}
 
 	return nil
+}
+
+func (arb Arbitrary) Copy() Arbitrary {
+	elements := make(Arbitraries, len(arb.Elements))
+	precursors := make(Arbitraries, len(arb.Precursors))
+
+	for index, element := range arb.Elements {
+		elements[index] = element.Copy()
+	}
+
+	for index, precursor := range arb.Precursors {
+		precursors[index] = precursor.Copy()
+	}
+
+	return Arbitrary{
+		Value:      arb.Value,
+		Elements:   elements,
+		Precursors: precursors,
+		Shrinker:   arb.Shrinker,
+	}
 }
 
 type Arbitraries []Arbitrary

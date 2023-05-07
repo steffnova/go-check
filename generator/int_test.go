@@ -14,7 +14,7 @@ func TestInt64(t *testing.T) {
 			Stream(0, 100, Streamer(
 				func(n int64) {
 					if n < intRange.Min || n > intRange.Max {
-						t.Fatalf("Generated value is not withing given range: [%d, %d]", intRange.Min, intRange.Max)
+						t.Fatalf("arbitrary.Arbitraryd value is not withing given range: [%d, %d]", intRange.Min, intRange.Max)
 					}
 				},
 				Int64(intRange),
@@ -62,7 +62,7 @@ func TestInt32(t *testing.T) {
 			Stream(0, 100, Streamer(
 				func(n int32) {
 					if n < intRange.Min || n > intRange.Max {
-						t.Fatalf("Generated value is not withing given range: [%d, %d]", intRange.Min, intRange.Max)
+						t.Fatalf("arbitrary.Arbitraryd value is not withing given range: [%d, %d]", intRange.Min, intRange.Max)
 					}
 				},
 				Int32(intRange),
@@ -101,7 +101,7 @@ func TestInt16(t *testing.T) {
 			Stream(0, 100, Streamer(
 				func(n int16) {
 					if n < intRange.Min || n > intRange.Max {
-						t.Fatalf("Generated value is not withing given range: [%d, %d]", intRange.Min, intRange.Max)
+						t.Fatalf("arbitrary.Arbitraryd value is not withing given range: [%d, %d]", intRange.Min, intRange.Max)
 					}
 				},
 				Int16(intRange),
@@ -140,7 +140,7 @@ func TestInt8(t *testing.T) {
 			Stream(0, 100, Streamer(
 				func(n int8) {
 					if n < intRange.Min || n > intRange.Max {
-						t.Fatalf("Generated value is not withing given range: [%d, %d]", intRange.Min, intRange.Max)
+						t.Fatalf("arbitrary.Arbitraryd value is not withing given range: [%d, %d]", intRange.Min, intRange.Max)
 					}
 				},
 				Int8(intRange),
@@ -179,7 +179,7 @@ func TestInt(t *testing.T) {
 			Stream(0, 100, Streamer(
 				func(n int) {
 					if n < intRange.Min || n > intRange.Max {
-						t.Fatalf("Generated value is not withing given range: [%d, %d]", intRange.Min, intRange.Max)
+						t.Fatalf("arbitrary.Arbitraryd value is not withing given range: [%d, %d]", intRange.Min, intRange.Max)
 					}
 				},
 				Int(intRange),

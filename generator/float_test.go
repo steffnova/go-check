@@ -15,7 +15,7 @@ func TestFloat64(t *testing.T) {
 			Stream(0, 100, Streamer(
 				func(n float64) {
 					if n < floatRange.Min || n > floatRange.Max {
-						t.Fatalf("Generated value is not withing given range: [%f, %f]", floatRange.Min, floatRange.Max)
+						t.Fatalf("arbitrary.Arbitraryd value is not withing given range: [%f, %f]", floatRange.Min, floatRange.Max)
 					}
 				},
 				Float64(floatRange),
@@ -81,7 +81,7 @@ func TestFloat32(t *testing.T) {
 			Stream(0, 100, Streamer(
 				func(n float32) {
 					if n < floatRange.Min || n > floatRange.Max {
-						t.Fatalf("Generated value is not withing given range: [%f, %f]", floatRange.Min, floatRange.Max)
+						t.Fatalf("arbitrary.Arbitraryd value is not withing given range: [%f, %f]", floatRange.Min, floatRange.Max)
 					}
 				},
 				Float32(floatRange),

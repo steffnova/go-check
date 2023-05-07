@@ -13,19 +13,19 @@ import (
 // [-math.MaxFloat64, math.MaxFloat64] for both real and imaginary part of complex128. Error
 // is returned if generator's target is not complex128 type or constraints for real or imaginary
 // part of complex128 are invalid.
-func Complex128(limits ...constraints.Complex128) Generator {
+func Complex128(limits ...constraints.Complex128) arbitrary.Generator {
 	constraint := constraints.Complex128Default()
 	if len(limits) != 0 {
 		constraint = limits[0]
 	}
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 		switch {
 		case target.Kind() != reflect.Complex128:
-			return nil, NewErrorInvalidTarget(target, "Complex128")
+			return arbitrary.Arbitrary{}, NewErrorInvalidTarget(target, "Complex128")
 		case constraint.Real.Min > constraint.Real.Max:
-			return nil, fmt.Errorf("%w. Lower limit of complex's real part can't be higher that it's upper limit", ErrorInvalidConstraints)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower limit of complex's real part can't be higher that it's upper limit", ErrorInvalidConstraints)
 		case constraint.Imaginary.Min > constraint.Imaginary.Max:
-			return nil, fmt.Errorf("%w. Lower limit of complex's imaginary part can't be higher that it's upper limit", ErrorInvalidConstraints)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower limit of complex's imaginary part can't be higher that it's upper limit", ErrorInvalidConstraints)
 		default:
 			mapper := arbitrary.Mapper(reflect.TypeOf([2]float64{}), target, func(in reflect.Value) reflect.Value {
 				parts := in.Interface().([2]float64)
@@ -44,19 +44,19 @@ func Complex128(limits ...constraints.Complex128) Generator {
 // [-math.MaxFloat32, math.MaxFloat32] for both real and imaginary part of complex64. Error
 // is returned if generator's target is not complex64 type or constraints for real or imaginary
 // part of complex64 are invalid.
-func Complex64(limits ...constraints.Complex64) Generator {
+func Complex64(limits ...constraints.Complex64) arbitrary.Generator {
 	constraint := constraints.Complex64Default()
 	if len(limits) != 0 {
 		constraint = limits[0]
 	}
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 		switch {
 		case target.Kind() != reflect.Complex64:
-			return nil, NewErrorInvalidTarget(target, "Complex64")
+			return arbitrary.Arbitrary{}, NewErrorInvalidTarget(target, "Complex64")
 		case constraint.Real.Min > constraint.Real.Max:
-			return nil, fmt.Errorf("%w. Lower limit of complex's real part can't be higher that it's upper limit", ErrorInvalidConstraints)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower limit of complex's real part can't be higher that it's upper limit", ErrorInvalidConstraints)
 		case constraint.Imaginary.Min > constraint.Imaginary.Max:
-			return nil, fmt.Errorf("%w. Lower limit of complex's imaginary part can't be higher that it's upper limit", ErrorInvalidConstraints)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower limit of complex's imaginary part can't be higher that it's upper limit", ErrorInvalidConstraints)
 		default:
 			mapper := arbitrary.Mapper(reflect.TypeOf([2]float32{}), target, func(in reflect.Value) reflect.Value {
 				parts := in.Interface().([2]float32)

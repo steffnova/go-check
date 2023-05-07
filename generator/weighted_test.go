@@ -18,7 +18,7 @@ func TestWeighted(t *testing.T) {
 				t.Fatalf("Expected error: '%s'", ErrorInvalidConfig)
 			}
 		},
-		"NoGenerators": func(t *testing.T) {
+		"Noarbitrary.Generators": func(t *testing.T) {
 			err := Stream(0, 10, Streamer(
 				func(int) {},
 				Weighted([]uint64{5}),

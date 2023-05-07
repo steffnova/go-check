@@ -24,7 +24,7 @@ func TestComplex128(t *testing.T) {
 					case imag(n) < complexRange.Imaginary.Min:
 						fallthrough
 					case imag(n) > complexRange.Imaginary.Max:
-						t.Fatalf("Generated value is not withing given range: [%#v]", complexRange)
+						t.Fatalf("arbitrary.Arbitraryd value is not withing given range: [%#v]", complexRange)
 					}
 				},
 				Complex128(complexRange),
@@ -97,7 +97,7 @@ func TestComplex64(t *testing.T) {
 					case imag(n) < complexRange.Imaginary.Min:
 						fallthrough
 					case imag(n) > complexRange.Imaginary.Max:
-						t.Fatalf("Generated value is not withing given range: [%#v]", complexRange)
+						t.Fatalf("arbitrary.Arbitraryd value is not withing given range: [%#v]", complexRange)
 					}
 				},
 				Complex64(complexRange),

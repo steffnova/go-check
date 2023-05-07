@@ -65,7 +65,7 @@ func TestMap(t *testing.T) {
 			err := Stream(0, 100, Streamer(
 				func(in map[int]int) {
 					if len(in) < int(constraint.Min) || len(in) > int(constraint.Max) {
-						t.Fatalf("Generated map size %d is not withing it's constraints: %#v", len(in), constraint)
+						t.Fatalf("arbitrary.Arbitraryd map size %d is not withing it's constraints: %#v", len(in), constraint)
 					}
 				},
 				Map(Int(), Int(), constraint),

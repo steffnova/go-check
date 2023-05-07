@@ -6,15 +6,14 @@ import (
 
 	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
-	"github.com/steffnova/go-check/shrinker"
 )
 
 // Array returns generator for array types. Array element's generator is specified by "element"
 // parameter. Error is returned if generator's target is not array type or element's generator
 // returns an error.
-func Array(element Generator) Generator {
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
-		generators := make([]Generator, target.Len())
+func Array(element arbitrary.Generator) arbitrary.Generator {
+	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
+		generators := make([]arbitrary.Generator, target.Len())
 		for index := range generators {
 			generators[index] = element
 		}
@@ -29,38 +28,31 @@ func Array(element Generator) Generator {
 // for each array element. Error is returned if generator's target is not array type, number
 // of element generators doesn't match the size of the array, or any of the element generators
 // return an error.
-func ArrayFrom(elements ...Generator) Generator {
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+func ArrayFrom(elements ...arbitrary.Generator) arbitrary.Generator {
+	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 		if target.Kind() != reflect.Array {
-			return nil, NewErrorInvalidTarget(target, "Array")
+			return arbitrary.Arbitrary{}, NewErrorInvalidTarget(target, "Array")
 		}
 		if target.Len() != len(elements) {
-			return nil, NewErrorInvalidCollectionSize(target.Len(), len(elements))
+			return arbitrary.Arbitrary{}, NewErrorInvalidCollectionSize(target.Len(), len(elements))
 		}
 
-		generators := make([]Generate, target.Len())
-		for index := range generators {
-			generator, err := elements[index](target.Elem(), bias, r)
+		value := reflect.New(target).Elem()
+		arbitraries := make([]arbitrary.Arbitrary, target.Len())
+
+		for index := range elements {
+			arb, err := elements[index](target.Elem(), bias, r)
 			if err != nil {
-				return nil, fmt.Errorf("%w. Failed to use gerator for array's (%s) element %d.", err, target.Kind(), index)
+				return arbitrary.Arbitrary{}, fmt.Errorf("%w. Failed to use gerator for array's (%s) element %d.", err, target.Kind(), index)
 			}
-			generators[index] = generator
+			arbitraries[index] = arb
+			value.Index(index).Set(arbitraries[index].Value)
 		}
 
-		return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
-			arb := arbitrary.Arbitrary{
-				Value:    reflect.New(target).Elem(),
-				Elements: make(arbitrary.Arbitraries, target.Len()),
-			}
-
-			shrinkers := make([]shrinker.Shrinker, target.Len())
-
-			for index, generator := range generators {
-				arb.Elements[index], shrinkers[index] = generator()
-				arb.Value.Index(index).Set(arb.Elements[index].Value)
-			}
-
-			return arb, shrinker.Array(arb, shrinkers)
+		return arbitrary.Arbitrary{
+			Value:    value,
+			Elements: arbitraries,
+			// Shrinker: shrinker.Array(value, shrinkers),
 		}, nil
 	}
 }

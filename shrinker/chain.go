@@ -2,24 +2,25 @@ package shrinker
 
 import "github.com/steffnova/go-check/arbitrary"
 
-func Chain(shrinkers ...Shrinker) Shrinker {
+func Chain(shrinkers ...arbitrary.Shrinker) arbitrary.Shrinker {
 	if len(shrinkers) == 0 {
 		return nil
 	}
 
-	return func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, Shrinker, error) {
+	return func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, error) {
 		for index, shrinker := range shrinkers {
 			if shrinker == nil {
 				continue
 			}
-			arb, next, err := shrinker(arb, propertyFailed)
+			arb, err := shrinker(arb, propertyFailed)
 			if err != nil {
-				return arbitrary.Arbitrary{}, nil, err
+				return arbitrary.Arbitrary{}, err
 			}
-			shrinkers[index] = next
-			return arb, Chain(shrinkers[index:]...), nil
+			shrinkers[index] = arb.Shrinker
+			arb.Shrinker = Chain(shrinkers[index:]...)
+			return arb, nil
 		}
 
-		return arb, nil, nil
+		return arb, nil
 	}
 }

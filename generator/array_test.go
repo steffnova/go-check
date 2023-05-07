@@ -18,7 +18,7 @@ func TestArrayFrom(t *testing.T) {
 				t.Fatalf("Expected error: '%s':", ErrorInvalidTarget)
 			}
 		},
-		"InvalidNumberOfElementGenerators": func(t *testing.T) {
+		"InvalidNumberOfElementarbitrary.Generators": func(t *testing.T) {
 			err := Stream(0, 100, Streamer(
 				func(n [3]uint) {},
 				ArrayFrom(Uint(), Uint()),
@@ -28,7 +28,7 @@ func TestArrayFrom(t *testing.T) {
 				t.Fatalf("Expected error: '%s'", ErrorInvalidCollectionSize)
 			}
 		},
-		"InvalidElementGeneratorType": func(t *testing.T) {
+		"InvalidElementarbitrary.GeneratorType": func(t *testing.T) {
 			err := Stream(0, 100, Streamer(
 				func(n [3]uint) {},
 				ArrayFrom(Int(), Int(), Int()),
@@ -38,7 +38,7 @@ func TestArrayFrom(t *testing.T) {
 				t.Fatalf("Expected error: '%s':", ErrorInvalidTarget)
 			}
 		},
-		"GeneratorPerElement": func(t *testing.T) {
+		"arbitrary.GeneratorPerElement": func(t *testing.T) {
 			// This test case aims to confirm whether each element within an array is
 			//  utilizing its designated generator. In order to validate this behavior,
 			// each element must abide by the constraints defined by its respective generator.

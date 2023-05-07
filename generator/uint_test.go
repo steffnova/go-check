@@ -14,7 +14,7 @@ func TestUint64(t *testing.T) {
 			Stream(0, 100, Streamer(
 				func(n uint64) {
 					if n < uintRange.Min || n > uintRange.Max {
-						t.Fatalf("Generated value is not withing given range: [%d, %d]", uintRange.Min, uintRange.Max)
+						t.Fatalf("arbitrary.Arbitraryd value is not withing given range: [%d, %d]", uintRange.Min, uintRange.Max)
 					}
 				},
 				Uint64(uintRange),
@@ -62,7 +62,7 @@ func TestUint32(t *testing.T) {
 			Stream(0, 100, Streamer(
 				func(n uint32) {
 					if n < uintRange.Min || n > uintRange.Max {
-						t.Fatalf("Generated value is not withing given range: [%d, %d]", uintRange.Min, uintRange.Max)
+						t.Fatalf("arbitrary.Arbitraryd value is not withing given range: [%d, %d]", uintRange.Min, uintRange.Max)
 					}
 				},
 				Uint32(uintRange),
@@ -101,7 +101,7 @@ func TestUint16(t *testing.T) {
 			Stream(0, 100, Streamer(
 				func(n uint16) {
 					if n < uintRange.Min || n > uintRange.Max {
-						t.Fatalf("Generated value is not withing given range: [%d, %d]", uintRange.Min, uintRange.Max)
+						t.Fatalf("arbitrary.Arbitraryd value is not withing given range: [%d, %d]", uintRange.Min, uintRange.Max)
 					}
 				},
 				Uint16(uintRange),
@@ -140,7 +140,7 @@ func TestUint8(t *testing.T) {
 			Stream(0, 100, Streamer(
 				func(n uint8) {
 					if n < uintRange.Min || n > uintRange.Max {
-						t.Fatalf("Generated value is not withing given range: [%d, %d]", uintRange.Min, uintRange.Max)
+						t.Fatalf("arbitrary.Arbitraryd value is not withing given range: [%d, %d]", uintRange.Min, uintRange.Max)
 					}
 				},
 				Uint8(uintRange),
@@ -179,7 +179,7 @@ func TestUint(t *testing.T) {
 			Stream(0, 100, Streamer(
 				func(n uint) {
 					if n < uintRange.Min || n > uintRange.Max {
-						t.Fatalf("Generated value is not withing given range: [%d, %d]", uintRange.Min, uintRange.Max)
+						t.Fatalf("arbitrary.Arbitraryd value is not withing given range: [%d, %d]", uintRange.Min, uintRange.Max)
 					}
 				},
 				Uint(uintRange),

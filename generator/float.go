@@ -14,26 +14,26 @@ import (
 // [-math.MaxFloat64, math.MaxFloat64] is used instead. Error is returned if generator's target
 // is not float64 type, "limits" paramter has invalid values (-Inf, NaN, +Inf), or limits.Min is
 // greater than limits.Max.
-func Float64(limits ...constraints.Float64) Generator {
+func Float64(limits ...constraints.Float64) arbitrary.Generator {
 	constraint := constraints.Float64Default()
 	if len(limits) > 0 {
 		constraint = limits[0]
 	}
 
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 		mapper := arbitrary.Mapper(reflect.TypeOf(uint64(0)), target, func(in reflect.Value) reflect.Value {
 			return reflect.ValueOf(math.Float64frombits(in.Uint())).Convert(target)
 		})
 
 		switch {
 		case target.Kind() != reflect.Float64:
-			return nil, NewErrorInvalidTarget(target, "Float64")
+			return arbitrary.Arbitrary{}, NewErrorInvalidTarget(target, "Float64")
 		case constraint.Min < -math.MaxFloat64:
-			return nil, fmt.Errorf("%w. Lower range value can't be lower then %f", ErrorInvalidConstraints, -math.MaxFloat64)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower range value can't be lower then %f", ErrorInvalidConstraints, -math.MaxFloat64)
 		case constraint.Max > math.MaxFloat64:
-			return nil, fmt.Errorf("%w. Upper range value can't be greater then %f", ErrorInvalidConstraints, math.MaxFloat64)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Upper range value can't be greater then %f", ErrorInvalidConstraints, math.MaxFloat64)
 		case constraint.Max < constraint.Min:
-			return nil, fmt.Errorf("%w. Lower range value can't be greater then upper range value", ErrorInvalidConstraints)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower range value can't be greater then upper range value", ErrorInvalidConstraints)
 		case constraint.Min >= math.Copysign(0, 1):
 			return Uint64(
 				constraints.Uint64{
@@ -69,26 +69,26 @@ func Float64(limits ...constraints.Float64) Generator {
 // [-math.MaxFloat32, math.MaxFloat32] is used instead. Error is returned if generator's target
 // is not float32 type, "limits" paramter has invalid values (-Inf, NaN, +Inf), or limits.Min is
 // greater than limits.Max.
-func Float32(limits ...constraints.Float32) Generator {
+func Float32(limits ...constraints.Float32) arbitrary.Generator {
 	constraint := constraints.Float32Default()
 	if len(limits) > 0 {
 		constraint = limits[0]
 	}
 
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 		mapper := arbitrary.Mapper(reflect.TypeOf(uint32(0)), target, func(in reflect.Value) reflect.Value {
 			return reflect.ValueOf(math.Float32frombits(uint32(in.Uint()))).Convert(target)
 		})
 
 		switch {
 		case target.Kind() != reflect.Float32:
-			return nil, NewErrorInvalidTarget(target, "Float32")
+			return arbitrary.Arbitrary{}, NewErrorInvalidTarget(target, "Float32")
 		case constraint.Min < -math.MaxFloat32:
-			return nil, fmt.Errorf("%w. Lower range value can't be lower then %f", ErrorInvalidConstraints, -math.MaxFloat32)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower range value can't be lower then %f", ErrorInvalidConstraints, -math.MaxFloat32)
 		case constraint.Max > math.MaxFloat32:
-			return nil, fmt.Errorf("%w. Upper range value can't be greater then %f", ErrorInvalidConstraints, math.MaxFloat32)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Upper range value can't be greater then %f", ErrorInvalidConstraints, math.MaxFloat32)
 		case constraint.Max < constraint.Min:
-			return nil, fmt.Errorf("%w. Lower range value can't be greater then upper range value", ErrorInvalidConstraints)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower range value can't be greater then upper range value", ErrorInvalidConstraints)
 		case constraint.Min >= 0:
 			return Uint32(constraints.Uint32{
 				Min: math.Float32bits(constraint.Min),

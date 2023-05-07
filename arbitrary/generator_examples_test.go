@@ -1,9 +1,10 @@
-package generator_test
+package arbitrary_test
 
 import (
 	"fmt"
 	"sort"
 
+	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/generator"
 )
@@ -126,7 +127,7 @@ func ExampleGenerator_Bind_stringWithRepeatingCharacter() {
 		generator.Rune(constraints.Rune{
 			MinCodePoint: 'a',
 			MaxCodePoint: 'z',
-		}).Bind(func(c rune) generator.Generator {
+		}).Bind(func(c rune) arbitrary.Generator {
 			return generator.String(constraints.String{
 				Rune: constraints.Rune{
 					MinCodePoint: c,

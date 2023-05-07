@@ -3,11 +3,12 @@ package generator_test
 import (
 	"fmt"
 
+	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/generator"
 )
 
 // This example demonstrates how to use Struct() generator for generation of struct values.
-// Struct() generator requires map[string]Generator, where map's key-value pairs represent
+// Struct() generator requires map[string]arbitrary.Generator, where map's key-value pairs represent
 // struct's field generators. Provided field generator or Any() generator (if field generator
 // is not provided) will be used to generate data for struct's field. In this example generators
 // for fields X and Y are provided while for Z is ommited.
@@ -23,7 +24,7 @@ func ExampleStruct() {
 		func(p Point) {
 			fmt.Printf("%#v\n", p)
 		},
-		generator.Struct(map[string]generator.Generator{
+		generator.Struct(map[string]arbitrary.Generator{
 			"X": generator.Int16(),
 			"Y": generator.Int16(),
 		}),

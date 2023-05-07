@@ -2,29 +2,37 @@ package shrinker
 
 import "github.com/steffnova/go-check/arbitrary"
 
-func CollectionElements(source ...Shrinker) Shrinker {
-	return func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, Shrinker, error) {
-		shrinkers := make([]Shrinker, len(source))
+func CollectionElements(firstRun bool, source ...arbitrary.Shrinker) arbitrary.Shrinker {
+	return func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, error) {
+		if firstRun {
+			for index := range arb.Elements {
+				arb.Elements[index].Shrinker = source[index]
+			}
+		}
+
+		shrinkers := make([]arbitrary.Shrinker, len(source))
 		copy(shrinkers, source)
 		canShrink := false
 
-		for index, shrinker := range shrinkers {
-			if shrinker == nil {
+		for index, element := range arb.Elements {
+			if element.Shrinker == nil {
 				continue
 			}
 			canShrink = true
 
-			var err error
-			arb.Elements[index], shrinkers[index], err = shrinker(arb.Elements[index], propertyFailed)
+			shrink, err := element.Shrinker(element, propertyFailed)
 			if err != nil {
-				return arbitrary.Arbitrary{}, nil, err
+				return arbitrary.Arbitrary{}, err
 			}
+			arb.Elements[index] = shrink
+			shrinkers[index] = shrink.Shrinker
 		}
 
 		if canShrink {
-			return arb, CollectionElements(shrinkers...), nil
+			arb.Shrinker = CollectionElements(false, shrinkers...)
+			return arb, nil
 		}
 
-		return arb, nil, nil
+		return arb, nil
 	}
 }

@@ -3,6 +3,8 @@ package generator
 import (
 	"errors"
 	"testing"
+
+	"github.com/steffnova/go-check/arbitrary"
 )
 
 func TestStruct(t *testing.T) {
@@ -20,7 +22,7 @@ func TestStruct(t *testing.T) {
 		"InvalidFieldName": func(t *testing.T) {
 			err := Stream(0, 10, Streamer(
 				func(struct{}) {},
-				Struct(map[string]Generator{"X": Int()}),
+				Struct(map[string]arbitrary.Generator{"X": Int()}),
 			))
 
 			if !errors.Is(err, ErrorInvalidConfig) {
@@ -30,7 +32,7 @@ func TestStruct(t *testing.T) {
 		"InvalidFieldTarget": func(t *testing.T) {
 			err := Stream(0, 10, Streamer(
 				func(struct{ X int }) {},
-				Struct(map[string]Generator{"X": Uint()}),
+				Struct(map[string]arbitrary.Generator{"X": Uint()}),
 			))
 
 			if !errors.Is(err, ErrorInvalidTarget) {

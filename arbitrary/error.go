@@ -1,4 +1,4 @@
-package generator
+package arbitrary
 
 import (
 	"fmt"
@@ -10,8 +10,8 @@ var (
 	ErrorInvalidConstraints    = fmt.Errorf("Invalid generator constraints")
 	ErrorInvalidCollectionSize = fmt.Errorf("Invalid number of generators for collection")
 	ErrorInvalidConfig         = fmt.Errorf("Invalid generator configuration")
-	ErrorMapper                = fmt.Errorf("arbitrary.Generator mapper is invalid")
-	ErrorFilter                = fmt.Errorf("arbitrary.Generator filter's predicate is invalid")
+	ErrorMapper                = fmt.Errorf("Generator mapper is invalid")
+	ErrorFilter                = fmt.Errorf("Generator filter's predicate is invalid")
 	ErrorBinder                = fmt.Errorf("Geneartor binder is invalid")
 	ErrorStream                = fmt.Errorf("Failed to stream data")
 )

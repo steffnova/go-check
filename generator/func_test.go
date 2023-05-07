@@ -28,14 +28,19 @@ func TestFunc(t *testing.T) {
 			}
 		},
 		"InvalidFuncOutputTarget": func(t *testing.T) {
-			err := Stream(0, 10, Streamer(
-				func(func(int) bool) {},
+			Stream(0, 10, Streamer(
+				func(in func(int) bool) {
+					defer func() {
+						err := recover().(error)
+						if !errors.Is(err, ErrorInvalidTarget) {
+							t.Fatalf("Expected error: %s", ErrorInvalidTarget)
+						}
+					}()
+					in(1)
+				},
 				Func(Int()),
 			))
 
-			if !errors.Is(err, ErrorInvalidTarget) {
-				t.Fatalf("Expected error: %s", ErrorInvalidTarget)
-			}
 		},
 		"TwoDifferentFunctions": func(t *testing.T) {
 			err := Stream(0, 10, Streamer(

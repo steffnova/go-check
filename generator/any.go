@@ -4,14 +4,15 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
 )
 
 // Any returns generator with default constraints for a type specified by generator's target.
 // Unsupported target: interface{}
-func Any() Generator {
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
-		var generator Generator
+func Any() arbitrary.Generator {
+	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
+		var generator arbitrary.Generator
 		switch target.Kind() {
 		case reflect.Array:
 			generator = Array(Any())
@@ -48,7 +49,7 @@ func Any() Generator {
 		case reflect.Uint64:
 			generator = Uint64()
 		case reflect.Func:
-			outputs := make([]Generator, target.NumOut())
+			outputs := make([]arbitrary.Generator, target.NumOut())
 			for index := range outputs {
 				outputs[index] = Any()
 			}
@@ -64,7 +65,7 @@ func Any() Generator {
 		case reflect.String:
 			generator = String()
 		default:
-			return nil, fmt.Errorf("%w. Any generator does not support values of kind: %s", ErrorInvalidTarget, target.Kind())
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Any generator does not support values of kind: %s", ErrorInvalidTarget, target.Kind())
 		}
 
 		return generator(target, bias, r)
