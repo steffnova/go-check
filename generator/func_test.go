@@ -3,6 +3,8 @@ package generator
 import (
 	"errors"
 	"testing"
+
+	"github.com/steffnova/go-check/arbitrary"
 )
 
 func TestFunc(t *testing.T) {
@@ -13,8 +15,8 @@ func TestFunc(t *testing.T) {
 				Func(),
 			))
 
-			if !errors.Is(err, ErrorInvalidTarget) {
-				t.Fatalf("Expected error: %s", ErrorInvalidTarget)
+			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
+				t.Fatalf("Expected error: %s", arbitrary.ErrorInvalidTarget)
 			}
 		},
 		"InvalidConfiguration": func(t *testing.T) {
@@ -23,8 +25,8 @@ func TestFunc(t *testing.T) {
 				Func(),
 			))
 
-			if !errors.Is(err, ErrorInvalidConfig) {
-				t.Fatalf("Expected error: %s", ErrorInvalidConfig)
+			if !errors.Is(err, arbitrary.ErrorInvalidConfig) {
+				t.Fatalf("Expected error: %s", arbitrary.ErrorInvalidConfig)
 			}
 		},
 		"InvalidFuncOutputTarget": func(t *testing.T) {
@@ -32,8 +34,8 @@ func TestFunc(t *testing.T) {
 				func(in func(int) bool) {
 					defer func() {
 						err := recover().(error)
-						if !errors.Is(err, ErrorInvalidTarget) {
-							t.Fatalf("Expected error: %s", ErrorInvalidTarget)
+						if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
+							t.Fatalf("Expected error: %s", arbitrary.ErrorInvalidTarget)
 						}
 					}()
 					in(1)

@@ -7,6 +7,7 @@ import (
 
 	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
+	"github.com/steffnova/go-check/shrinker"
 )
 
 // Slice returns generator for slice types. Slice elements are generated with
@@ -23,11 +24,11 @@ func Slice(elementGenerator arbitrary.Generator, limits ...constraints.Length) a
 	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 		switch {
 		case target.Kind() != reflect.Slice:
-			return arbitrary.Arbitrary{}, NewErrorInvalidTarget(target, "Slice")
+			return arbitrary.Arbitrary{}, arbitrary.NewErrorInvalidTarget(target, "Slice")
 		case constraint.Min > constraint.Max:
-			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Minimal length value %d can't be greater than max length value %d", ErrorInvalidConstraints, constraint.Min, constraint.Max)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Minimal length value %d can't be greater than max length value %d", arbitrary.ErrorInvalidConstraints, constraint.Min, constraint.Max)
 		case constraint.Max > uint64(math.MaxInt64):
-			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Max length %d can't be greater than %d", ErrorInvalidConstraints, constraint.Max, uint64(math.MaxInt64))
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Max length %d can't be greater than %d", arbitrary.ErrorInvalidConstraints, constraint.Max, uint64(math.MaxInt64))
 		}
 
 		biasedConstraints := constraints.Uint64(constraint)
@@ -36,25 +37,23 @@ func Slice(elementGenerator arbitrary.Generator, limits ...constraints.Length) a
 		value := reflect.MakeSlice(target, int(size), int(size))
 		elements := make([]arbitrary.Arbitrary, int(size))
 
-		// arb := arbitrary.Arbitrary{
-		// 	Value:    ,
-		// 	Elements: make([]arbitrary.Arbitrary, int(size)),
-		// }
-
 		for index := range elements {
 			var err error
 			elements[index], err = elementGenerator(target.Elem(), bias, r)
 			if err != nil {
-				return arbitrary.Arbitrary{}, fmt.Errorf("Failed to use slice element generator. %w", err)
+				return arbitrary.Arbitrary{}, fmt.Errorf("failed to use slice element generator. %w", err)
 			}
 			value.Index(index).Set(elements[index].Value)
 		}
 
-		return arbitrary.Arbitrary{
+		arb := arbitrary.Arbitrary{
 			Value:    value,
 			Elements: elements,
-			// Shrinker: shrinker.Slice(arb, constraints.Length(biasedConstraints)),
-		}, nil
+		}
+
+		arb.Shrinker = shrinker.Slice(arb, constraints.Length(biasedConstraints))
+
+		return arb, nil
 	}
 
 }

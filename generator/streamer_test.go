@@ -3,6 +3,8 @@ package generator
 import (
 	"errors"
 	"testing"
+
+	"github.com/steffnova/go-check/arbitrary"
 )
 
 func TestStreamer(t *testing.T) {
@@ -13,8 +15,8 @@ func TestStreamer(t *testing.T) {
 				Int(),
 			))
 
-			if !errors.Is(err, ErrorStream) {
-				t.Fatalf("Expected error; '%s'", ErrorStream)
+			if !errors.Is(err, arbitrary.ErrorStream) {
+				t.Fatalf("Expected error; '%s'", arbitrary.ErrorStream)
 			}
 		},
 		"InvalidStreamTargetInput": func(t *testing.T) {
@@ -23,8 +25,8 @@ func TestStreamer(t *testing.T) {
 				Int(),
 			))
 
-			if !errors.Is(err, ErrorStream) {
-				t.Fatalf("Expected error; '%s'", ErrorStream)
+			if !errors.Is(err, arbitrary.ErrorStream) {
+				t.Fatalf("Expected error; '%s'", arbitrary.ErrorStream)
 			}
 		},
 		"InvalidStreamTargetOutput": func(t *testing.T) {
@@ -33,8 +35,8 @@ func TestStreamer(t *testing.T) {
 				Int(),
 			))
 
-			if !errors.Is(err, ErrorStream) {
-				t.Fatalf("Expected error; '%s'", ErrorStream)
+			if !errors.Is(err, arbitrary.ErrorStream) {
+				t.Fatalf("Expected error; '%s'", arbitrary.ErrorStream)
 			}
 		},
 		"InvalidTarget": func(t *testing.T) {
@@ -43,8 +45,8 @@ func TestStreamer(t *testing.T) {
 				Int(),
 			))
 
-			if !errors.Is(err, ErrorInvalidTarget) {
-				t.Fatalf("Expected error; '%s'", ErrorInvalidTarget)
+			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
+				t.Fatalf("Expected error; '%s'", arbitrary.ErrorInvalidTarget)
 			}
 		},
 	}

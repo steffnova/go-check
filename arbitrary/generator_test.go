@@ -16,8 +16,8 @@ func TestGeneratorMap(t *testing.T) {
 				generator.Int().Map(nil),
 			))
 
-			if !errors.Is(err, generator.ErrorMapper) {
-				t.Fatalf("Expected error: '%s'", generator.ErrorMapper)
+			if !errors.Is(err, arbitrary.ErrorMapper) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorMapper)
 			}
 		},
 		"MapperInput": func(t *testing.T) {
@@ -28,8 +28,8 @@ func TestGeneratorMap(t *testing.T) {
 				}),
 			))
 
-			if !errors.Is(err, generator.ErrorMapper) {
-				t.Fatalf("Expected error: '%s'", generator.ErrorMapper)
+			if !errors.Is(err, arbitrary.ErrorMapper) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorMapper)
 			}
 		},
 		"MapperOutput": func(t *testing.T) {
@@ -38,8 +38,8 @@ func TestGeneratorMap(t *testing.T) {
 				generator.Int().Map(func(int) {}),
 			))
 
-			if !errors.Is(err, generator.ErrorMapper) {
-				t.Fatalf("Expected error: '%s'", generator.ErrorMapper)
+			if !errors.Is(err, arbitrary.ErrorMapper) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorMapper)
 			}
 		},
 		"MapperOutputType": func(t *testing.T) {
@@ -50,8 +50,8 @@ func TestGeneratorMap(t *testing.T) {
 				}),
 			))
 
-			if !errors.Is(err, generator.ErrorMapper) {
-				t.Fatalf("Expected error: '%s'", generator.ErrorMapper)
+			if !errors.Is(err, arbitrary.ErrorMapper) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorMapper)
 			}
 		},
 		"InvalidTarget": func(t *testing.T) {
@@ -61,8 +61,8 @@ func TestGeneratorMap(t *testing.T) {
 					return ""
 				}),
 			))
-			if !errors.Is(err, generator.ErrorInvalidTarget) {
-				t.Fatalf("Expected error: '%s'", generator.ErrorInvalidTarget)
+			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidTarget)
 			}
 		},
 		"Mapping": func(t *testing.T) {
@@ -95,8 +95,8 @@ func TestGeneratorFilter(t *testing.T) {
 				generator.Int().Filter(nil),
 			))
 
-			if !errors.Is(err, generator.ErrorFilter) {
-				t.Fatalf("Expected error: '%s'", generator.ErrorFilter)
+			if !errors.Is(err, arbitrary.ErrorFilter) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorFilter)
 			}
 		},
 		"PredicateInput": func(t *testing.T) {
@@ -107,8 +107,8 @@ func TestGeneratorFilter(t *testing.T) {
 				}),
 			))
 
-			if !errors.Is(err, generator.ErrorFilter) {
-				t.Fatalf("Expected error: '%s'", generator.ErrorFilter)
+			if !errors.Is(err, arbitrary.ErrorFilter) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorFilter)
 			}
 		},
 		"PredicateOutput": func(t *testing.T) {
@@ -117,8 +117,8 @@ func TestGeneratorFilter(t *testing.T) {
 				generator.Int().Filter(func(int) {}),
 			))
 
-			if !errors.Is(err, generator.ErrorFilter) {
-				t.Fatalf("Expected error: '%s'", generator.ErrorFilter)
+			if !errors.Is(err, arbitrary.ErrorFilter) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorFilter)
 			}
 		},
 		"PredicateOutputType": func(t *testing.T) {
@@ -129,8 +129,8 @@ func TestGeneratorFilter(t *testing.T) {
 				}),
 			))
 
-			if !errors.Is(err, generator.ErrorFilter) {
-				t.Fatalf("Expected error: '%s'", generator.ErrorFilter)
+			if !errors.Is(err, arbitrary.ErrorFilter) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorFilter)
 			}
 		},
 		"InvalidTarget": func(t *testing.T) {
@@ -140,8 +140,8 @@ func TestGeneratorFilter(t *testing.T) {
 					return false
 				}),
 			))
-			if !errors.Is(err, generator.ErrorInvalidTarget) {
-				t.Fatalf("Expected error: '%s'", generator.ErrorInvalidTarget)
+			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidTarget)
 			}
 		},
 		"Filtering": func(t *testing.T) {
@@ -174,8 +174,8 @@ func TestGeneratorBind(t *testing.T) {
 				generator.Int().Bind(0),
 			))
 
-			if !errors.Is(err, generator.ErrorBinder) {
-				t.Fatalf("Expected error: '%s'", generator.ErrorBinder)
+			if !errors.Is(err, arbitrary.ErrorBinder) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorBinder)
 			}
 		},
 		"BinderInput": func(t *testing.T) {
@@ -186,8 +186,8 @@ func TestGeneratorBind(t *testing.T) {
 				}),
 			))
 
-			if !errors.Is(err, generator.ErrorBinder) {
-				t.Fatalf("Expected error: '%s'", generator.ErrorBinder)
+			if !errors.Is(err, arbitrary.ErrorBinder) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorBinder)
 			}
 		},
 		"BinderOutput": func(t *testing.T) {
@@ -196,8 +196,8 @@ func TestGeneratorBind(t *testing.T) {
 				generator.Int().Bind(func(int) {}),
 			))
 
-			if !errors.Is(err, generator.ErrorBinder) {
-				t.Fatalf("Expected error: '%s'", generator.ErrorBinder)
+			if !errors.Is(err, arbitrary.ErrorBinder) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorBinder)
 			}
 		},
 		"BinderOutputType": func(t *testing.T) {
@@ -208,8 +208,8 @@ func TestGeneratorBind(t *testing.T) {
 				}),
 			))
 
-			if !errors.Is(err, generator.ErrorBinder) {
-				t.Fatalf("Expected error: '%s'", generator.ErrorBinder)
+			if !errors.Is(err, arbitrary.ErrorBinder) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorBinder)
 			}
 		},
 		"BounderTarget": func(t *testing.T) {
@@ -220,8 +220,8 @@ func TestGeneratorBind(t *testing.T) {
 				}),
 			))
 
-			if !errors.Is(err, generator.ErrorInvalidTarget) {
-				t.Fatalf("Expected error: '%s'", generator.ErrorInvalidTarget)
+			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidTarget)
 			}
 		},
 		"InvalidTarget": func(t *testing.T) {
@@ -231,8 +231,8 @@ func TestGeneratorBind(t *testing.T) {
 					return generator.Int()
 				}),
 			))
-			if !errors.Is(err, generator.ErrorInvalidTarget) {
-				t.Fatalf("Expected error: '%s'", generator.ErrorInvalidTarget)
+			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidTarget)
 			}
 		},
 		"Binding": func(t *testing.T) {

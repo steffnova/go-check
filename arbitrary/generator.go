@@ -121,7 +121,7 @@ func (generator Generator) Bind(binder interface{}) Generator {
 			return Arbitrary{}, err
 		}
 
-		boundVal.Shrinker = sourceArb.Shrinker.Bind(binder, boundVal)
+		boundVal.Shrinker = boundVal.Shrinker.Bind(binder, boundVal)
 		return boundVal, nil
 	}
 }

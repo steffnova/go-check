@@ -3,6 +3,8 @@ package generator
 import (
 	"errors"
 	"testing"
+
+	"github.com/steffnova/go-check/arbitrary"
 )
 
 func TestAny(t *testing.T) {
@@ -13,8 +15,8 @@ func TestAny(t *testing.T) {
 				Any(),
 			))
 
-			if !errors.Is(err, ErrorInvalidTarget) {
-				t.Fatalf("Expected error: '%s'", ErrorInvalidTarget)
+			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidTarget)
 			}
 		},
 		"Array": func(t *testing.T) {

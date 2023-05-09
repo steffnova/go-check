@@ -20,11 +20,11 @@ func Streamer(target interface{}, generators ...arbitrary.Generator) streamer {
 		targetVal := reflect.ValueOf(target)
 		switch {
 		case targetVal.Kind() != reflect.Func:
-			return fmt.Errorf("%w. Stream's target must be a function", ErrorStream)
+			return fmt.Errorf("%w. Stream's target must be a function", arbitrary.ErrorStream)
 		case targetVal.Type().NumIn() != len(generators):
-			return fmt.Errorf("%w. Number of generators %d must match number of input parameters :%d of stream target", ErrorStream, len(generators), targetVal.Type().NumIn())
+			return fmt.Errorf("%w. Number of generators %d must match number of input parameters :%d of stream target", arbitrary.ErrorStream, len(generators), targetVal.Type().NumIn())
 		case targetVal.Type().NumOut() != 0:
-			return fmt.Errorf("%w. Number of stream target's outputs must be 0", ErrorStream)
+			return fmt.Errorf("%w. Number of stream target's outputs must be 0", arbitrary.ErrorStream)
 		}
 
 		arbs := make(arbitrary.Arbitraries, len(generators))

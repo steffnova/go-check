@@ -7,6 +7,7 @@ import (
 
 	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
+	"github.com/steffnova/go-check/shrinker"
 )
 
 // Struct returns generator for struct types. arbitrary.Generators for struct fields can be
@@ -22,18 +23,18 @@ func Struct(fields ...map[string]arbitrary.Generator) arbitrary.Generator {
 
 	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 		if target.Kind() != reflect.Struct {
-			return arbitrary.Arbitrary{}, NewErrorInvalidTarget(target, "Struct")
+			return arbitrary.Arbitrary{}, arbitrary.NewErrorInvalidTarget(target, "Struct")
 		}
 
 		for fieldName := range fieldGenerators {
 			if _, exists := target.FieldByName(fieldName); !exists {
-				return arbitrary.Arbitrary{}, fmt.Errorf("%w. %s doesn't have a field: %s", ErrorInvalidConfig, target, fieldName)
+				return arbitrary.Arbitrary{}, fmt.Errorf("%w. %s doesn't have a field: %s", arbitrary.ErrorInvalidConfig, target, fieldName)
 			}
 		}
 
 		value := reflect.New(target).Elem()
 		elements := make(arbitrary.Arbitraries, target.NumField())
-		// arbitraries := make([]arbitrary.Arbitrary, target.NumField())
+
 		for index := range elements {
 			field := target.Field(index)
 			generator, exists := fieldGenerators[field.Name]
@@ -54,10 +55,12 @@ func Struct(fields ...map[string]arbitrary.Generator) arbitrary.Generator {
 			).Elem().Set(elements[index].Value)
 		}
 
-		return arbitrary.Arbitrary{
+		arb := arbitrary.Arbitrary{
 			Value:    value,
 			Elements: elements,
-			// Shrinker: shrinker.Struct(arb),
-		}, nil
+		}
+		arb.Shrinker = shrinker.Struct(arb)
+
+		return arb, nil
 	}
 }

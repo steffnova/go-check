@@ -16,10 +16,7 @@ func Array(original arbitrary.Arbitrary) arbitrary.Shrinker {
 			shrinkers[index] = element.Shrinker
 		}
 
-		return CollectionOneElement(). //Chain(
-			// CollectionElement(true, shrinkers...),
-			// CollectionElements(true, shrinkers...),
-			// CollectionAllElements(),
+		return CollectionElements(original).
 			TransformAfter(arbitrary.NewArray(original.Value.Type())).
 			Validate(arbitrary.ValidateArray())
 	}

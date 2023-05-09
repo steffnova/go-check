@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
 )
 
@@ -14,8 +15,8 @@ func TestArrayFrom(t *testing.T) {
 				func(n string) {},
 				ArrayFrom(Int()),
 			))
-			if !errors.Is(err, ErrorInvalidTarget) {
-				t.Fatalf("Expected error: '%s':", ErrorInvalidTarget)
+			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s':", arbitrary.ErrorInvalidTarget)
 			}
 		},
 		"InvalidNumberOfElementarbitrary.Generators": func(t *testing.T) {
@@ -24,8 +25,8 @@ func TestArrayFrom(t *testing.T) {
 				ArrayFrom(Uint(), Uint()),
 			))
 
-			if !errors.Is(err, ErrorInvalidCollectionSize) {
-				t.Fatalf("Expected error: '%s'", ErrorInvalidCollectionSize)
+			if !errors.Is(err, arbitrary.ErrorInvalidCollectionSize) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidCollectionSize)
 			}
 		},
 		"InvalidElementarbitrary.GeneratorType": func(t *testing.T) {
@@ -34,8 +35,8 @@ func TestArrayFrom(t *testing.T) {
 				ArrayFrom(Int(), Int(), Int()),
 			))
 
-			if !errors.Is(err, ErrorInvalidTarget) {
-				t.Fatalf("Expected error: '%s':", ErrorInvalidTarget)
+			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s':", arbitrary.ErrorInvalidTarget)
 			}
 		},
 		"arbitrary.GeneratorPerElement": func(t *testing.T) {

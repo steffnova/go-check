@@ -23,7 +23,7 @@ func Constant(constant interface{}) arbitrary.Generator {
 				Value: reflect.ValueOf(constant),
 			}, nil
 		default:
-			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Constant %s doesn't match the target's type: %s", ErrorInvalidTarget, reflect.TypeOf(constant).Kind().String(), target.String())
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Constant %s doesn't match the target's type: %s", arbitrary.ErrorInvalidTarget, reflect.TypeOf(constant).Kind().String(), target.String())
 		}
 	}
 }

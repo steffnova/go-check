@@ -29,9 +29,9 @@ func Int64(limits ...constraints.Int64) arbitrary.Generator {
 
 		switch {
 		case target.Kind() != reflect.Int64:
-			return arbitrary.Arbitrary{}, NewErrorInvalidTarget(target, "Int64")
+			return arbitrary.Arbitrary{}, arbitrary.NewErrorInvalidTarget(target, "Int64")
 		case constraint.Min > constraint.Max:
-			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower limit: %d cannot be greater than upper limit: %d", ErrorInvalidConstraints, constraint.Min, constraint.Max)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower limit: %d cannot be greater than upper limit: %d", arbitrary.ErrorInvalidConstraints, constraint.Min, constraint.Max)
 		case constraint.Max < 0:
 			return Uint64(constraints.Uint64{Min: uint64(-constraint.Max), Max: uint64(-constraint.Min)}).
 				Map(negativeMapper)(target, bias, r)
@@ -62,7 +62,7 @@ func Int32(limits ...constraints.Int32) arbitrary.Generator {
 	}
 	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 		if target.Kind() != reflect.Int32 {
-			return arbitrary.Arbitrary{}, NewErrorInvalidTarget(target, "Int32")
+			return arbitrary.Arbitrary{}, arbitrary.NewErrorInvalidTarget(target, "Int32")
 		}
 
 		mapper := arbitrary.Mapper(reflect.TypeOf(int64(0)), target, func(in reflect.Value) reflect.Value {
@@ -86,7 +86,7 @@ func Int16(limits ...constraints.Int16) arbitrary.Generator {
 	}
 	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 		if target.Kind() != reflect.Int16 {
-			return arbitrary.Arbitrary{}, NewErrorInvalidTarget(target, "Int16")
+			return arbitrary.Arbitrary{}, arbitrary.NewErrorInvalidTarget(target, "Int16")
 		}
 
 		mapper := arbitrary.Mapper(reflect.TypeOf(int64(0)), target, func(in reflect.Value) reflect.Value {
@@ -111,7 +111,7 @@ func Int8(limits ...constraints.Int8) arbitrary.Generator {
 
 	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 		if target.Kind() != reflect.Int8 {
-			return arbitrary.Arbitrary{}, NewErrorInvalidTarget(target, "Int8")
+			return arbitrary.Arbitrary{}, arbitrary.NewErrorInvalidTarget(target, "Int8")
 		}
 
 		mapper := arbitrary.Mapper(reflect.TypeOf(int64(0)), target, func(in reflect.Value) reflect.Value {
@@ -136,7 +136,7 @@ func Int(limits ...constraints.Int) arbitrary.Generator {
 
 	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 		if target.Kind() != reflect.Int {
-			return arbitrary.Arbitrary{}, NewErrorInvalidTarget(target, "Int")
+			return arbitrary.Arbitrary{}, arbitrary.NewErrorInvalidTarget(target, "Int")
 		}
 
 		mapper := arbitrary.Mapper(reflect.TypeOf(int64(0)), target, func(in reflect.Value) reflect.Value {

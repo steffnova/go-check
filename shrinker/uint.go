@@ -18,6 +18,7 @@ func Uint64(limits constraints.Uint64) arbitrary.Shrinker {
 		case val.Value.Uint() < limits.Min || val.Value.Uint() > limits.Max:
 			return arbitrary.Arbitrary{}, fmt.Errorf("n: %v is out of limit constraints: {Min: %v, Max: %v}", val.Value.Uint(), limits.Min, limits.Max)
 		case limits.Max == limits.Min:
+			val.Shrinker = nil
 			return val, nil
 		case propertyFailed:
 			limits.Max = val.Value.Uint()

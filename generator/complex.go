@@ -21,11 +21,11 @@ func Complex128(limits ...constraints.Complex128) arbitrary.Generator {
 	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 		switch {
 		case target.Kind() != reflect.Complex128:
-			return arbitrary.Arbitrary{}, NewErrorInvalidTarget(target, "Complex128")
+			return arbitrary.Arbitrary{}, arbitrary.NewErrorInvalidTarget(target, "Complex128")
 		case constraint.Real.Min > constraint.Real.Max:
-			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower limit of complex's real part can't be higher that it's upper limit", ErrorInvalidConstraints)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower limit of complex's real part can't be higher that it's upper limit", arbitrary.ErrorInvalidConstraints)
 		case constraint.Imaginary.Min > constraint.Imaginary.Max:
-			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower limit of complex's imaginary part can't be higher that it's upper limit", ErrorInvalidConstraints)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower limit of complex's imaginary part can't be higher that it's upper limit", arbitrary.ErrorInvalidConstraints)
 		default:
 			mapper := arbitrary.Mapper(reflect.TypeOf([2]float64{}), target, func(in reflect.Value) reflect.Value {
 				parts := in.Interface().([2]float64)
@@ -52,11 +52,11 @@ func Complex64(limits ...constraints.Complex64) arbitrary.Generator {
 	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 		switch {
 		case target.Kind() != reflect.Complex64:
-			return arbitrary.Arbitrary{}, NewErrorInvalidTarget(target, "Complex64")
+			return arbitrary.Arbitrary{}, arbitrary.NewErrorInvalidTarget(target, "Complex64")
 		case constraint.Real.Min > constraint.Real.Max:
-			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower limit of complex's real part can't be higher that it's upper limit", ErrorInvalidConstraints)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower limit of complex's real part can't be higher that it's upper limit", arbitrary.ErrorInvalidConstraints)
 		case constraint.Imaginary.Min > constraint.Imaginary.Max:
-			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower limit of complex's imaginary part can't be higher that it's upper limit", ErrorInvalidConstraints)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower limit of complex's imaginary part can't be higher that it's upper limit", arbitrary.ErrorInvalidConstraints)
 		default:
 			mapper := arbitrary.Mapper(reflect.TypeOf([2]float32{}), target, func(in reflect.Value) reflect.Value {
 				parts := in.Interface().([2]float32)

@@ -16,10 +16,10 @@ import (
 func Func(outputs ...arbitrary.Generator) arbitrary.Generator {
 	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 		if target.Kind() != reflect.Func {
-			return arbitrary.Arbitrary{}, NewErrorInvalidTarget(target, "Func")
+			return arbitrary.Arbitrary{}, arbitrary.NewErrorInvalidTarget(target, "Func")
 		}
 		if len(outputs) != target.NumOut() {
-			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Invalid number of generators (%d) used for generating function outputs, expected %d", ErrorInvalidConfig, len(outputs), target.NumOut())
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Invalid number of generators (%d) used for generating function outputs, expected %d", arbitrary.ErrorInvalidConfig, len(outputs), target.NumOut())
 		}
 		// arbitraries := make([]arbitrary.Arbitrary, len(outputs))
 		randoms := make([]arbitrary.Random, len(outputs))

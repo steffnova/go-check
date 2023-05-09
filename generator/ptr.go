@@ -21,7 +21,7 @@ func Ptr(arb arbitrary.Generator) arbitrary.Generator {
 func PtrTo(arb arbitrary.Generator) arbitrary.Generator {
 	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 		if target.Kind() != reflect.Ptr {
-			return arbitrary.Arbitrary{}, NewErrorInvalidTarget(target, "PtrTo")
+			return arbitrary.Arbitrary{}, arbitrary.NewErrorInvalidTarget(target, "PtrTo")
 		}
 
 		mapper := arbitrary.Mapper(target.Elem(), target, func(in reflect.Value) reflect.Value {

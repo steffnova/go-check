@@ -23,10 +23,7 @@ func Struct(original arbitrary.Arbitrary) arbitrary.Shrinker {
 			shrinkers[index] = element.Shrinker
 		}
 
-		return Chain(
-			CollectionElement(true, shrinkers...),
-			CollectionElements(true, shrinkers...),
-		).
+		return CollectionElements(original).
 			TransformAfter(arbitrary.NewStruct(original.Value.Type())).
 			Validate(arbitrary.ValidateStruct())
 	}

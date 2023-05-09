@@ -18,7 +18,7 @@ func Nil() arbitrary.Generator {
 				Value: reflect.Zero(target),
 			}, nil
 		default:
-			return arbitrary.Arbitrary{}, NewErrorInvalidTarget(target, "Nil")
+			return arbitrary.Arbitrary{}, arbitrary.NewErrorInvalidTarget(target, "Nil")
 		}
 	}
 }

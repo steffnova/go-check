@@ -65,7 +65,7 @@ func Any() arbitrary.Generator {
 		case reflect.String:
 			generator = String()
 		default:
-			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Any generator does not support values of kind: %s", ErrorInvalidTarget, target.Kind())
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Any generator does not support values of kind: %s", arbitrary.ErrorInvalidTarget, target.Kind())
 		}
 
 		return generator(target, bias, r)

@@ -30,11 +30,11 @@ type weightedGenerator struct {
 func Weighted(weights []uint64, generators ...arbitrary.Generator) arbitrary.Generator {
 	switch {
 	case len(weights) == 0:
-		return Invalid(fmt.Errorf("%w. Number of weights can't be 0", ErrorInvalidConfig))
+		return Invalid(fmt.Errorf("%w. Number of weights can't be 0", arbitrary.ErrorInvalidConfig))
 	case len(generators) == 0:
-		return Invalid(fmt.Errorf("%w. Number of generators can't be 0", ErrorInvalidConfig))
+		return Invalid(fmt.Errorf("%w. Number of generators can't be 0", arbitrary.ErrorInvalidConfig))
 	case len(weights) != len(generators):
-		return Invalid(fmt.Errorf("%w. Number of weights and generators must be the same", ErrorInvalidConfig))
+		return Invalid(fmt.Errorf("%w. Number of weights and generators must be the same", arbitrary.ErrorInvalidConfig))
 	default:
 		return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 			totalWeight := uint64(0)
@@ -44,7 +44,7 @@ func Weighted(weights []uint64, generators ...arbitrary.Generator) arbitrary.Gen
 
 			for index, generator := range generators {
 				if weights[index] < 1 {
-					return arbitrary.Arbitrary{}, fmt.Errorf("%w. Weight can't be less than 1: weights[%d] %d", ErrorInvalidConfig, index, weights[index])
+					return arbitrary.Arbitrary{}, fmt.Errorf("%w. Weight can't be less than 1: weights[%d] %d", arbitrary.ErrorInvalidConfig, index, weights[index])
 				}
 				gen, err := generator(target, bias, r)
 				if err != nil {
@@ -57,7 +57,7 @@ func Weighted(weights []uint64, generators ...arbitrary.Generator) arbitrary.Gen
 					totalWeight -= 1
 				}
 				if prevWeight > totalWeight {
-					return arbitrary.Arbitrary{}, fmt.Errorf("%w. Total weght overflow. (sum of all weights can't exceed %d)", ErrorInvalidConfig, uint(math.MaxUint64))
+					return arbitrary.Arbitrary{}, fmt.Errorf("%w. Total weght overflow. (sum of all weights can't exceed %d)", arbitrary.ErrorInvalidConfig, uint(math.MaxUint64))
 				}
 				weightsIndex[index] = totalWeight
 				arbitraries[index] = gen

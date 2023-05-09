@@ -22,13 +22,13 @@ func Rune(limits ...constraints.Rune) arbitrary.Generator {
 	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 		switch {
 		case target.Kind() != reflect.Int32:
-			return arbitrary.Arbitrary{}, NewErrorInvalidTarget(target, "Rune")
+			return arbitrary.Arbitrary{}, arbitrary.NewErrorInvalidTarget(target, "Rune")
 		case constraint.MinCodePoint > constraint.MaxCodePoint:
-			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Minimal code point %d can't be greater than maximal code point: %d", ErrorInvalidConstraints, constraint.MinCodePoint, constraint.MaxCodePoint)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Minimal code point %d can't be greater than maximal code point: %d", arbitrary.ErrorInvalidConstraints, constraint.MinCodePoint, constraint.MaxCodePoint)
 		case constraint.MinCodePoint < 0:
-			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Minimal code point must be greater then or equal to 0", ErrorInvalidConstraints)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Minimal code point must be greater then or equal to 0", arbitrary.ErrorInvalidConstraints)
 		case constraint.MaxCodePoint > 0x10ffff:
-			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Maximal code point must be lower then or equal to 0x10ffff", ErrorInvalidConstraints)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Maximal code point must be lower then or equal to 0x10ffff", arbitrary.ErrorInvalidConstraints)
 		default:
 			mapper := arbitrary.Mapper(reflect.TypeOf(int32(0)), target, func(in reflect.Value) reflect.Value {
 				return reflect.ValueOf(rune(int32(in.Int()))).Convert(target)

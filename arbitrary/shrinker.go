@@ -7,19 +7,27 @@ import (
 
 type Shrinker func(arb Arbitrary, propertyFailed bool) (Arbitrary, error)
 
-func (shrinker Shrinker) Map(mapper interface{}) Shrinker {
+func (shrinker Shrinker) Fail(err error) Shrinker {
 	return func(arb Arbitrary, propertyFailed bool) (Arbitrary, error) {
-		mapperVal := reflect.ValueOf(mapper)
-		switch {
-		case mapperVal.Kind() != reflect.Func:
-			return Arbitrary{}, fmt.Errorf("mapper must be a function")
-		case mapperVal.Type().NumIn() != 1:
-			return Arbitrary{}, fmt.Errorf("mapper must have 1 input value")
-		case mapperVal.Type().NumOut() != 1:
-			return Arbitrary{}, fmt.Errorf("mapper must have 1 output value")
-		case shrinker == nil:
-			return arb, nil
-		}
+		return Arbitrary{}, err
+	}
+}
+
+func (shrinker Shrinker) Map(mapper interface{}) Shrinker {
+	mapperVal := reflect.ValueOf(mapper)
+
+	switch {
+	case mapperVal.Kind() != reflect.Func:
+		return shrinker.Fail(fmt.Errorf("mapper must be a function"))
+	case mapperVal.Type().NumIn() != 1:
+		return shrinker.Fail(fmt.Errorf("mapper must have 1 input value"))
+	case mapperVal.Type().NumOut() != 1:
+		return shrinker.Fail(fmt.Errorf("mapper must have 1 output value"))
+	case shrinker == nil:
+		return nil
+	}
+
+	return func(arb Arbitrary, propertyFailed bool) (Arbitrary, error) {
 
 		if mapperVal.Type().In(0) != arb.Precursors[0].Value.Type() {
 			return Arbitrary{}, fmt.Errorf("mapper input type must match shrink type")
@@ -39,32 +47,32 @@ func (shrinker Shrinker) Map(mapper interface{}) Shrinker {
 }
 
 func (shrinker Shrinker) Filter(predicate interface{}) Shrinker {
+	val := reflect.ValueOf(predicate)
+	switch {
+	case val.Kind() != reflect.Func:
+		return shrinker.Fail(fmt.Errorf("predicate must be a function"))
+	case val.Type().NumIn() != 1:
+		return shrinker.Fail(fmt.Errorf("predicate must have one input value"))
+	case val.Type().NumOut() != 1:
+		return shrinker.Fail(fmt.Errorf("predicate must have one output value"))
+	case val.Type().Out(0).Kind() != reflect.Bool:
+		return shrinker.Fail(fmt.Errorf("predicate must have bool as a output value"))
+	case shrinker == nil:
+		return nil
+	}
+
 	return func(arb Arbitrary, propertyFailed bool) (Arbitrary, error) {
-		val := reflect.ValueOf(predicate)
+		shrink, err := shrinker(arb, propertyFailed)
 		switch {
-		case val.Kind() != reflect.Func:
-			return Arbitrary{}, fmt.Errorf("predicate must be a function")
-		case val.Type().NumIn() != 1:
-			return Arbitrary{}, fmt.Errorf("predicate must have one input value")
-		case val.Type().NumOut() != 1:
-			return Arbitrary{}, fmt.Errorf("predicate must have one output value")
-		case val.Type().Out(0).Kind() != reflect.Bool:
-			return Arbitrary{}, fmt.Errorf("predicate must have bool as a output value")
-		case shrinker == nil:
-			return arb, nil
+		case err != nil:
+			return Arbitrary{}, err
+		case val.Call([]reflect.Value{shrink.Value})[0].Bool():
+			shrink.Shrinker = shrink.Shrinker.Filter(predicate)
+			return shrink, nil
+		case shrink.Shrinker == nil:
+			return shrink, nil
 		default:
-			shrink, err := shrinker(arb, propertyFailed)
-			switch {
-			case err != nil:
-				return Arbitrary{}, err
-			case val.Call([]reflect.Value{shrink.Value})[0].Bool():
-				shrink.Shrinker = shrink.Shrinker.Filter(predicate)
-				return shrink, nil
-			case shrink.Shrinker == nil:
-				return shrink, nil
-			default:
-				return shrink.Shrinker.Filter(predicate)(shrink, false)
-			}
+			return shrink.Shrinker.Filter(predicate)(shrink, false)
 		}
 	}
 
@@ -80,15 +88,17 @@ type binder func(Arbitrary) (Arbitrary, error)
 // that caused last property falsification. Because of "non-deterministic" property of
 // binder, Bind is best paired with Retry combinator that can improve shrinking efficiency.
 func (shrinker Shrinker) Bind(binder binder, last Arbitrary) Shrinker {
+	if binder == nil {
+		return shrinker.Fail(fmt.Errorf("binder is nil"))
+	}
 	return func(arb Arbitrary, propertyFailed bool) (Arbitrary, error) {
-		if binder == nil {
-			return Arbitrary{}, fmt.Errorf("binder is nil")
-		}
 		if propertyFailed {
-			last = arb
+			last = arb.Copy()
+			last.Shrinker = shrinker
 		}
 
-		if shrinker == nil {
+		source := last.Precursors[len(last.Precursors)-1]
+		if source.Shrinker == nil {
 			after := func(in Arbitrary) Arbitrary {
 				in.Precursors = append(in.Precursors, last.Precursors[len(last.Precursors)-1])
 				return in
@@ -101,7 +111,7 @@ func (shrinker Shrinker) Bind(binder binder, last Arbitrary) Shrinker {
 			return last, nil
 		}
 
-		sourceShrink, err := shrinker(arb.Precursors[len(arb.Precursors)-1], propertyFailed)
+		sourceShrink, err := source.Shrinker(arb.Precursors[len(arb.Precursors)-1], propertyFailed)
 		if err != nil {
 			return Arbitrary{}, err
 		}
@@ -110,7 +120,7 @@ func (shrinker Shrinker) Bind(binder binder, last Arbitrary) Shrinker {
 		if err != nil {
 			return Arbitrary{}, err
 		}
-		boundShrink.Shrinker = sourceShrink.Shrinker.Bind(binder, last)
+		boundShrink.Shrinker = boundShrink.Shrinker.Bind(binder, last)
 		return boundShrink, nil
 	}
 }
@@ -129,7 +139,8 @@ func (shrinker Shrinker) TransformAfter(transformer transform) Shrinker {
 		if err != nil {
 			return Arbitrary{}, err
 		}
-		shrink.Shrinker = arb.Shrinker.TransformAfter(transformer)
+
+		shrink.Shrinker = shrink.Shrinker.TransformAfter(transformer)
 		return transformer(shrink), nil
 	}
 }
@@ -147,6 +158,22 @@ func (shrinker Shrinker) TransformBefore(transformer transform) Shrinker {
 			return Arbitrary{}, err
 		}
 		shrink.Shrinker = shrink.Shrinker.TransformBefore(transformer)
+		return shrink, nil
+	}
+}
+
+func (shrinker Shrinker) TransformOnceBefore(transformer transform) Shrinker {
+	if shrinker == nil {
+		return nil
+	}
+	return func(arb Arbitrary, propertyFailed bool) (Arbitrary, error) {
+		if transformer == nil {
+			return Arbitrary{}, fmt.Errorf("transformer is nil")
+		}
+		shrink, err := shrinker(transformer(arb), propertyFailed)
+		if err != nil {
+			return Arbitrary{}, err
+		}
 		return shrink, nil
 	}
 }
@@ -202,12 +229,12 @@ func (shrinker Shrinker) Validate(validation func(Arbitrary) error) Shrinker {
 		if err := validation(arb); err != nil {
 			return Arbitrary{}, err
 		}
-		arb, err := shrinker(arb, propertyFailed)
+		shrink, err := shrinker(arb, propertyFailed)
 		if err != nil {
 			return Arbitrary{}, err
 		}
 
-		arb.Shrinker = arb.Shrinker.Validate(validation)
-		return arb, nil
+		shrink.Shrinker = shrink.Shrinker.Validate(validation)
+		return shrink, nil
 	}
 }

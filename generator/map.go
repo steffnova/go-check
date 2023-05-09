@@ -31,11 +31,11 @@ func Map(keyGenerator, ValueGenerator arbitrary.Generator, limits ...constraints
 	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 		switch {
 		case target.Kind() != reflect.Map:
-			return arbitrary.Arbitrary{}, NewErrorInvalidTarget(target, "Map")
+			return arbitrary.Arbitrary{}, arbitrary.NewErrorInvalidTarget(target, "Map")
 		case constraint.Min > constraint.Max:
-			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Minimal length value %d can't be greater than max length value %d", ErrorInvalidConstraints, constraint.Min, constraint.Max)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Minimal length value %d can't be greater than max length value %d", arbitrary.ErrorInvalidConstraints, constraint.Min, constraint.Max)
 		case constraint.Max > uint64(math.MaxInt64):
-			return arbitrary.Arbitrary{}, fmt.Errorf("%w. max length %d can't be greater than %d", ErrorInvalidConstraints, constraint.Max, uint64(math.MaxInt64))
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. max length %d can't be greater than %d", arbitrary.ErrorInvalidConstraints, constraint.Max, uint64(math.MaxInt64))
 		}
 
 		size := r.Uint64(constraints.Uint64{
@@ -66,10 +66,7 @@ func Map(keyGenerator, ValueGenerator arbitrary.Generator, limits ...constraints
 
 			elements[index] = arbitrary.Arbitrary{
 				Elements: arbitrary.Arbitraries{keyArb, valueArb},
-				Shrinker: shrinker.Chain(
-				// shrinker.CollectionElement(keyArb.Shrinker, valueArb.Shrinker),
-				// shrinker.CollectionElements(keyArb.Shrinker, valueArb.Shrinker),
-				),
+				Shrinker: shrinker.CollectionElements(elements[index]),
 			}
 
 			value.SetMapIndex(keyArb.Value, valueArb.Value)

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
 )
 
@@ -25,8 +26,8 @@ func TestUint64(t *testing.T) {
 				func(n uint64) {},
 				Uint64(constraints.Uint64{Min: 100, Max: 20}),
 			))
-			if !errors.Is(err, ErrorInvalidConstraints) {
-				t.Fatalf("Expected error: '%s'", ErrorInvalidConstraints)
+			if !errors.Is(err, arbitrary.ErrorInvalidConstraints) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidConstraints)
 			}
 		},
 		"InvalidType": func(t *testing.T) {
@@ -34,8 +35,8 @@ func TestUint64(t *testing.T) {
 				func(n string) {},
 				Uint64(),
 			))
-			if !errors.Is(err, ErrorInvalidTarget) {
-				t.Fatalf("Expected error: '%s' because constraints are invalid.", ErrorInvalidTarget)
+			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s' because constraints are invalid.", arbitrary.ErrorInvalidTarget)
 			}
 		},
 		"UnderlyingType": func(t *testing.T) {
@@ -73,7 +74,7 @@ func TestUint32(t *testing.T) {
 				func(n string) {},
 				Uint32(),
 			))
-			if !errors.Is(err, ErrorInvalidTarget) {
+			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
 				t.Fatalf("Expected error because constraints are invalid: %s", err)
 			}
 		},
@@ -112,7 +113,7 @@ func TestUint16(t *testing.T) {
 				func(n string) {},
 				Uint16(),
 			))
-			if !errors.Is(err, ErrorInvalidTarget) {
+			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
 				t.Fatalf("Expected error because constraints are invalid: %s", err)
 			}
 		},
@@ -151,7 +152,7 @@ func TestUint8(t *testing.T) {
 				func(n string) {},
 				Uint8(),
 			))
-			if !errors.Is(err, ErrorInvalidTarget) {
+			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
 				t.Fatalf("Expected error because constraints are invalid: %s", err)
 			}
 		},
@@ -190,7 +191,7 @@ func TestUint(t *testing.T) {
 				func(n string) {},
 				Uint(),
 			))
-			if !errors.Is(err, ErrorInvalidTarget) {
+			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
 				t.Fatalf("Expected error because constraints are invalid: %s", err)
 			}
 		},

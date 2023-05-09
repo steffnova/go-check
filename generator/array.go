@@ -31,10 +31,10 @@ func Array(element arbitrary.Generator) arbitrary.Generator {
 func ArrayFrom(elements ...arbitrary.Generator) arbitrary.Generator {
 	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 		if target.Kind() != reflect.Array {
-			return arbitrary.Arbitrary{}, NewErrorInvalidTarget(target, "Array")
+			return arbitrary.Arbitrary{}, arbitrary.NewErrorInvalidTarget(target, "Array")
 		}
 		if target.Len() != len(elements) {
-			return arbitrary.Arbitrary{}, NewErrorInvalidCollectionSize(target.Len(), len(elements))
+			return arbitrary.Arbitrary{}, arbitrary.NewErrorInvalidCollectionSize(target.Len(), len(elements))
 		}
 
 		value := reflect.New(target).Elem()

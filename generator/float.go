@@ -27,13 +27,13 @@ func Float64(limits ...constraints.Float64) arbitrary.Generator {
 
 		switch {
 		case target.Kind() != reflect.Float64:
-			return arbitrary.Arbitrary{}, NewErrorInvalidTarget(target, "Float64")
+			return arbitrary.Arbitrary{}, arbitrary.NewErrorInvalidTarget(target, "Float64")
 		case constraint.Min < -math.MaxFloat64:
-			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower range value can't be lower then %f", ErrorInvalidConstraints, -math.MaxFloat64)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower range value can't be lower then %f", arbitrary.ErrorInvalidConstraints, -math.MaxFloat64)
 		case constraint.Max > math.MaxFloat64:
-			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Upper range value can't be greater then %f", ErrorInvalidConstraints, math.MaxFloat64)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Upper range value can't be greater then %f", arbitrary.ErrorInvalidConstraints, math.MaxFloat64)
 		case constraint.Max < constraint.Min:
-			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower range value can't be greater then upper range value", ErrorInvalidConstraints)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower range value can't be greater then upper range value", arbitrary.ErrorInvalidConstraints)
 		case constraint.Min >= math.Copysign(0, 1):
 			return Uint64(
 				constraints.Uint64{
@@ -82,13 +82,13 @@ func Float32(limits ...constraints.Float32) arbitrary.Generator {
 
 		switch {
 		case target.Kind() != reflect.Float32:
-			return arbitrary.Arbitrary{}, NewErrorInvalidTarget(target, "Float32")
+			return arbitrary.Arbitrary{}, arbitrary.NewErrorInvalidTarget(target, "Float32")
 		case constraint.Min < -math.MaxFloat32:
-			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower range value can't be lower then %f", ErrorInvalidConstraints, -math.MaxFloat32)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower range value can't be lower then %f", arbitrary.ErrorInvalidConstraints, -math.MaxFloat32)
 		case constraint.Max > math.MaxFloat32:
-			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Upper range value can't be greater then %f", ErrorInvalidConstraints, math.MaxFloat32)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Upper range value can't be greater then %f", arbitrary.ErrorInvalidConstraints, math.MaxFloat32)
 		case constraint.Max < constraint.Min:
-			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower range value can't be greater then upper range value", ErrorInvalidConstraints)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower range value can't be greater then upper range value", arbitrary.ErrorInvalidConstraints)
 		case constraint.Min >= 0:
 			return Uint32(constraints.Uint32{
 				Min: math.Float32bits(constraint.Min),

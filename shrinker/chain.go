@@ -21,6 +21,7 @@ func Chain(shrinkers ...arbitrary.Shrinker) arbitrary.Shrinker {
 			return arb, nil
 		}
 
+		arb.Shrinker = nil
 		return arb, nil
 	}
 }

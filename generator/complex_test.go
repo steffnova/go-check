@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
 )
 
@@ -38,8 +39,8 @@ func TestComplex128(t *testing.T) {
 					Imaginary: constraints.Float64Default(),
 				}),
 			))
-			if !errors.Is(err, ErrorInvalidConstraints) {
-				t.Fatalf("Expected error: '%s'", ErrorInvalidConstraints)
+			if !errors.Is(err, arbitrary.ErrorInvalidConstraints) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidConstraints)
 			}
 		},
 		"InvalidImaginaryRange": func(t *testing.T) {
@@ -50,8 +51,8 @@ func TestComplex128(t *testing.T) {
 					Imaginary: constraints.Float64{Min: 50, Max: -50},
 				}),
 			))
-			if !errors.Is(err, ErrorInvalidConstraints) {
-				t.Fatalf("Expected error: '%s'", ErrorInvalidConstraints)
+			if !errors.Is(err, arbitrary.ErrorInvalidConstraints) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidConstraints)
 			}
 		},
 		"InvalidType": func(t *testing.T) {
@@ -59,8 +60,8 @@ func TestComplex128(t *testing.T) {
 				func(n string) {},
 				Complex128(),
 			))
-			if !errors.Is(err, ErrorInvalidTarget) {
-				t.Fatalf("Expected error: '%s':", ErrorInvalidTarget)
+			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s':", arbitrary.ErrorInvalidTarget)
 			}
 		},
 		"UnderlyingType": func(t *testing.T) {
@@ -111,8 +112,8 @@ func TestComplex64(t *testing.T) {
 					Imaginary: constraints.Float32Default(),
 				}),
 			))
-			if !errors.Is(err, ErrorInvalidConstraints) {
-				t.Fatalf("Expected error: '%s'", ErrorInvalidConstraints)
+			if !errors.Is(err, arbitrary.ErrorInvalidConstraints) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidConstraints)
 			}
 		},
 		"InvalidImaginaryRange": func(t *testing.T) {
@@ -123,8 +124,8 @@ func TestComplex64(t *testing.T) {
 					Imaginary: constraints.Float32{Min: 50, Max: -50},
 				}),
 			))
-			if !errors.Is(err, ErrorInvalidConstraints) {
-				t.Fatalf("Expected error: '%s'", ErrorInvalidConstraints)
+			if !errors.Is(err, arbitrary.ErrorInvalidConstraints) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidConstraints)
 			}
 		},
 		"InvalidType": func(t *testing.T) {
@@ -132,8 +133,8 @@ func TestComplex64(t *testing.T) {
 				func(n string) {},
 				Complex64(),
 			))
-			if !errors.Is(err, ErrorInvalidTarget) {
-				t.Fatalf("Expected error: '%s':", ErrorInvalidTarget)
+			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s':", arbitrary.ErrorInvalidTarget)
 			}
 		},
 		"UnderlyingType": func(t *testing.T) {

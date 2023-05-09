@@ -4,40 +4,68 @@ import (
 	"fmt"
 
 	"github.com/steffnova/go-check/arbitrary"
-	"github.com/steffnova/go-check/constraints"
 )
 
-func CollectionSize(arbs []arbitrary.Arbitrary, index int, limits constraints.Length) arbitrary.Shrinker {
-	shrinkers := make([]arbitrary.Shrinker, len(arbs))
-	for index := range arbs {
-		shrinkers[index] = arbs[index].Shrinker
-	}
+func CollectionRemoveFront(index int) arbitrary.Shrinker {
 	return func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, error) {
 		switch {
-		// case len(shrinkers) != len(arbs):
-		// 	return arbitrary.Arbitrary{}, nil, fmt.Errorf("shrinker, nodes miss match")
-		case index < 0 || index > int(limits.Max):
-			return arbitrary.Arbitrary{}, fmt.Errorf("number of indexes out of range")
-		case int(limits.Min) == len(arbs)-index:
-			return arbitrary.Arbitrary{
-				Elements: arbs,
-				Shrinker: Chain(
-					CollectionOneElement(),
-					CollectionAllElements(),
-				)}, nil
+		case index < 0:
+			return arbitrary.Arbitrary{}, fmt.Errorf("index is out of range")
+		case index >= len(arb.Elements) && propertyFailed:
+			reduced := arb.Copy()
+			reduced.Shrinker = nil
+			arb.Shrinker = CollectionElements(reduced)
+			return arb, nil
 		default:
-			nextArbs := []arbitrary.Arbitrary{}
-			nextArbs = append(nextArbs, arbs[:index]...)
-			nextArbs = append(nextArbs, arbs[index+1:]...)
+			reduced := arb.Copy()
+			elements := []arbitrary.Arbitrary{}
+			elements = append(elements, arb.Elements[:index]...)
+			elements = append(elements, arb.Elements[index+1:]...)
 
-			shrinker1 := CollectionSize(nextArbs, index, limits)
-			shrinker2 := CollectionSize(arbs, index+1, limits)
+			revertRemoval := func(in arbitrary.Arbitrary) arbitrary.Arbitrary {
+				in.Elements = arb.Elements
+				return in
+			}
+
+			shrinker1 := CollectionRemoveFront(index)
+			shrinker2 := CollectionRemoveFront(index + 1).TransformOnceBefore(revertRemoval)
 			shrinker := shrinker1.Or(shrinker2)
 
-			return arbitrary.Arbitrary{
-				Elements: nextArbs,
-				Shrinker: shrinker,
-			}, nil
+			reduced.Elements = elements
+			reduced.Shrinker = shrinker
+			return reduced, nil
+		}
+	}
+}
+
+func CollectionRemoveBack(index int) arbitrary.Shrinker {
+	return func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, error) {
+		switch {
+		case index >= len(arb.Elements):
+			return arbitrary.Arbitrary{}, fmt.Errorf("index is out of range")
+		case index < 0 && propertyFailed:
+			reduced := arb.Copy()
+			reduced.Shrinker = nil
+			arb.Shrinker = CollectionElements(reduced)
+			return arb, nil
+		default:
+			reduced := arb.Copy()
+			elements := []arbitrary.Arbitrary{}
+			elements = append(elements, arb.Elements[:index]...)
+			elements = append(elements, arb.Elements[index+1:]...)
+
+			revertRemoval := func(in arbitrary.Arbitrary) arbitrary.Arbitrary {
+				in.Elements = arb.Elements
+				return in
+			}
+
+			shrinker1 := CollectionRemoveBack(index - 1)
+			shrinker2 := CollectionRemoveBack(index - 1).TransformOnceBefore(revertRemoval)
+			shrinker := shrinker1.Or(shrinker2)
+
+			reduced.Elements = elements
+			reduced.Shrinker = shrinker
+			return reduced, nil
 		}
 	}
 }

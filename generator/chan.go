@@ -20,13 +20,13 @@ func Chan(limits ...constraints.Length) arbitrary.Generator {
 	}
 	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 		if target.Kind() != reflect.Chan {
-			return arbitrary.Arbitrary{}, NewErrorInvalidTarget(target, "Chan")
+			return arbitrary.Arbitrary{}, arbitrary.NewErrorInvalidTarget(target, "Chan")
 		}
 		if constraint.Min > constraint.Max {
-			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Minimal length value %d can't be greater than max length value %d", ErrorInvalidConstraints, constraint.Min, constraint.Max)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Minimal length value %d can't be greater than max length value %d", arbitrary.ErrorInvalidConstraints, constraint.Min, constraint.Max)
 		}
 		if constraint.Max > uint64(math.MaxInt64) {
-			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Max length %d can't be greater than %d", ErrorInvalidConstraints, constraint.Max, uint64(math.MaxInt64))
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Max length %d can't be greater than %d", arbitrary.ErrorInvalidConstraints, constraint.Max, uint64(math.MaxInt64))
 		}
 
 		return arbitrary.Arbitrary{
