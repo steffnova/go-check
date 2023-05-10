@@ -34,14 +34,14 @@ func ExampleStruct() {
 		panic(err)
 	}
 	// Output:
-	// generator_test.Point{X:-12790, Y:13142, Z:-91}
-	// generator_test.Point{X:-3323, Y:16168, Z:104}
-	// generator_test.Point{X:-24597, Y:-4175, Z:40}
-	// generator_test.Point{X:-5523, Y:5629, Z:-116}
-	// generator_test.Point{X:-31913, Y:20516, Z:-57}
-	// generator_test.Point{X:6926, Y:-17391, Z:23}
-	// generator_test.Point{X:-27956, Y:13619, Z:127}
-	// generator_test.Point{X:6440, Y:21880, Z:-12}
-	// generator_test.Point{X:-20179, Y:28489, Z:10}
-	// generator_test.Point{X:26139, Y:-3364, Z:7}
+	// generator_test.Point{X:12790, Y:-13142, Z:-30}
+	// generator_test.Point{X:3323, Y:-16168, Z:50}
+	// generator_test.Point{X:-4175, Y:5523, Z:116}
+	// generator_test.Point{X:-29920, Y:-6926, Z:-23}
+	// generator_test.Point{X:20130, Y:6440, Z:19}
+	// generator_test.Point{X:20179, Y:-28489, Z:-10}
+	// generator_test.Point{X:16896, Y:-743, Z:-95}
+	// generator_test.Point{X:3072, Y:-7313, Z:-30}
+	// generator_test.Point{X:20655, Y:29016, Z:81}
+	// generator_test.Point{X:-7244, Y:12674, Z:7}
 }
