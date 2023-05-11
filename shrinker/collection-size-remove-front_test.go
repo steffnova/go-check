@@ -1,7 +1,6 @@
 package shrinker
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -84,8 +83,6 @@ func TestCollectionSizeRemoveFront(t *testing.T) {
 
 			arb.Elements = append(arb.Elements[:1], arb.Elements[2:]...)
 			for index := range arb.Elements {
-				fmt.Println(arb.Elements[index].Value.Uint())
-				fmt.Println(shrink.Elements[index].Value.Uint())
 				if !reflect.DeepEqual(shrink.Elements[index].Value, arb.Elements[index].Value) {
 					t.Fatalf("Remaining elements in shrink do not match their counterpart in original arbitrary")
 				}
