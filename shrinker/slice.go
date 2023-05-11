@@ -19,7 +19,7 @@ func Slice(original arbitrary.Arbitrary, con constraints.Length) arbitrary.Shrin
 			return in.Len() >= int(con.Min) && in.Len() <= int(con.Max)
 		})
 
-		return CollectionRemoveFront(0).
+		return CollectionSizeRemoveFront(0).
 			Validate(arbitrary.ValidateSlice()).
 			TransformAfter(arbitrary.NewSlice(original.Value.Type())).
 			Filter(filter)

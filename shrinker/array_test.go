@@ -9,32 +9,17 @@ import (
 )
 
 func TestArray(t *testing.T) {
-
 	testCases := map[string]func(t *testing.T){
-		"InvalidOriginal": func(t *testing.T) {
+		"OriginalNotAStruct": func(t *testing.T) {
 			arr := [10]uint64{1, 2, 3, 4, 5, 6, 7, 8, 9}
 			arb := arbitrary.Arbitrary{Value: reflect.ValueOf(arr)}
-			shrinker := Array(arb)
-			if _, err := shrinker(arbitrary.Arbitrary{}, true); err == nil {
-				t.Fatalf("Expected error when original arbitrary is invalid")
-			}
-		},
-		"InvalidShrinkers": func(t *testing.T) {
-			arr := [10]uint64{1, 2, 3, 4, 5, 6, 7, 8, 9}
-			elements := make([]arbitrary.Arbitrary, len(arr))
-			for index, arr := range arr {
-				elements[index] = arbitrary.Arbitrary{Value: reflect.ValueOf(arr)}
-			}
-			arb := arbitrary.Arbitrary{Value: reflect.ValueOf(arr), Elements: elements}
 			shrinker := Array(arb)
 			if _, err := shrinker(arb, true); err == nil {
-				t.Fatalf("Expected error when original arbitrary is invalid")
+				t.Fatalf("Expected error when original arbitrary has no elements")
 			}
 		},
-		"ErrorWhenArbitraryIsNotArray": func(t *testing.T) {
-			arr := [10]uint64{1, 2, 3, 4, 5, 6, 7, 8, 9}
-			arb := arbitrary.Arbitrary{Value: reflect.ValueOf(arr)}
-			shrinker := Array(arb)
+		"OriginalInsufficientElements": func(t *testing.T) {
+			shrinker := Array(arbitrary.Arbitrary{})
 			if _, err := shrinker(arbitrary.Arbitrary{}, true); err == nil {
 				t.Fatalf("Expected error when passed arbitrary is not a array")
 			}
@@ -43,9 +28,9 @@ func TestArray(t *testing.T) {
 			arr := [10]uint64{1, 2, 3, 4, 5, 6, 7, 8, 9}
 			elements := make([]arbitrary.Arbitrary, len(arr))
 
-			for index, arr := range arr {
+			for index, element := range arr {
 				elements[index] = arbitrary.Arbitrary{
-					Value:    reflect.ValueOf(arr),
+					Value:    reflect.ValueOf(element),
 					Shrinker: Uint64(constraints.Uint64Default()),
 				}
 			}

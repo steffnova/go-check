@@ -16,7 +16,7 @@ func Struct(original arbitrary.Arbitrary) arbitrary.Shrinker {
 	case original.Value.Kind() != reflect.Struct:
 		return Fail(fmt.Errorf("struct shrinker cannot shrink %s", original.Value.Kind().String()))
 	case original.Value.NumField() != len(original.Elements):
-		return Fail(fmt.Errorf("number of struct arbitraries %d must match number of struct fields %d", len(original.Elements), original.Value.Len()))
+		return Fail(fmt.Errorf("number of struct arbitraries %d must match number of struct fields %d", len(original.Elements), original.Value.NumField()))
 	default:
 		shrinkers := make([]arbitrary.Shrinker, len(original.Elements))
 		for index, element := range original.Elements {
