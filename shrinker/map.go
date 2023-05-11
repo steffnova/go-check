@@ -20,7 +20,7 @@ func Map(original arbitrary.Arbitrary, con constraints.Length) arbitrary.Shrinke
 			return in.Len() >= int(con.Min)
 		})
 
-		return CollectionSizeRemoveFront(0).
+		return Collection().
 			Validate(arbitrary.ValidateMap()).
 			TransformAfter(arbitrary.NewMap(original.Value.Type())).
 			Filter(filter)

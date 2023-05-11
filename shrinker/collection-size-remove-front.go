@@ -13,9 +13,8 @@ func CollectionSizeRemoveFront(index int) arbitrary.Shrinker {
 			return arbitrary.Arbitrary{}, fmt.Errorf("index is out of range")
 		case index >= len(arb.Elements) && propertyFailed:
 			reduced := arb.Copy()
-			reduced.Shrinker = nil
-			arb.Shrinker = CollectionElements(reduced)
-			return arb, nil
+			reduced.Shrinker = CollectionElements(reduced)
+			return reduced, nil
 		default:
 			reduced := arb.Copy()
 			elements := []arbitrary.Arbitrary{}
