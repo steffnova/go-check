@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/steffnova/go-check"
+	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/generator"
 )
 
@@ -30,7 +31,7 @@ func TestProfileMarshalUnmarshal(t *testing.T) {
 
 			return nil
 		},
-		generator.Struct(map[string]generator.Generator{
+		generator.Struct(map[string]arbitrary.Generator{
 			"Name":    generator.String(),
 			"Region":  generator.String(),
 			"Raiting": generator.String(),

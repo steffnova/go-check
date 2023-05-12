@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
 )
 
@@ -14,31 +15,31 @@ func TestArrayFrom(t *testing.T) {
 				func(n string) {},
 				ArrayFrom(Int()),
 			))
-			if !errors.Is(err, ErrorInvalidTarget) {
-				t.Fatalf("Expected error: '%s':", ErrorInvalidTarget)
+			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s':", arbitrary.ErrorInvalidTarget)
 			}
 		},
-		"InvalidNumberOfElementGenerators": func(t *testing.T) {
+		"InvalidNumberOfElementarbitrary.Generators": func(t *testing.T) {
 			err := Stream(0, 100, Streamer(
 				func(n [3]uint) {},
 				ArrayFrom(Uint(), Uint()),
 			))
 
-			if !errors.Is(err, ErrorInvalidCollectionSize) {
-				t.Fatalf("Expected error: '%s'", ErrorInvalidCollectionSize)
+			if !errors.Is(err, arbitrary.ErrorInvalidCollectionSize) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidCollectionSize)
 			}
 		},
-		"InvalidElementGeneratorType": func(t *testing.T) {
+		"InvalidElementarbitrary.GeneratorType": func(t *testing.T) {
 			err := Stream(0, 100, Streamer(
 				func(n [3]uint) {},
 				ArrayFrom(Int(), Int(), Int()),
 			))
 
-			if !errors.Is(err, ErrorInvalidTarget) {
-				t.Fatalf("Expected error: '%s':", ErrorInvalidTarget)
+			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s':", arbitrary.ErrorInvalidTarget)
 			}
 		},
-		"GeneratorPerElement": func(t *testing.T) {
+		"arbitrary.GeneratorPerElement": func(t *testing.T) {
 			// This test case aims to confirm whether each element within an array is
 			//  utilizing its designated generator. In order to validate this behavior,
 			// each element must abide by the constraints defined by its respective generator.

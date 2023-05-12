@@ -3,6 +3,8 @@ package generator
 import (
 	"errors"
 	"testing"
+
+	"github.com/steffnova/go-check/arbitrary"
 )
 
 func TestStruct(t *testing.T) {
@@ -13,28 +15,28 @@ func TestStruct(t *testing.T) {
 				Struct(),
 			))
 
-			if !errors.Is(err, ErrorInvalidTarget) {
-				t.Fatalf("Expected error: '%s'", ErrorInvalidTarget)
+			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidTarget)
 			}
 		},
 		"InvalidFieldName": func(t *testing.T) {
 			err := Stream(0, 10, Streamer(
 				func(struct{}) {},
-				Struct(map[string]Generator{"X": Int()}),
+				Struct(map[string]arbitrary.Generator{"X": Int()}),
 			))
 
-			if !errors.Is(err, ErrorInvalidConfig) {
-				t.Fatalf("Expected error: '%s'", ErrorInvalidConfig)
+			if !errors.Is(err, arbitrary.ErrorInvalidConfig) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidConfig)
 			}
 		},
 		"InvalidFieldTarget": func(t *testing.T) {
 			err := Stream(0, 10, Streamer(
 				func(struct{ X int }) {},
-				Struct(map[string]Generator{"X": Uint()}),
+				Struct(map[string]arbitrary.Generator{"X": Uint()}),
 			))
 
-			if !errors.Is(err, ErrorInvalidTarget) {
-				t.Fatalf("Expected error: '%s'", ErrorInvalidTarget)
+			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidTarget)
 			}
 		},
 		"UnderlyingType": func(t *testing.T) {

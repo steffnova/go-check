@@ -5,6 +5,7 @@ import (
 	"math"
 	"testing"
 
+	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
 )
 
@@ -16,8 +17,8 @@ func TestMap(t *testing.T) {
 				Map(Int(), Int()),
 			))
 
-			if !errors.Is(err, ErrorInvalidTarget) {
-				t.Fatalf("Expected error: '%s'", ErrorInvalidTarget)
+			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidTarget)
 			}
 		},
 		"InvalidConstraints": func(t *testing.T) {
@@ -26,8 +27,8 @@ func TestMap(t *testing.T) {
 				Map(Int(), Int(), constraints.Length{Min: 100, Max: 10}),
 			))
 
-			if !errors.Is(err, ErrorInvalidConstraints) {
-				t.Fatalf("Expected error: '%s'", ErrorInvalidConstraints)
+			if !errors.Is(err, arbitrary.ErrorInvalidConstraints) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidConstraints)
 			}
 		},
 		"InvalidConstraints2": func(t *testing.T) {
@@ -36,8 +37,8 @@ func TestMap(t *testing.T) {
 				Map(Int(), Int(), constraints.Length{Max: uint64(math.MaxInt64) + 1}),
 			))
 
-			if !errors.Is(err, ErrorInvalidConstraints) {
-				t.Fatalf("Expected error: '%s'", ErrorInvalidConstraints)
+			if !errors.Is(err, arbitrary.ErrorInvalidConstraints) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidConstraints)
 			}
 		},
 		"InvalidKeyTarget": func(t *testing.T) {
@@ -46,8 +47,8 @@ func TestMap(t *testing.T) {
 				Map(Int(), Int()),
 			))
 
-			if !errors.Is(err, ErrorInvalidTarget) {
-				t.Fatalf("Expected error: '%s'", ErrorInvalidTarget)
+			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidTarget)
 			}
 		},
 		"InvalidValueTarget": func(t *testing.T) {
@@ -56,8 +57,8 @@ func TestMap(t *testing.T) {
 				Map(Int(), Int()),
 			))
 
-			if !errors.Is(err, ErrorInvalidTarget) {
-				t.Fatalf("Expected error: '%s'", ErrorInvalidTarget)
+			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidTarget)
 			}
 		},
 		"MapSizeWithinConstraints": func(t *testing.T) {
@@ -65,7 +66,7 @@ func TestMap(t *testing.T) {
 			err := Stream(0, 100, Streamer(
 				func(in map[int]int) {
 					if len(in) < int(constraint.Min) || len(in) > int(constraint.Max) {
-						t.Fatalf("Generated map size %d is not withing it's constraints: %#v", len(in), constraint)
+						t.Fatalf("arbitrary.Arbitraryd map size %d is not withing it's constraints: %#v", len(in), constraint)
 					}
 				},
 				Map(Int(), Int(), constraint),

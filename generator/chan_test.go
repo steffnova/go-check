@@ -5,6 +5,7 @@ import (
 	"math"
 	"testing"
 
+	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
 )
 
@@ -15,8 +16,8 @@ func TestChan(t *testing.T) {
 				func(int) {},
 				Chan(),
 			))
-			if !errors.Is(err, ErrorInvalidTarget) {
-				t.Fatalf("Expected error: '%s'", ErrorInvalidTarget)
+			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidTarget)
 			}
 		},
 		"InvalidConstraints1": func(t *testing.T) {
@@ -25,8 +26,8 @@ func TestChan(t *testing.T) {
 				Chan(constraints.Length{Min: 10, Max: 0}),
 			))
 
-			if !errors.Is(err, ErrorInvalidConstraints) {
-				t.Fatalf("Expected error: '%s'", ErrorInvalidConstraints)
+			if !errors.Is(err, arbitrary.ErrorInvalidConstraints) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidConstraints)
 			}
 		},
 		"InvalidConstraints2": func(t *testing.T) {
@@ -35,8 +36,8 @@ func TestChan(t *testing.T) {
 				Chan(constraints.Length{Min: 10, Max: uint64(math.MaxInt64) + 1}),
 			))
 
-			if !errors.Is(err, ErrorInvalidConstraints) {
-				t.Fatalf("Expected error: '%s'", ErrorInvalidConstraints)
+			if !errors.Is(err, arbitrary.ErrorInvalidConstraints) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidConstraints)
 			}
 		},
 		"WithinConstraints": func(t *testing.T) {

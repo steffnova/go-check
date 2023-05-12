@@ -13,22 +13,22 @@ import (
 // [0, 0x10ffff] code point range is used which includes all Unicode16 characters.
 // Error is returned if minimal code point is greater than maximal code point,
 // minimal code point is lower than 0 or maximal code point is greater than 0x10ffff
-func Rune(limits ...constraints.Rune) Generator {
+func Rune(limits ...constraints.Rune) arbitrary.Generator {
 	constraint := constraints.RuneDefault()
 	if len(limits) != 0 {
 		constraint = limits[0]
 	}
 
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 		switch {
 		case target.Kind() != reflect.Int32:
-			return nil, NewErrorInvalidTarget(target, "Rune")
+			return arbitrary.Arbitrary{}, arbitrary.NewErrorInvalidTarget(target, "Rune")
 		case constraint.MinCodePoint > constraint.MaxCodePoint:
-			return nil, fmt.Errorf("%w. Minimal code point %d can't be greater than maximal code point: %d", ErrorInvalidConstraints, constraint.MinCodePoint, constraint.MaxCodePoint)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Minimal code point %d can't be greater than maximal code point: %d", arbitrary.ErrorInvalidConstraints, constraint.MinCodePoint, constraint.MaxCodePoint)
 		case constraint.MinCodePoint < 0:
-			return nil, fmt.Errorf("%w. Minimal code point must be greater then or equal to 0", ErrorInvalidConstraints)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Minimal code point must be greater then or equal to 0", arbitrary.ErrorInvalidConstraints)
 		case constraint.MaxCodePoint > 0x10ffff:
-			return nil, fmt.Errorf("%w. Maximal code point must be lower then or equal to 0x10ffff", ErrorInvalidConstraints)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Maximal code point must be lower then or equal to 0x10ffff", arbitrary.ErrorInvalidConstraints)
 		default:
 			mapper := arbitrary.Mapper(reflect.TypeOf(int32(0)), target, func(in reflect.Value) reflect.Value {
 				return reflect.ValueOf(rune(int32(in.Int()))).Convert(target)

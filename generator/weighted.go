@@ -7,16 +7,15 @@ import (
 
 	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
-	"github.com/steffnova/go-check/shrinker"
 )
 
 type weightedGenerator struct {
 	weight    uint64
-	generator Generator
+	generator arbitrary.Generator
 }
 
-// func Weighted2(weight uint64, generator Generator) weightedGenerator {
-// 	return weightedGenerator{
+// func Weighted2(weight uint64, generator arbitrary.Generator) weightedarbitrary.Generator {
+// 	return weightedarbitrary.Generator{
 // 		weight:    weight,
 // 		generator: generator,
 // 	}
@@ -28,28 +27,28 @@ type weightedGenerator struct {
 // of all weights can't exceed math.Uint64. Error is returned if number of "weights"
 // and "generators" is invalid, sum of all weights exceed math.Uint64, weight value
 // is lower than 1, or weighted generators returns an error.
-func Weighted(weights []uint64, generators ...Generator) Generator {
+func Weighted(weights []uint64, generators ...arbitrary.Generator) arbitrary.Generator {
 	switch {
 	case len(weights) == 0:
-		return Invalid(fmt.Errorf("%w. Number of weights can't be 0", ErrorInvalidConfig))
+		return Invalid(fmt.Errorf("%w. Number of weights can't be 0", arbitrary.ErrorInvalidConfig))
 	case len(generators) == 0:
-		return Invalid(fmt.Errorf("%w. Number of generators can't be 0", ErrorInvalidConfig))
+		return Invalid(fmt.Errorf("%w. Number of generators can't be 0", arbitrary.ErrorInvalidConfig))
 	case len(weights) != len(generators):
-		return Invalid(fmt.Errorf("%w. Number of weights and generators must be the same", ErrorInvalidConfig))
+		return Invalid(fmt.Errorf("%w. Number of weights and generators must be the same", arbitrary.ErrorInvalidConfig))
 	default:
-		return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+		return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 			totalWeight := uint64(0)
 
 			weightsIndex := make([]uint64, len(generators))
-			generates := make([]Generate, len(generators))
+			arbitraries := make([]arbitrary.Arbitrary, len(generators))
 
 			for index, generator := range generators {
 				if weights[index] < 1 {
-					return nil, fmt.Errorf("%w. Weight can't be less than 1: weights[%d] %d", ErrorInvalidConfig, index, weights[index])
+					return arbitrary.Arbitrary{}, fmt.Errorf("%w. Weight can't be less than 1: weights[%d] %d", arbitrary.ErrorInvalidConfig, index, weights[index])
 				}
 				gen, err := generator(target, bias, r)
 				if err != nil {
-					return nil, fmt.Errorf("failed to instantiate generator with index: %d. %w", index, err)
+					return arbitrary.Arbitrary{}, fmt.Errorf("failed to instantiate generator with index: %d. %w", index, err)
 				}
 
 				prevWeight := totalWeight
@@ -58,24 +57,22 @@ func Weighted(weights []uint64, generators ...Generator) Generator {
 					totalWeight -= 1
 				}
 				if prevWeight > totalWeight {
-					return nil, fmt.Errorf("%w. Total weght overflow. (sum of all weights can't exceed %d)", ErrorInvalidConfig, uint(math.MaxUint64))
+					return arbitrary.Arbitrary{}, fmt.Errorf("%w. Total weght overflow. (sum of all weights can't exceed %d)", arbitrary.ErrorInvalidConfig, uint(math.MaxUint64))
 				}
 				weightsIndex[index] = totalWeight
-				generates[index] = gen
+				arbitraries[index] = gen
 			}
 
-			return func() (arbitrary.Arbitrary, shrinker.Shrinker) {
-				x := r.Uint64(constraints.Uint64{Min: 0, Max: uint64(totalWeight)})
-				generator := generates[0]
-				for index, weight := range weightsIndex {
-					if weight >= x {
-						generator = generates[index]
-						break
-					}
+			x := r.Uint64(constraints.Uint64{Min: 0, Max: uint64(totalWeight)})
+			arb := arbitraries[0]
+			for index, weight := range weightsIndex {
+				if weight >= x {
+					arb = arbitraries[index]
+					break
 				}
+			}
 
-				return generator()
-			}, nil
+			return arb, nil
 		}
 	}
 }

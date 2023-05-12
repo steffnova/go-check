@@ -1,4 +1,4 @@
-package shrinker
+package arbitrary_test
 
 import (
 	"errors"
@@ -9,41 +9,42 @@ import (
 
 	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
+	"github.com/steffnova/go-check/shrinker"
 )
 
 func TestShrinkerMap(t *testing.T) {
 	testCases := map[string]func(*testing.T){
 		"MapOnNilShrinker": func(t *testing.T) {
-			if Shrinker(nil).Map(func(int) int { return 0 }) != nil {
+			if arbitrary.Shrinker(nil).Map(func(int) int { return 0 }) != nil {
 				t.Errorf("Mapping a nil shrinker should return nil")
 			}
 		},
 		"MapperNotAFunction": func(t *testing.T) {
-			shrinker := Uint64(constraints.Uint64{}).Map(nil)
+			shrinker := shrinker.Uint64(constraints.Uint64{}).Map(nil)
 
-			_, _, err := shrinker(arbitrary.Arbitrary{}, true)
+			_, err := shrinker(arbitrary.Arbitrary{}, true)
 			if err == nil {
 				t.Fatalf("Expected a failure due to mapper not being a function")
 			}
 		},
 		"MapperInputInvalid": func(t *testing.T) {
-			shrinker := Uint64(constraints.Uint64{}).Map(func() {})
+			shrinker := shrinker.Uint64(constraints.Uint64{}).Map(func() {})
 
-			_, _, err := shrinker(arbitrary.Arbitrary{}, true)
+			_, err := shrinker(arbitrary.Arbitrary{}, true)
 			if err == nil {
 				t.Fatalf("Expected a failure due to mapper not having exactly one input")
 			}
 		},
 		"MapperOutputInvalid": func(t *testing.T) {
-			shrinker := Uint64(constraints.Uint64{}).Map(func(uint64) {})
+			shrinker := shrinker.Uint64(constraints.Uint64{}).Map(func(uint64) {})
 
-			_, _, err := shrinker(arbitrary.Arbitrary{}, true)
+			_, err := shrinker(arbitrary.Arbitrary{}, true)
 			if err == nil {
 				t.Fatalf("Expected a failure due to mapper not having exactly one output")
 			}
 		},
 		"MapperInputIncompatibleWithShrunkType": func(t *testing.T) {
-			shrinker := Uint64(constraints.Uint64{}).
+			shrinker := shrinker.Uint64(constraints.Uint64{}).
 				Map(func(int64) int {
 					return 0
 				})
@@ -52,13 +53,13 @@ func TestShrinkerMap(t *testing.T) {
 				Precursors: arbitrary.Arbitraries{
 					{Value: reflect.ValueOf(uint64(0))}},
 			}
-			_, _, err := shrinker(arb, true)
+			_, err := shrinker(arb, true)
 			if err == nil {
 				t.Fatalf("Expected a failure due to mapper not having exactly one input")
 			}
 		},
 		"ShrinkingError": func(t *testing.T) {
-			shrinker := Fail(fmt.Errorf("random error")).
+			shrinker := shrinker.Fail(fmt.Errorf("random error")).
 				Map(func(uint64) int {
 					return 0
 				})
@@ -67,7 +68,7 @@ func TestShrinkerMap(t *testing.T) {
 				Precursors: arbitrary.Arbitraries{
 					{Value: reflect.ValueOf(uint64(0))}},
 			}
-			_, _, err := shrinker(arb, true)
+			_, err := shrinker(arb, true)
 			if err == nil {
 				t.Fatalf("Expected a failure due base generator throwing an error")
 			}
@@ -76,13 +77,13 @@ func TestShrinkerMap(t *testing.T) {
 			mapper := func(in uint64) uint64 {
 				return in + 2
 			}
-			shrinker := Uint64(constraints.Uint64Default()).Map(mapper)
+			shrinker := shrinker.Uint64(constraints.Uint64Default()).Map(mapper)
 
 			arb := arbitrary.Arbitrary{
 				Precursors: arbitrary.Arbitraries{
 					{Value: reflect.ValueOf(uint64(100))}},
 			}
-			shrink, _, err := shrinker(arb, true)
+			shrink, err := shrinker(arb, true)
 			if err != nil {
 				t.Fatalf("Unexpected error: %s", err)
 			}
@@ -100,52 +101,10 @@ func TestShrinkerMap(t *testing.T) {
 	}
 }
 
-func TestShrinkerOr(t *testing.T) {
-	testCases := map[string]func(*testing.T){
-		"OrOnNilShrinker": func(t *testing.T) {
-			someError := fmt.Errorf("random error")
-			shrinker := Shrinker(nil).Or(Fail(someError))
-
-			_, shrinker, err := shrinker(arbitrary.Arbitrary{}, true)
-			if !errors.Is(err, someError) {
-				t.Fatalf("expected error returned by Fail shrinker")
-			}
-		},
-		"PropertyFailed": func(t *testing.T) {
-			error1 := fmt.Errorf("error1")
-			error2 := fmt.Errorf("error2")
-			shrinker := Fail(error1).Or(Fail(error2))
-
-			_, shrinker, err := shrinker(arbitrary.Arbitrary{}, true)
-			// Testing if base shrinker is called, doesn't matter that it
-			// throws an error.
-			if !errors.Is(err, error1) {
-				t.Fatalf("expected error: %s", error1)
-			}
-		},
-		"PropertySucceed": func(t *testing.T) {
-			error1 := fmt.Errorf("error1")
-			error2 := fmt.Errorf("error2")
-			shrinker := Fail(error1).Or(Fail(error2))
-
-			_, shrinker, err := shrinker(arbitrary.Arbitrary{}, false)
-			// Testing if shrinker passed to Or is called, doesn't matter that it
-			// throws an error.
-			if !errors.Is(err, error2) {
-				t.Fatalf("expected error: %s", error2)
-			}
-		},
-	}
-
-	for name, testCase := range testCases {
-		t.Run(name, testCase)
-	}
-}
-
 func TestShrinkerFilter(t *testing.T) {
 	testCases := map[string]func(*testing.T){
 		"FilterOnNilShrinker": func(t *testing.T) {
-			shrinker := Shrinker(nil).
+			shrinker := arbitrary.Shrinker(nil).
 				Filter(func(int) bool {
 					return false
 				})
@@ -154,70 +113,72 @@ func TestShrinkerFilter(t *testing.T) {
 			}
 		},
 		"PredicateIsNotAFunction": func(t *testing.T) {
-			shrinker := Shrinker(nil).Filter(nil)
+			shrinker := shrinker.Uint64(constraints.Uint64{}).Filter(nil)
 
-			_, _, err := shrinker(arbitrary.Arbitrary{}, true)
+			_, err := shrinker(arbitrary.Arbitrary{}, true)
 			if err == nil {
 				t.Fatalf("Expected a failure due to predicate not being a function")
 			}
 		},
 		"PredicateNumberOfInputsInvalid": func(t *testing.T) {
-			shrinker := Shrinker(nil).
+			shrinker := shrinker.Uint64(constraints.Uint64{}).
 				Filter(func() bool {
 					return false
 				})
 
-			_, _, err := shrinker(arbitrary.Arbitrary{}, true)
+			_, err := shrinker(arbitrary.Arbitrary{}, true)
 			if err == nil {
 				t.Fatalf("Expected a failure due to predicate not having exactly one input")
 			}
 		},
 		"PredicateNumberOfOutputsInvalid": func(t *testing.T) {
-			shrinker := Shrinker(nil).
+			shrinker := shrinker.Uint64(constraints.Uint64{}).
 				Filter(func(int) {
 
 				})
 
-			_, _, err := shrinker(arbitrary.Arbitrary{}, true)
+			_, err := shrinker(arbitrary.Arbitrary{}, true)
 			if err == nil {
 				t.Fatalf("Expected a failure due to predicate not having exactly one output")
 			}
 		},
 		"PredicateOutputTypeNotBool": func(t *testing.T) {
-			shrinker := Shrinker(nil).
+			shrinker := shrinker.Uint64(constraints.Uint64{}).
 				Filter(func(int) int {
 					return 0
 				})
 
-			_, _, err := shrinker(arbitrary.Arbitrary{}, true)
+			_, err := shrinker(arbitrary.Arbitrary{}, true)
 			if err == nil {
 				t.Fatalf("Expected a failure due to predicate not having exactly one output")
 			}
 		},
 		"ShrinkingError": func(t *testing.T) {
 			randomError := fmt.Errorf("random error")
-			shrinker := Fail(randomError).
+			shrinker := shrinker.Fail(randomError).
 				Filter(func(int) bool {
 					return true
 				})
 
-			_, _, err := shrinker(arbitrary.Arbitrary{}, true)
+			_, err := shrinker(arbitrary.Arbitrary{}, true)
 			if !errors.Is(err, randomError) {
 				t.Fatalf("Expected error: %s", randomError)
 			}
 		},
 		"ImpossiblePredicate": func(t *testing.T) {
-			arb := arbitrary.Arbitrary{Value: reflect.ValueOf(uint64(5))}
-			shrinker := Uint64(constraints.Uint64Default()).Filter(
-				func(in uint64) bool {
-					return in > 115
-				},
-			)
+			arb := arbitrary.Arbitrary{
+				Value: reflect.ValueOf(uint64(5)),
+				Shrinker: shrinker.Uint64(constraints.Uint64Default()).Filter(
+					func(in uint64) bool {
+						return in > 115
+					},
+				),
+			}
 
 			var err error
 			var shrink = arb
-			for shrinker != nil {
-				shrink, shrinker, err = shrinker(shrink, true)
+			for shrink.Shrinker != nil {
+				shrink, err = shrink.Shrinker(shrink, true)
 				if err != nil {
 					t.Fatalf("Unexpected error: %s", err)
 				}
@@ -228,15 +189,18 @@ func TestShrinkerFilter(t *testing.T) {
 			}
 		},
 		"ShrunkValue": func(t *testing.T) {
-			arb := arbitrary.Arbitrary{Value: reflect.ValueOf(uint64(115))}
 			predicate := func(in uint64) bool {
 				return in%2 != 0
 			}
-			shrinker := Uint64(constraints.Uint64Default()).Filter(predicate)
+
+			arb := arbitrary.Arbitrary{
+				Value:    reflect.ValueOf(uint64(115)),
+				Shrinker: shrinker.Uint64(constraints.Uint64Default()).Filter(predicate),
+			}
 
 			var err error
-			for shrinker != nil {
-				arb, shrinker, err = shrinker(arb, true)
+			for arb.Shrinker != nil {
+				arb, err = arb.Shrinker(arb, true)
 				if err != nil {
 					t.Fatalf("Unexpected error: %s", err)
 				}
@@ -258,72 +222,88 @@ func TestShrinkerBind(t *testing.T) {
 		"BinderIsNil": func(t *testing.T) {
 			arb := arbitrary.Arbitrary{Precursors: arbitrary.Arbitraries{{}}}
 
-			shrinker := Shrinker(nil).Bind(nil, arbitrary.Arbitrary{}, nil, nil)
-			if _, _, err := shrinker(arb, true); err == nil {
+			shrinker := arbitrary.Shrinker(nil).Bind(nil, arbitrary.Arbitrary{})
+			if _, err := shrinker(arb, true); err == nil {
 				t.Fatalf("expected error because binder is nil")
 			}
 		},
-		"ShrinkerError": func(t *testing.T) {
+		"PrecursorError": func(t *testing.T) {
 			randomError := fmt.Errorf("random error")
-			arb := arbitrary.Arbitrary{Precursors: arbitrary.Arbitraries{{}}}
-			binder := func(arbitrary.Arbitrary) (arbitrary.Arbitrary, Shrinker, error) {
-				return arbitrary.Arbitrary{}, nil, nil
+			arb := arbitrary.Arbitrary{
+				Precursors: arbitrary.Arbitraries{
+					{
+						Shrinker: arbitrary.Shrinker(nil).Fail(randomError),
+					},
+				},
 			}
-			shrinker := Fail(randomError).Bind(binder, arbitrary.Arbitrary{}, nil, nil)
-			_, _, err := shrinker(arb, true)
+
+			binder := func(arbitrary.Arbitrary) (arbitrary.Arbitrary, error) {
+				return arbitrary.Arbitrary{}, randomError
+			}
+
+			arb.Shrinker = arbitrary.Shrinker(nil).Bind(binder, arb)
+			_, err := arb.Shrinker(arb, false)
 
 			if !errors.Is(err, randomError) {
-				t.Fatalf("Expected error: %s", err)
+				t.Fatalf("Expected error: %s, got: %s", randomError, err)
 			}
 		},
 		"BinderError": func(t *testing.T) {
 			randomError := fmt.Errorf("random error")
-			arb := arbitrary.Arbitrary{Precursors: arbitrary.Arbitraries{{}}}
-			binder := func(arbitrary.Arbitrary) (arbitrary.Arbitrary, Shrinker, error) {
-				return arbitrary.Arbitrary{}, nil, randomError
+
+			binder := func(arbitrary.Arbitrary) (arbitrary.Arbitrary, error) {
+				return arbitrary.Arbitrary{}, randomError
 			}
-			shrinker := Shrinker(func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, Shrinker, error) {
-				return arb, nil, nil
-			}).Bind(binder, arbitrary.Arbitrary{}, nil, nil)
-			_, _, err := shrinker(arb, true)
+			arb := arbitrary.Arbitrary{
+				Precursors: arbitrary.Arbitraries{
+					{
+						Shrinker: arbitrary.Shrinker(func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, error) {
+							return arb, nil
+						}),
+					},
+				},
+			}
+
+			arb.Shrinker = arbitrary.Shrinker(nil).Bind(binder, arb)
+
+			_, err := arb.Shrinker(arb, false)
 
 			if !errors.Is(err, randomError) {
-				t.Fatalf("Expected error: %s", err)
+				t.Fatalf("Expected error: %s, got: %s", randomError, err)
 			}
 		},
 		"RootShrinkerIsNilPropertyFalsified": func(t *testing.T) {
-			arb := arbitrary.Arbitrary{Precursors: arbitrary.Arbitraries{{Value: reflect.ValueOf(uint64(5))}}}
-			binder := func(arb arbitrary.Arbitrary) (arbitrary.Arbitrary, Shrinker, error) {
-				return arbitrary.Arbitrary{}, nil, nil
+			arb := arbitrary.Arbitrary{
+				Value: reflect.ValueOf(uint64(10)),
+				Precursors: arbitrary.Arbitraries{
+					{Value: reflect.ValueOf(uint64(5))},
+				},
+			}
+			binder := func(arb arbitrary.Arbitrary) (arbitrary.Arbitrary, error) {
+				return arbitrary.Arbitrary{}, nil
 			}
 
-			shrinker1 := Shrinker(nil)
-			shrinker2 := Shrinker(nil)
+			arb.Shrinker = arbitrary.Shrinker(nil).Bind(binder, arb)
 
-			shrinker := shrinker1.Bind(binder, arb, shrinker2, shrinker2)
-
-			shrink, _, err := shrinker(arb, true)
+			shrink, err := arb.Shrinker(arb, true)
 			if err != nil {
 				t.Fatalf("Unexpected error: %s", err)
 			}
 
-			if !reflect.DeepEqual(arb, shrink) {
+			if arb.Value.Uint() != shrink.Value.Uint() {
 				t.Fatalf("Shrink should be arb if property failed")
 			}
 		},
 		"RootShrinkerIsNilPropertyHolds": func(t *testing.T) {
 			arb1 := arbitrary.Arbitrary{Precursors: arbitrary.Arbitraries{{Value: reflect.ValueOf(uint64(5))}}}
 			arb2 := arbitrary.Arbitrary{Precursors: arbitrary.Arbitraries{{Value: reflect.ValueOf(uint64(10))}}}
-			binder := func(arb arbitrary.Arbitrary) (arbitrary.Arbitrary, Shrinker, error) {
-				return arbitrary.Arbitrary{}, nil, nil
+			binder := func(arb arbitrary.Arbitrary) (arbitrary.Arbitrary, error) {
+				return arbitrary.Arbitrary{}, nil
 			}
 
-			shrinker1 := Shrinker(nil)
-			shrinker2 := Shrinker(nil)
+			arb1.Shrinker = arbitrary.Shrinker(nil).Bind(binder, arb2)
 
-			shrinker := shrinker1.Bind(binder, arb2, shrinker2, shrinker2)
-
-			shrink, _, err := shrinker(arb1, false)
+			shrink, err := arb1.Shrinker(arb1, false)
 			if err != nil {
 				t.Fatalf("Unexpected error: %s", err)
 			}
@@ -333,43 +313,53 @@ func TestShrinkerBind(t *testing.T) {
 			}
 		},
 		"BoundShrink": func(t *testing.T) {
-			arb1 := arbitrary.Arbitrary{Value: reflect.ValueOf(int(10)), Precursors: arbitrary.Arbitraries{{Value: reflect.ValueOf(uint64(5))}}}
-			arb2 := arbitrary.Arbitrary{Value: reflect.ValueOf(int(20)), Precursors: arbitrary.Arbitraries{{Value: reflect.ValueOf(uint64(5))}}}
-			binder := func(arb arbitrary.Arbitrary) (arbitrary.Arbitrary, Shrinker, error) {
-				return arb2, nil, nil
+			arb := arbitrary.Arbitrary{
+				Value: reflect.ValueOf(int(20)),
+				Precursors: arbitrary.Arbitraries{
+					{
+						Value:    reflect.ValueOf(uint64(5)),
+						Shrinker: shrinker.Uint64(constraints.Uint64Default()),
+					},
+				},
 			}
 
-			shrinker1 := Uint64(constraints.Uint64Default())
-			shrinker2 := Shrinker(nil)
+			binder := func(arbitrary.Arbitrary) (arbitrary.Arbitrary, error) {
+				return arb, nil
+			}
 
-			shrinker := shrinker1.Bind(binder, arb2, shrinker2, shrinker2)
+			arb.Shrinker = arb.Shrinker.Bind(binder, arb)
 
-			shrink, _, err := shrinker(arb1, true)
+			shrink, err := arb.Shrinker(arb, false)
 			if err != nil {
 				t.Fatalf("Unexpected error: %s", err)
 			}
 
-			if !reflect.DeepEqual(arb2, shrink) {
+			if arb.Value.Int() != shrink.Value.Int() {
 				t.Fatalf("Shrink should be arb2 if property holds")
 			}
 		},
 		"ShrinkIsTheSameTypeAsPassedArbitrary": func(t *testing.T) {
-			arb1 := arbitrary.Arbitrary{Value: reflect.ValueOf(uint64(10)), Precursors: arbitrary.Arbitraries{{Value: reflect.ValueOf(uint64(5))}}}
+			arb1 := arbitrary.Arbitrary{
+				Value: reflect.ValueOf(uint64(10)),
+				Precursors: arbitrary.Arbitraries{
+					{Value: reflect.ValueOf(uint64(5))},
+				},
+			}
 
-			binder := func(arb arbitrary.Arbitrary) (arbitrary.Arbitrary, Shrinker, error) {
+			binder := func(arb arbitrary.Arbitrary) (arbitrary.Arbitrary, error) {
 				return arbitrary.Arbitrary{
 					Value:      arb1.Value,
 					Precursors: arbitrary.Arbitraries{arb},
-				}, Uint64(constraints.Uint64Default()), nil
+					Shrinker:   shrinker.Uint64(constraints.Uint64Default()),
+				}, nil
 			}
 
-			uintShrinker := Uint64(constraints.Uint64Default())
-			shrinker := uintShrinker.Bind(binder, arb1, uintShrinker, uintShrinker)
+			arb1.Shrinker = shrinker.Uint64(constraints.Uint64Default()).Bind(binder, arb1)
 
 			shrink := arb1
-			for shrinker != nil {
+			for shrink.Shrinker != nil {
 				var err error
-				shrink, shrinker, err = shrinker(shrink, true)
+				shrink, err = shrink.Shrinker(shrink, true)
 				if err != nil {
 					t.Fatalf("Unexpected error: %s", err)
 				}
@@ -386,20 +376,21 @@ func TestShrinkerBind(t *testing.T) {
 	}
 
 }
-
 func TestShrinkerTransformAfter(t *testing.T) {
 	testCases := map[string]func(*testing.T){
 		"OnNilShrinker": func(t *testing.T) {
 			transform := func(in arbitrary.Arbitrary) arbitrary.Arbitrary {
 				return in
 			}
-			if Shrinker(nil).transformAfter(transform) != nil {
-				t.Fatalf("Shrinker should be nil")
+			if arbitrary.Shrinker(nil).TransformAfter(transform) != nil {
+				t.Fatalf("arbitrary.Shrinker should be nil")
 			}
 		},
 		"NilTransform": func(t *testing.T) {
-			shrinker := Shrinker(nil).transformAfter(nil)
-			if _, _, err := shrinker(arbitrary.Arbitrary{}, true); err == nil {
+			shrinker := arbitrary.Shrinker(func(arbitrary.Arbitrary, bool) (arbitrary.Arbitrary, error) {
+				return arbitrary.Arbitrary{}, nil
+			}).TransformAfter(nil)
+			if _, err := shrinker(arbitrary.Arbitrary{}, true); err == nil {
 				t.Fatalf("Expected error when transfrom is nil")
 			}
 		},
@@ -409,8 +400,8 @@ func TestShrinkerTransformAfter(t *testing.T) {
 				return in
 			}
 
-			shrinker := Fail(randomError).transformAfter(transform)
-			_, _, err := shrinker(arbitrary.Arbitrary{}, true)
+			shrinker := shrinker.Fail(randomError).TransformAfter(transform)
+			_, err := shrinker(arbitrary.Arbitrary{}, true)
 			if !errors.Is(err, randomError) {
 				t.Fatalf("Expected error: %s", randomError)
 			}
@@ -422,8 +413,8 @@ func TestShrinkerTransformAfter(t *testing.T) {
 				return in
 			}
 
-			shrinker := Uint64(constraints.Uint64Default()).transformAfter(transform)
-			shrink, _, err := shrinker(arb, true)
+			arb.Shrinker = shrinker.Uint64(constraints.Uint64Default()).TransformAfter(transform)
+			shrink, err := arb.Shrinker(arb, true)
 			if err != nil {
 				t.Fatalf("Unexpected error: %s", err)
 			}
@@ -444,13 +435,15 @@ func TestShrinkerTransformBefore(t *testing.T) {
 			transform := func(in arbitrary.Arbitrary) arbitrary.Arbitrary {
 				return in
 			}
-			if Shrinker(nil).transformBefore(transform) != nil {
-				t.Fatalf("Shrinker should be nil")
+			if arbitrary.Shrinker(nil).TransformBefore(transform) != nil {
+				t.Fatalf("arbitrary.Shrinker should be nil")
 			}
 		},
 		"NilTransform": func(t *testing.T) {
-			shrinker := Shrinker(nil).transformBefore(nil)
-			if _, _, err := shrinker(arbitrary.Arbitrary{}, true); err == nil {
+			shrinker := arbitrary.Shrinker(func(arbitrary.Arbitrary, bool) (arbitrary.Arbitrary, error) {
+				return arbitrary.Arbitrary{}, nil
+			}).TransformBefore(nil)
+			if _, err := shrinker(arbitrary.Arbitrary{}, true); err == nil {
 				t.Fatalf("Expected error when transfrom is nil")
 			}
 		},
@@ -460,8 +453,8 @@ func TestShrinkerTransformBefore(t *testing.T) {
 				return in
 			}
 
-			shrinker := Fail(randomError).transformBefore(transform)
-			_, _, err := shrinker(arbitrary.Arbitrary{}, true)
+			shrinker := shrinker.Fail(randomError).TransformBefore(transform)
+			_, err := shrinker(arbitrary.Arbitrary{}, true)
 			if !errors.Is(err, randomError) {
 				t.Fatalf("Expected error: %s", randomError)
 			}
@@ -473,13 +466,13 @@ func TestShrinkerTransformBefore(t *testing.T) {
 				return in
 			}
 
-			shrinker := Shrinker(func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, Shrinker, error) {
+			shrinker := arbitrary.Shrinker(func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, error) {
 				if len(arb.Elements) == 0 {
 					t.Fatal("Excepted transformBefore to change shrink arbitrary")
 				}
-				return arb, nil, nil
-			}).transformBefore(transform)
-			_, _, err := shrinker(arb, true)
+				return arb, nil
+			}).TransformBefore(transform)
+			_, err := shrinker(arb, true)
 			if err != nil {
 				t.Fatalf("Unexpected error: %s", err)
 			}
@@ -491,29 +484,71 @@ func TestShrinkerTransformBefore(t *testing.T) {
 	}
 }
 
-func TestRetry(t *testing.T) {
+func TestShrinkerOr(t *testing.T) {
+	testCases := map[string]func(*testing.T){
+		"OrOnNilShrinker": func(t *testing.T) {
+			someError := fmt.Errorf("random error")
+			shrinker := arbitrary.Shrinker(nil).Or(shrinker.Fail(someError))
+
+			_, err := shrinker(arbitrary.Arbitrary{}, true)
+			if !errors.Is(err, someError) {
+				t.Fatalf("expected error returned by Fail shrinker")
+			}
+		},
+		"PropertyFailed": func(t *testing.T) {
+			error1 := fmt.Errorf("error1")
+			error2 := fmt.Errorf("error2")
+			shrinker := shrinker.Fail(error1).Or(shrinker.Fail(error2))
+
+			_, err := shrinker(arbitrary.Arbitrary{}, true)
+			// Testing if base shrinker is called, doesn't matter that it
+			// throws an error.
+			if !errors.Is(err, error1) {
+				t.Fatalf("expected error: %s", error1)
+			}
+		},
+		"PropertySucceed": func(t *testing.T) {
+			error1 := fmt.Errorf("error1")
+			error2 := fmt.Errorf("error2")
+			shrinker := shrinker.Fail(error1).Or(shrinker.Fail(error2))
+
+			_, err := shrinker(arbitrary.Arbitrary{}, false)
+			// Testing if shrinker passed to Or is called, doesn't matter that it
+			// throws an error.
+			if !errors.Is(err, error2) {
+				t.Fatalf("expected error: %s", error2)
+			}
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, testCase)
+	}
+}
+
+func TestShrinkerRetry(t *testing.T) {
 	testCases := map[string]func(*testing.T){
 		"RetryOnNilShrinker": func(t *testing.T) {
-			if Shrinker(nil).Retry(100, 100, arbitrary.Arbitrary{}) != nil {
+			if arbitrary.Shrinker(nil).Retry(100, 100, arbitrary.Arbitrary{}) != nil {
 				t.Errorf("Calling Retry on a nil shrinker should return nil")
 			}
 		},
 		"ShrinkingError": func(t *testing.T) {
 			arb := arbitrary.Arbitrary{}
-			shrinker := Fail(fmt.Errorf("random error")).Retry(10, 0, arb)
+			shrinker := shrinker.Fail(fmt.Errorf("random error")).Retry(10, 0, arb)
 
-			if _, _, err := shrinker(arb, true); err == nil {
+			if _, err := shrinker(arb, true); err == nil {
 				t.Fatalf("Expected error")
 			}
 		},
 		"UseAllRetries": func(t *testing.T) {
 			arb := arbitrary.Arbitrary{Value: reflect.ValueOf(uint64(1000))}
-			shrinker := Uint64(constraints.Uint64Default()).Retry(5, 5, arb)
+			arb.Shrinker = shrinker.Uint64(constraints.Uint64Default()).Retry(5, 5, arb)
 
 			var err error
 			var shrink = arb
-			for shrinker != nil {
-				shrink, shrinker, err = shrinker(shrink, false)
+			for shrink.Shrinker != nil {
+				shrink, err = shrink.Shrinker(shrink, false)
 				if err != nil {
 					t.Fatalf("Unexpected error: %s", err)
 				}
@@ -530,19 +565,21 @@ func TestRetry(t *testing.T) {
 	}
 }
 
-func TestValidate(t *testing.T) {
+func TestShrinkerValidate(t *testing.T) {
 	testCases := map[string]func(*testing.T){
 		"OnNilShrinker": func(t *testing.T) {
 			validation := func(in arbitrary.Arbitrary) error {
 				return nil
 			}
-			if Shrinker(nil).Validate(validation) != nil {
-				t.Fatalf("Shrinker should be nil")
+			if arbitrary.Shrinker(nil).Validate(validation) != nil {
+				t.Fatalf("arbitrary.Shrinker should be nil")
 			}
 		},
 		"NilValidation": func(t *testing.T) {
-			shrinker := Shrinker(nil).Validate(nil)
-			if _, _, err := shrinker(arbitrary.Arbitrary{}, true); err == nil {
+			shrinker := arbitrary.Shrinker(func(arbitrary.Arbitrary, bool) (arbitrary.Arbitrary, error) {
+				return arbitrary.Arbitrary{}, nil
+			}).Validate(nil)
+			if _, err := shrinker(arbitrary.Arbitrary{}, true); err == nil {
 				t.Fatalf("Expected error when validation is nil")
 			}
 		},
@@ -552,8 +589,8 @@ func TestValidate(t *testing.T) {
 				return nil
 			}
 
-			shrinker := Fail(randomError).Validate(validation)
-			_, _, err := shrinker(arbitrary.Arbitrary{}, true)
+			shrinker := shrinker.Fail(randomError).Validate(validation)
+			_, err := shrinker(arbitrary.Arbitrary{}, true)
 			if !errors.Is(err, randomError) {
 				t.Fatalf("Expected error: %s", randomError)
 			}
@@ -564,11 +601,11 @@ func TestValidate(t *testing.T) {
 				return validationError
 			}
 
-			shrinker := Shrinker(func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, Shrinker, error) {
-				return arbitrary.Arbitrary{}, nil, nil
+			shrinker := arbitrary.Shrinker(func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, error) {
+				return arbitrary.Arbitrary{}, nil
 			}).Validate(validation)
 
-			_, _, err := shrinker(arbitrary.Arbitrary{}, true)
+			_, err := shrinker(arbitrary.Arbitrary{}, true)
 			if !errors.Is(err, validationError) {
 				t.Fatalf("Expected error: %s", validationError)
 			}
@@ -578,17 +615,18 @@ func TestValidate(t *testing.T) {
 				return nil
 			}
 
-			shrinker := Shrinker(func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, Shrinker, error) {
-				return arb, nil, nil
-			}).Validate(validation)
-
-			arb := arbitrary.Arbitrary{Value: reflect.ValueOf(uint64(0))}
-			shrink, _, err := shrinker(arb, true)
+			arb := arbitrary.Arbitrary{
+				Value: reflect.ValueOf(uint64(0)),
+				Shrinker: arbitrary.Shrinker(func(arb arbitrary.Arbitrary, propertyFailed bool) (arbitrary.Arbitrary, error) {
+					return arb, nil
+				}).Validate(validation),
+			}
+			shrink, err := arb.Shrinker(arb, true)
 			if err != nil {
 				t.Fatalf("Unexpected error: %s", err)
 			}
 
-			if !reflect.DeepEqual(arb, shrink) {
+			if !reflect.DeepEqual(arb.Value, shrink.Value) {
 				t.Fatalf("Expected shrink to be of the same value as arb")
 			}
 		},

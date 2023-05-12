@@ -12,13 +12,13 @@ import (
 // generated is defined by "limits" parameter.  If no limits are provided default
 // int64 range [math.MinInt64, math.MaxInt64] is used instead. Error is returned if
 // generator's target is not int64 type or limits.Min is greater than limits.Max.
-func Int64(limits ...constraints.Int64) Generator {
+func Int64(limits ...constraints.Int64) arbitrary.Generator {
 	constraint := constraints.Int64Default()
 	if len(limits) > 0 {
 		constraint = limits[0]
 	}
 
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 		negativeMapper := arbitrary.Mapper(reflect.TypeOf(uint64(0)), target, func(in reflect.Value) reflect.Value {
 			return reflect.ValueOf(int64(-in.Uint())).Convert(target)
 		})
@@ -29,9 +29,9 @@ func Int64(limits ...constraints.Int64) Generator {
 
 		switch {
 		case target.Kind() != reflect.Int64:
-			return nil, NewErrorInvalidTarget(target, "Int64")
+			return arbitrary.Arbitrary{}, arbitrary.NewErrorInvalidTarget(target, "Int64")
 		case constraint.Min > constraint.Max:
-			return nil, fmt.Errorf("%w. Lower limit: %d cannot be greater than upper limit: %d", ErrorInvalidConstraints, constraint.Min, constraint.Max)
+			return arbitrary.Arbitrary{}, fmt.Errorf("%w. Lower limit: %d cannot be greater than upper limit: %d", arbitrary.ErrorInvalidConstraints, constraint.Min, constraint.Max)
 		case constraint.Max < 0:
 			return Uint64(constraints.Uint64{Min: uint64(-constraint.Max), Max: uint64(-constraint.Min)}).
 				Map(negativeMapper)(target, bias, r)
@@ -55,14 +55,14 @@ func Int64(limits ...constraints.Int64) Generator {
 // generated is defined by "limits" parameter.  If no limits are provided default
 // int64 range [math.MinInt32, math.MaxInt32] is used instead. Error is returned if
 // generator's target is not int32 type or limits.Min is greater than limits.Max.
-func Int32(limits ...constraints.Int32) Generator {
+func Int32(limits ...constraints.Int32) arbitrary.Generator {
 	constraint := constraints.Int32Default()
 	if len(limits) > 0 {
 		constraint = limits[0]
 	}
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 		if target.Kind() != reflect.Int32 {
-			return nil, NewErrorInvalidTarget(target, "Int32")
+			return arbitrary.Arbitrary{}, arbitrary.NewErrorInvalidTarget(target, "Int32")
 		}
 
 		mapper := arbitrary.Mapper(reflect.TypeOf(int64(0)), target, func(in reflect.Value) reflect.Value {
@@ -79,14 +79,14 @@ func Int32(limits ...constraints.Int32) Generator {
 // generated is defined by "limits" parameter.  If no limits are provided default
 // int16 range [math.MinInt16, math.MaxInt16] is used instead. Error is returned if
 // generator's target is not int16 type or limits.Min is greater than limits.Max.
-func Int16(limits ...constraints.Int16) Generator {
+func Int16(limits ...constraints.Int16) arbitrary.Generator {
 	constraint := constraints.Int16Default()
 	if len(limits) > 0 {
 		constraint = limits[0]
 	}
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 		if target.Kind() != reflect.Int16 {
-			return nil, NewErrorInvalidTarget(target, "Int16")
+			return arbitrary.Arbitrary{}, arbitrary.NewErrorInvalidTarget(target, "Int16")
 		}
 
 		mapper := arbitrary.Mapper(reflect.TypeOf(int64(0)), target, func(in reflect.Value) reflect.Value {
@@ -103,15 +103,15 @@ func Int16(limits ...constraints.Int16) Generator {
 // generated is defined by "limits" parameter.  If no limits are provided default
 // int8 range [math.MinInt8, math.MaxInt8] is used instead. Error is returned if
 // generator's target is not int8 type or limits.Min is greater than limits.Max.
-func Int8(limits ...constraints.Int8) Generator {
+func Int8(limits ...constraints.Int8) arbitrary.Generator {
 	constraint := constraints.Int8Default()
 	if len(limits) > 0 {
 		constraint = limits[0]
 	}
 
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 		if target.Kind() != reflect.Int8 {
-			return nil, NewErrorInvalidTarget(target, "Int8")
+			return arbitrary.Arbitrary{}, arbitrary.NewErrorInvalidTarget(target, "Int8")
 		}
 
 		mapper := arbitrary.Mapper(reflect.TypeOf(int64(0)), target, func(in reflect.Value) reflect.Value {
@@ -128,15 +128,15 @@ func Int8(limits ...constraints.Int8) Generator {
 // generated is defined by "limits" parameter.  If no limits are provided default
 // int range is used instead. Error is returned if generator's target is not int
 // type or limits.Min is greater than limits.Max.
-func Int(limits ...constraints.Int) Generator {
+func Int(limits ...constraints.Int) arbitrary.Generator {
 	constraint := constraints.IntDefault()
 	if len(limits) > 0 {
 		constraint.Min, constraint.Max = limits[0].Min, limits[0].Max
 	}
 
-	return func(target reflect.Type, bias constraints.Bias, r Random) (Generate, error) {
+	return func(target reflect.Type, bias constraints.Bias, r arbitrary.Random) (arbitrary.Arbitrary, error) {
 		if target.Kind() != reflect.Int {
-			return nil, NewErrorInvalidTarget(target, "Int")
+			return arbitrary.Arbitrary{}, arbitrary.NewErrorInvalidTarget(target, "Int")
 		}
 
 		mapper := arbitrary.Mapper(reflect.TypeOf(int64(0)), target, func(in reflect.Value) reflect.Value {

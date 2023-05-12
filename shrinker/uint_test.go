@@ -12,7 +12,7 @@ func TestUint(t *testing.T) {
 	testCase := map[string]func(t *testing.T){
 		"Kind": func(t *testing.T) {
 			arb := arbitrary.Arbitrary{Value: reflect.ValueOf(int(0))}
-			_, _, err := Uint64(constraints.Uint64Default())(arb, false)
+			_, err := Uint64(constraints.Uint64Default())(arb, false)
 
 			if err == nil {
 				t.Fatalf("Expected error because arb is int and shrinker is Uint64")
@@ -22,7 +22,7 @@ func TestUint(t *testing.T) {
 			arb := arbitrary.Arbitrary{Value: reflect.ValueOf(uint64(10))}
 			limits := constraints.Uint64{Max: 2, Min: 10}
 
-			_, _, err := Uint64(limits)(arb, false)
+			_, err := Uint64(limits)(arb, false)
 
 			if err == nil {
 				t.Fatalf("Expected error because limit's upper bound is higher then it's lower bound")
@@ -32,7 +32,7 @@ func TestUint(t *testing.T) {
 			arb := arbitrary.Arbitrary{Value: reflect.ValueOf(uint64(1))}
 			limits := constraints.Uint64{Max: 20, Min: 10}
 
-			_, _, err := Uint64(limits)(arb, false)
+			_, err := Uint64(limits)(arb, false)
 
 			if err == nil {
 				t.Fatalf("Expected error because limit's upper bound is higher then it's lower bound")
@@ -42,38 +42,40 @@ func TestUint(t *testing.T) {
 			arb := arbitrary.Arbitrary{Value: reflect.ValueOf(uint64(50))}
 			limits := constraints.Uint64{Max: 100, Min: 0}
 
-			next, _, err := Uint64(limits)(arb, true)
+			shrink, err := Uint64(limits)(arb, true)
 
 			if err != nil {
 				t.Fatalf("Unexpected error : %s", err)
 			}
 
-			if next.Value.Uint() > arb.Value.Uint() {
-				t.Fatalf("Shrunk value: %d is bigger then original: %d", next.Value.Uint(), arb.Value.Uint())
+			if shrink.Value.Uint() > arb.Value.Uint() {
+				t.Fatalf("Shrunk value: %d is bigger then original: %d", shrink.Value.Uint(), arb.Value.Uint())
 			}
 		},
 		"Unshrink": func(t *testing.T) {
 			arb := arbitrary.Arbitrary{Value: reflect.ValueOf(uint64(50))}
 			limits := constraints.Uint64{Max: 100, Min: 0}
 
-			next, _, err := Uint64(limits)(arb, false)
+			shrink, err := Uint64(limits)(arb, false)
 
 			if err != nil {
 				t.Fatalf("Unexpected error : %s", err)
 			}
 
-			if next.Value.Uint() < arb.Value.Uint() {
-				t.Fatalf("Shrunk value: %d is smaller then original: %d", next.Value.Uint(), arb.Value.Uint())
+			if shrink.Value.Uint() < arb.Value.Uint() {
+				t.Fatalf("Shrunk value: %d is smaller then original: %d", shrink.Value.Uint(), arb.Value.Uint())
 			}
 		},
 		"ShrinkTowardsLowerBound": func(t *testing.T) {
-			arb := arbitrary.Arbitrary{Value: reflect.ValueOf(uint64(50))}
 			limits := constraints.Uint64{Max: 100, Min: 20}
+			arb := arbitrary.Arbitrary{
+				Value:    reflect.ValueOf(uint64(50)),
+				Shrinker: Uint64(limits),
+			}
 
-			shrinker := Uint64(limits)
-			for shrinker != nil {
+			for arb.Shrinker != nil {
 				var err error
-				arb, shrinker, err = shrinker(arb, true)
+				arb, err = arb.Shrinker(arb, true)
 				if err != nil {
 					t.Fatalf("Unexpected error : %s", err)
 				}
@@ -84,13 +86,15 @@ func TestUint(t *testing.T) {
 			}
 		},
 		"ShrinkTowardsUpperBound": func(t *testing.T) {
-			arb := arbitrary.Arbitrary{Value: reflect.ValueOf(uint64(50))}
 			limits := constraints.Uint64{Max: 100, Min: 20}
+			arb := arbitrary.Arbitrary{
+				Value:    reflect.ValueOf(uint64(50)),
+				Shrinker: Uint64(limits),
+			}
 
-			shrinker := Uint64(limits)
-			for shrinker != nil {
+			for arb.Shrinker != nil {
 				var err error
-				arb, shrinker, err = shrinker(arb, false)
+				arb, err = arb.Shrinker(arb, false)
 				if err != nil {
 					t.Fatalf("Unexpected error : %s", err)
 				}

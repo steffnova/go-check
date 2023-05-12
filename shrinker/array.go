@@ -2,22 +2,25 @@ package shrinker
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/steffnova/go-check/arbitrary"
 )
 
-func Array(original arbitrary.Arbitrary, shrinkers []Shrinker) Shrinker {
+func Array(original arbitrary.Arbitrary) arbitrary.Shrinker {
 	switch {
+	case original.Value.Kind() != reflect.Array:
+		return Fail(fmt.Errorf("Array shrinker can's shrink: %s", original.Value.Kind()))
 	case original.Value.Len() != len(original.Elements):
-		return Fail(fmt.Errorf("Invalid number of elements. Expected: %d", len(original.Elements)))
-	case len(original.Elements) != len(shrinkers):
-		return Fail(fmt.Errorf("Number of shrinkers: %d must match number of elements: %d", len(shrinkers), len(original.Elements)))
+		return Fail(fmt.Errorf("invalid number of elements. Expected: %d", len(original.Elements)))
 	default:
-		return Chain(
-			CollectionElement(shrinkers...),
-			CollectionElements(shrinkers...),
-		).
-			transformAfter(arbitrary.NewArray(original.Value.Type())).
+		shrinkers := make([]arbitrary.Shrinker, len(original.Elements))
+		for index, element := range original.Elements {
+			shrinkers[index] = element.Shrinker
+		}
+
+		return CollectionElements(original).
+			TransformAfter(arbitrary.NewArray(original.Value.Type())).
 			Validate(arbitrary.ValidateArray())
 	}
 }

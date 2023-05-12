@@ -3,13 +3,15 @@ package generator
 import (
 	"fmt"
 	"math/rand"
+
+	"github.com/steffnova/go-check/arbitrary"
 )
 
 // Stream streams data using a streamer. Seed for random number generation is specified by
 // seed paramere, Number of values that will be generated is specified by "count" parameter
 // Error is returned if streamer returns an error.
 func Stream(seed, count uint64, streamer streamer) error {
-	random := RandomNumber{
+	random := arbitrary.RandomNumber{
 		Rand: rand.New(rand.NewSource(int64(seed))),
 	}
 

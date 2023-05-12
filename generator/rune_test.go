@@ -5,6 +5,7 @@ import (
 	"math"
 	"testing"
 
+	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
 )
 
@@ -16,8 +17,8 @@ func TestRune(t *testing.T) {
 				Rune(),
 			))
 
-			if !errors.Is(err, ErrorInvalidTarget) {
-				t.Fatalf("Expected error: '%s'", ErrorInvalidTarget)
+			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidTarget)
 			}
 		},
 		"InvalidConstraints": func(t *testing.T) {
@@ -26,8 +27,8 @@ func TestRune(t *testing.T) {
 				Rune(constraints.Rune{MinCodePoint: 100, MaxCodePoint: 0}),
 			))
 
-			if !errors.Is(err, ErrorInvalidConstraints) {
-				t.Fatalf("Expected error: '%s'", ErrorInvalidConstraints)
+			if !errors.Is(err, arbitrary.ErrorInvalidConstraints) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidConstraints)
 			}
 		},
 		"InvalidMaxCodePoint": func(t *testing.T) {
@@ -36,8 +37,8 @@ func TestRune(t *testing.T) {
 				Rune(constraints.Rune{MaxCodePoint: math.MaxInt32}),
 			))
 
-			if !errors.Is(err, ErrorInvalidConstraints) {
-				t.Fatalf("Expected error: '%s'", ErrorInvalidConstraints)
+			if !errors.Is(err, arbitrary.ErrorInvalidConstraints) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidConstraints)
 			}
 		},
 		"InvalidMinCodePoint": func(t *testing.T) {
@@ -46,8 +47,8 @@ func TestRune(t *testing.T) {
 				Rune(constraints.Rune{MinCodePoint: math.MinInt32}),
 			))
 
-			if !errors.Is(err, ErrorInvalidConstraints) {
-				t.Fatalf("Expected error: '%s'", ErrorInvalidConstraints)
+			if !errors.Is(err, arbitrary.ErrorInvalidConstraints) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidConstraints)
 			}
 		},
 		"WithinConstraints": func(t *testing.T) {
