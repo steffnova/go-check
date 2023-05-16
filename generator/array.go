@@ -6,6 +6,7 @@ import (
 
 	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
+	"github.com/steffnova/go-check/shrinker"
 )
 
 // Array returns generator for array types. Array element's generator is specified by "element"
@@ -49,10 +50,12 @@ func ArrayFrom(elements ...arbitrary.Generator) arbitrary.Generator {
 			value.Index(index).Set(arbitraries[index].Value)
 		}
 
-		return arbitrary.Arbitrary{
+		arb := arbitrary.Arbitrary{
 			Value:    value,
 			Elements: arbitraries,
-			// Shrinker: shrinker.Array(value, shrinkers),
-		}, nil
+		}
+		arb.Shrinker = shrinker.Array(arb)
+
+		return arb, nil
 	}
 }
