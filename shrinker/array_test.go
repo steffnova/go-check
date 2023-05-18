@@ -10,7 +10,7 @@ import (
 
 func TestArray(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"OriginalNotAStruct": func(t *testing.T) {
+		"OriginalNotAnArray": func(t *testing.T) {
 			arr := [10]uint64{1, 2, 3, 4, 5, 6, 7, 8, 9}
 			arb := arbitrary.Arbitrary{Value: reflect.ValueOf(arr)}
 			shrinker := Array(arb)

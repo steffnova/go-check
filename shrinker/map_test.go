@@ -47,7 +47,7 @@ func TestMap(t *testing.T) {
 			arb.Shrinker = Map(arb, constraints.Length{Min: 0, Max: 10})
 
 			property := func(in map[uint64]uint64) bool {
-				for key, _ := range in {
+				for key := range in {
 					if key == 5 {
 						return true
 					}
