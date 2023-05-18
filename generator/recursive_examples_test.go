@@ -31,7 +31,7 @@ func ExampleRecursive_binaryTree() {
 				"Value": Int(constraints.Int{Min: 0, Max: 10}),
 				"Left":  r(),
 				"Right": r(),
-			}))
+			}), constraints.Ptr{NilFrequency: 3})
 		}, 3),
 	))
 
@@ -39,11 +39,11 @@ func ExampleRecursive_binaryTree() {
 		panic(fmt.Errorf("Unexpected error: '%s'", err))
 	}
 	// Output:
-	// {Value: 5, Left: nil  Right {Value: 8, Left: nil  Right nil}}
-	// nil
-	// {Value: 7, Left: nil  Right nil}
-	// nil
-	// {Value: 0, Left: nil  Right {Value: 7, Left: {Value: 3, Left: nil  Right nil}  Right nil}}
+	// {Value: 2, Left: nil  Right {Value: 0, Left: nil  Right {Value: 5, Left: nil  Right {Value: 3, Left: nil  Right nil}}}}
+	// {Value: 3, Left: {Value: 1, Left: {Value: 8, Left: {Value: 5, Left: nil  Right nil}  Right nil}  Right {Value: 10, Left: {Value: 2, Left: nil  Right nil}  Right {Value: 5, Left: nil  Right nil}}}  Right nil}
+	// {Value: 9, Left: {Value: 4, Left: {Value: 9, Left: {Value: 1, Left: nil  Right nil}  Right {Value: 7, Left: nil  Right nil}}  Right {Value: 4, Left: {Value: 8, Left: nil  Right nil}  Right nil}}  Right nil}
+	// {Value: 6, Left: {Value: 9, Left: {Value: 7, Left: {Value: 4, Left: nil  Right nil}  Right {Value: 3, Left: nil  Right nil}}  Right nil}  Right {Value: 6, Left: {Value: 4, Left: {Value: 8, Left: nil  Right nil}  Right {Value: 9, Left: nil  Right nil}}  Right {Value: 3, Left: {Value: 0, Left: nil  Right nil}  Right {Value: 7, Left: nil  Right nil}}}}
+	// {Value: 9, Left: {Value: 9, Left: {Value: 8, Left: {Value: 2, Left: nil  Right nil}  Right {Value: 10, Left: nil  Right nil}}  Right {Value: 10, Left: {Value: 0, Left: nil  Right nil}  Right {Value: 10, Left: nil  Right nil}}}  Right {Value: 4, Left: {Value: 3, Left: nil  Right nil}  Right nil}}
 }
 
 func ExampleRecursive_recursiveFunction() {

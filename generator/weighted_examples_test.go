@@ -3,6 +3,7 @@ package generator_test
 import (
 	"fmt"
 
+	"github.com/steffnova/go-check/constraints"
 	"github.com/steffnova/go-check/generator"
 )
 
@@ -24,7 +25,7 @@ func ExampleWeighted() {
 		generator.Weighted(
 			[]uint64{1, 9},
 			generator.Nil(),
-			generator.PtrTo(generator.Uint64()),
+			generator.Ptr(generator.Uint64(), constraints.Ptr{NilFrequency: 0}),
 		),
 	)
 

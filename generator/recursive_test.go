@@ -40,11 +40,11 @@ func TestRecursive(t *testing.T) {
 					}
 				},
 				Recursive(func(r Recurse) arbitrary.Generator {
-					return PtrTo(Struct(map[string]arbitrary.Generator{
+					return Ptr(Struct(map[string]arbitrary.Generator{
 						"Value": Int(constraints.Int{Min: 0, Max: 10}),
 						"Left":  r(),
 						"Right": r(),
-					}))
+					}), constraints.Ptr{NilFrequency: 0})
 				}, 0),
 			))
 
@@ -74,11 +74,11 @@ func TestRecursive(t *testing.T) {
 					}
 				},
 				Recursive(func(r Recurse) arbitrary.Generator {
-					return PtrTo(Struct(map[string]arbitrary.Generator{
+					return Ptr(Struct(map[string]arbitrary.Generator{
 						"Value": Int(constraints.Int{Min: 0, Max: 10}),
 						"Left":  r(),
 						"Right": r(),
-					}))
+					}), constraints.Ptr{NilFrequency: 0})
 				}, 5),
 			))
 
