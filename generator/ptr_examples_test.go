@@ -42,7 +42,6 @@ func ExamplePtr() {
 // [constraints.Ptr] to generate non-nil *uint values. By setting NilFrequency to 0, it ensures
 // that nil pointers will never be generated. The [Ptr] generator requires a generator of the
 // type to which the pointer points, so the Uint generator is used in this case.
-
 func ExamplePtr_noNil() {
 	streamer := generator.Streamer(
 		func(n *uint) {
