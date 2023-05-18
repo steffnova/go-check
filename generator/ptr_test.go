@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/steffnova/go-check/arbitrary"
+	"github.com/steffnova/go-check/constraints"
 )
 
 func TestPtrTo(t *testing.T) {
@@ -12,7 +13,17 @@ func TestPtrTo(t *testing.T) {
 		"InvalidTarget": func(t *testing.T) {
 			err := Stream(0, 10, Streamer(
 				func(int) {},
-				PtrTo(Int()),
+				Ptr(Int()),
+			))
+
+			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
+				t.Fatalf("Expected error: '%s'", arbitrary.ErrorInvalidTarget)
+			}
+		},
+		"InvalidElementTarget": func(t *testing.T) {
+			err := Stream(0, 10, Streamer(
+				func(*uint) {},
+				Ptr(Int()),
 			))
 
 			if !errors.Is(err, arbitrary.ErrorInvalidTarget) {
@@ -26,7 +37,7 @@ func TestPtrTo(t *testing.T) {
 						t.Fatalf("Nil pointer value generated")
 					}
 				},
-				PtrTo(Int()),
+				Ptr(Int(), constraints.Ptr{NilFrequency: 0}),
 			))
 
 			if err != nil {

@@ -105,3 +105,19 @@ func NewStruct(t reflect.Type) func(Arbitrary) Arbitrary {
 		return arb
 	}
 }
+
+func NewPtr(t reflect.Type) func(Arbitrary) Arbitrary {
+	return func(arb Arbitrary) Arbitrary {
+		if len(arb.Elements) == 0 {
+			arb.Value = reflect.Zero(t)
+			return arb
+		}
+
+		if arb.Value.IsZero() || !arb.Value.CanSet() {
+			arb.Value = reflect.New(t.Elem())
+		}
+		arb.Value.Elem().Set(arb.Elements[0].Value)
+
+		return arb
+	}
+}
