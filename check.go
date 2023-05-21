@@ -27,6 +27,7 @@ type Config struct {
 // uses only the first value. If config is not specified default configuration is
 // used (random seed and 100 iterations).
 func Check(t *testing.T, property property, config ...Config) {
+	t.Helper()
 	configuration := Config{
 		Seed:       *seedFlag,
 		Iterations: *iterationsFlag,
@@ -46,11 +47,48 @@ func Check(t *testing.T, property property, config ...Config) {
 			Scaling: int(configuration.Iterations) - int(i),
 		}
 
-		if err := property(bias, random); err != nil {
+		details, err := property(bias, random)
+		if err != nil {
+			t.Fatalf("Unexpected error: %s", err)
+		}
+		if details.FailureReason != nil {
 			t.Fatal(
-				fmt.Sprintf("\nCheck failed after %d tests with seed: %d. \n%s", i+1, configuration.Seed, err),
+				fmt.Sprintf("\nCheck failed after %d tests with seed: %d.", i+1, configuration.Seed),
+				fmt.Sprintf("\n%s", (propertyFailed(details.FailureInput.Values()))),
+				fmt.Sprintf("\nShrunk %d time(s)", details.NumberOfShrinks),
+				fmt.Sprintf("\nFailure reason: %s", details.FailureReason),
 				fmt.Sprintf("\n\nRe-run:\ngo test -run=%s -seed=%d -iterations=%d", t.Name(), configuration.Seed, configuration.Iterations),
 			)
 		}
+	}
+}
+
+func Checkv2(t *testing.T, p2 property2, config ...Config) {
+	t.Helper()
+	configuration := Config{
+		Seed:       *seedFlag,
+		Iterations: *iterationsFlag,
+	}
+
+	if len(config) > 0 {
+		configuration = config[0]
+	}
+
+	random := arbitrary.RandomNumber{
+		Rand: rand.New(rand.NewSource(configuration.Seed)),
+	}
+
+	details, err := p2(random, int(configuration.Iterations))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if details.FailureReason != nil {
+		t.Fatal(
+			fmt.Sprintf("\nCheck failed after %d example(s) and %d test(s) with seed: %d.", details.NumberOfExamples, details.NumberOfIterations, configuration.Seed),
+			fmt.Sprintf("\n%s", (propertyFailed(details.FailureInput.Values()))),
+			fmt.Sprintf("\nShrink %d time(s)", details.NumberOfShrinks),
+			fmt.Sprintf("\nFailure reason: %s", details.FailureReason),
+			fmt.Sprintf("\n\nRe-run:\ngo test -run=%s -seed=%d -iterations=%d", t.Name(), configuration.Seed, configuration.Iterations),
+		)
 	}
 }
