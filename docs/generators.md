@@ -49,10 +49,10 @@ func TestBool(t *testing.T) {
 
     // Derived generator can now used by Check for generating bool values
     check.Check(t, check.Property(
-        func(b bool) error {
+        check.Inputs(derived),
+        check.Predicate(func(b bool) error {
             return nil
-        },
-        derived,
+        }),
     ))
 }
 ```
@@ -74,14 +74,16 @@ import (
 
 func TestEvenInteger(t *testing.T) {
     check.Check(t, check.Property(
-        func(n int) error {
+        check.Inputs(
+            generator.Int().Map(func(n int) int {
+                return n*2
+            })
+        ),
+        check.Predicate(func(n int) error {
             if n%2 != 0 {
                 return fmt.Errorf("Not an even integer: %d", n)
             }
             return nil
-        },
-        generator.Int().Map(func(n int) int {
-            return n*2
         }),
     ))
 }
@@ -108,11 +110,12 @@ func TestEvenInteger(t *testing.T) {
     }
 
     check.Check(t, check.Property(
-        func(n int) error {
+        check.Inputs(
+            generator.Int().Filter(predicate),
+        ),
+        check.Predicate(func(n int) error {
             return nil
-        },
-
-        generator.Int().Filter(predicate),
+        }),
     ))
 }
 ```
@@ -133,35 +136,37 @@ import (
 
 func TestSlowGenerator(t *testing.T) {
     check.Check(t, check.Property(
-        func(n int64) error {
+        check.Inputs(
+            // Int64 generator can generate 2^64 values, and likelihood for generated
+            // value to satisfy a filter is slim. Generator will keep retrying until
+            // Filter's predicate is satisfied. Eventually it will generate it, but it
+            // will take a long time to do it, thus making this generator painfully slow.
+            generator.Int64().Filter(func(n int64) bool{
+                return 0 < n && n < 100
+            }),
+        )
+        check.Predicate(func(n int64) error {
             return nil
-        },
-
-        // Int64 generator can generate 2^64 values, and likelihood for generated
-        // value to satisfy a filter is slim. Generator will keep retrying until
-        // Filter's predicate is satisfied. Eventually it will generate it, but it
-        // will take a long time to do it, thus making this generator painfully slow.
-        generator.Int64().Filter(func(n int64) bool{
-            return 0 < n && n < 100
         }),
     ))
 }
 
 func TestInfiniteLoopGenerator(t *testing.T) {
     check.Check(t, check.Property(
-        func(n int) error {
+        check.Inputs(
+            // Int generator will generate values in range [0, 10], thus never 
+            // satisfying Filter's predicate that expectes generated value to
+            // be greated than 10. Generator will enter in an endless retrying
+            // cycle.
+            generator.Int(constraints.Int{
+                Min: 0,
+                Max: 10,
+            }).Filter(func(n int64) bool{
+                return n > 10
+            }),
+        ),
+        check.Predicate(func(n int) error {
             return nil
-        },
-
-        // Int generator will generate values in range [0, 10], thus never 
-        // satisfying Filter's predicate that expectes generated value to
-        // be greated than 10. Generator will enter in an endless retrying
-        // cycle.
-        generator.Int(constraints.Int{
-            Min: 0,
-            Max: 10,
-        }).Filter(func(n int64) bool{
-            return n > 10
         }),
     ))
 }
@@ -197,13 +202,15 @@ func TestDuplicate(t *testing.T) {
     }
 
     check.Check(t, check.Property(
-        func(duplicates [2]int) error {
+        check.Inputs(
+            generator.Int().Bind(binder),
+        ),
+        check.Predicate(func(duplicates [2]int) error {
             if duplicates[0] != duplicates[1] {
                 return fmt.Errorf("No duplicates: %v", duplicates)
             }
             return nil
-        },
-        generator.Int().Bind(binder),
+        }),
     ))
 }
 ```

@@ -33,6 +33,7 @@ func Predicate(p any) predicate {
 		for index := 0; index < predicateVal.Type().NumIn(); index++ {
 			targets[index] = predicateVal.Type().In(index)
 		}
+
 		return targets, func(arbs arbitrary.Arbitraries) error {
 			if predicateVal.Type().NumIn() != len(arbs) {
 				return fmt.Errorf("number of predicate input parameters (%d) doesn't match number of generators (%d)", predicateVal.Type().NumIn(), len(arbs))

@@ -14,7 +14,17 @@ import (
 
 func TestProfileMarshalUnmarshal(t *testing.T) {
 	check.Check(t, check.Property(
-		func(in Profile) error {
+		check.Inputs(
+			generator.Struct(map[string]arbitrary.Generator{
+				"Name":    generator.String(),
+				"Region":  generator.String(),
+				"Raiting": generator.String(),
+				"Interests": generator.Slice(generator.String()).Map(func(input []string) string {
+					return strings.Join(input, ";")
+				}),
+			}),
+		),
+		check.Predicate(func(in Profile) error {
 			data, err := json.Marshal(in)
 			if err != nil {
 				return fmt.Errorf("failed to encode: %w", err)
@@ -30,14 +40,6 @@ func TestProfileMarshalUnmarshal(t *testing.T) {
 			}
 
 			return nil
-		},
-		generator.Struct(map[string]arbitrary.Generator{
-			"Name":    generator.String(),
-			"Region":  generator.String(),
-			"Raiting": generator.String(),
-			"Interests": generator.Slice(generator.String()).Map(func(input []string) string {
-				return strings.Join(input, ";")
-			}),
 		}),
 	))
 }
