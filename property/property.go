@@ -33,6 +33,13 @@ type Property func(r arbitrary.Random, bias constraints.Bias) (Details, error)
 //			return nil
 //		}),
 //	)
+//
+// [Property] returned by Define will generate random inputs for predicte returned by
+// [Predicate]. If predicate returns an error for a generated input it will try to minimize
+// inputs using shrinking. An error is returned when:
+//   - generator returns an error
+//   - predicate returns an error
+//   - shrinking process returns an error
 func Define(generator InputsGenerator, predicate predicate) Property {
 	return func(r arbitrary.Random, bias constraints.Bias) (Details, error) {
 		targets, runner := predicate()

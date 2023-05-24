@@ -75,7 +75,7 @@ func (generator InputsGenerator) NoShrink() InputsGenerator {
 // Inputs returns [InputsGenerator] used by [Property] for generating property inputs (see [Define]). The variadic
 // generators parameter are generators used for each input of property's predicate. Number of generators must match
 // the number of targets. Error is returned if:
-//   - Number of generators doesn't match number of targets
+//   - Number of generators doesn't match number of targets passed to [Inputs Generator]
 //   - Any of generators retuns an error while generating arbitrary
 func Inputs(generators ...arbitrary.Generator) InputsGenerator {
 	return func(targets []reflect.Type, b constraints.Bias, r arbitrary.Random) (arbitrary.Arbitraries, inputShrinker, error) {
