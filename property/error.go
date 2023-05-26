@@ -7,9 +7,9 @@ import (
 )
 
 var (
-	ErrorPredicate = fmt.Errorf("predicate configuration error") // Property predicate is invalid
-	ErrorInputs    = fmt.Errorf("inputs generator error")        // Property input generator is invalid
-	ErrorProperty  = fmt.Errorf("property failed")               // Property returned an error
+	ErrorPredicate      = fmt.Errorf("predicate configuration error") // Property predicate is invalid
+	ErrorInputs         = fmt.Errorf("inputs generator error")        // Property input generator is invalid
+	ErrorPropertyConfig = fmt.Errorf("property configuration error")  // Property returned an error
 )
 
 func inputMissmatchError(targets []reflect.Type, predicate reflect.Type) error {

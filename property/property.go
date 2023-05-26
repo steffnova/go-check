@@ -1,6 +1,8 @@
 package property
 
 import (
+	"fmt"
+
 	"github.com/steffnova/go-check/arbitrary"
 	"github.com/steffnova/go-check/constraints"
 )
@@ -42,6 +44,13 @@ type Property func(r arbitrary.Random, bias constraints.Bias) (Details, error)
 //   - shrinking process returns an error
 func Define(generator InputsGenerator, predicate predicate) Property {
 	return func(r arbitrary.Random, bias constraints.Bias) (Details, error) {
+		if generator == nil {
+			return Details{}, fmt.Errorf("%w. Input generator is nil", ErrorPropertyConfig)
+		}
+		if predicate == nil {
+			return Details{}, fmt.Errorf("%w. Predicate is nil", ErrorPropertyConfig)
+		}
+
 		targets, runner := predicate()
 
 		arbs, shrinker, err := generator(targets, bias, r)
@@ -61,7 +70,7 @@ func Define(generator InputsGenerator, predicate predicate) Property {
 			propertyFailed := predicateErr != nil
 			arbs, shrinker, shrinkingErr = shrinker(arbs, propertyFailed)
 			if shrinkingErr != nil {
-				return Details{}, err
+				return Details{}, shrinkingErr
 			}
 			predicateErr = runner(arbs)
 		}
