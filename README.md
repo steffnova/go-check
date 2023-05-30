@@ -34,6 +34,7 @@ import (
 
     "github.com/steffnova/go-check"
     "github.com/steffnova/go-check/generator"
+    "github.com/steffnova/go-check/property"
 )
 
 
@@ -41,26 +42,30 @@ import (
 func TestAdditionCommutativity(t *testing.T) {
     // Predicate is a function that will be used for defining a property. Predicate
     // can have variable number of inputs, but must have only one output of error type
-    predicate := func(x, y int) error {
+    predicate := property.Predicate(func(x, y int) error {
         // Test if changing the order of operands in addition gives the same result
         if x+y != y+x {
             return fmt.Errorf("commutativity doesn't hold for addition")
         }
         return nil
-    }
+    })
 
-    // Property requires a predicate function and generators. 
-    // Number of generators must match number of inputs predicate has.
-    // Generator's type with index i must match predicate's input with index i.
-    property := check.Property(predicate,
-        // Predicate function has two inputs of type int, because of that
-        // 2 generators are required (one for "x" and one for "y"). Generators
-        // must generate int values.
-
-        // generator.Int accepts constraints that define range of generatable values.
-        // If no constraints are specified, any int value can be generated
+    // Predicate function has two inputs of type int, because of that
+    // 2 generators are required (one for "x" and one for "y"). Generators
+    // must generate int values.
+    // generator.Int accepts constraints that define range of generated values.
+    // If no constraints are specified, any int value can be generated
+    inputs := property.Inputs(
         generator.Int(),
         generator.Int(),                               
+    )
+
+    // Property requires a predicate function and input generators. 
+    // Number of generators must match number of inputs predicate has.
+    // Generator's type with index i must match predicate's input with index i.
+    property := property.Define(
+        inputs,
+        predicate,    
     )
 
     // Check tests the property by feeding it with generated values
@@ -72,27 +77,30 @@ Commutativity is one of defining properties for addition, and test above will al
 demonstrate shrinking capabilities of go-check, following example will test commutativity for subtraction
 
 ```go
-package main_test
+package main
 
 import (
-    "fmt"
-    "testing"   
+	"fmt"
+	"testing"
 
-    "github.com/steffnova/go-check"
-    "github.com/steffnova/go-check/generator"
+	"github.com/steffnova/go-check"
+	"github.com/steffnova/go-check/generator"
+	"github.com/steffnova/go-check/property"
 )
 
 func TestSubtractionCommutativity(t *testing.T) {
-    check.Check(t, check.Property(
-        func(x, y int) error {
-            if x-y != y-x {
-                return fmt.Errorf("commutativity does not hold for subtraction. ")
-            }
-            return nil
-        },
-        generator.Int()
-        generator.Int()
-    ))
+	check.Check(t, property.Define(
+		property.Inputs(
+			generator.Int(),
+			generator.Int(),
+		),
+		property.Predicate(func(x, y int) error {
+			if x-y != y-x {
+				return fmt.Errorf("commutativity does not hold for subtraction. ")
+			}
+			return nil
+		}),
+	))
 }
 
 ```
