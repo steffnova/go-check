@@ -22,38 +22,38 @@ Map combinator maps generated data using mapper. Mapper is any function that has
 package main_test
 
 import (
-    "fmt"
-    "testing"
+	"testing"
 
-    "github.com/steffnova/go-check"
-    "github.com/steffnova/go-check/constraints"
-    "github.com/steffnova/go-check/generator"
+	"github.com/steffnova/go-check"
+	"github.com/steffnova/go-check/constraints"
+	"github.com/steffnova/go-check/generator"
+	"github.com/steffnova/go-check/property"
 )
 
 func TestBool(t *testing.T) {
-    // Source generator is Uint generator that can generate either 0 or 1.
-    // 0 and 1 constraints are imposed by passing constraints.Uint to Uint
-    // generator.
-    source := generator.Uint(constraints.Uint{
-        Min: 0,
-        Max: 1,
-    })
+	// Source generator is Uint generator that can generate either 0 or 1.
+	// 0 and 1 constraints are imposed by passing constraints.Uint to Uint
+	// generator.
+	source := generator.Uint(constraints.Uint{
+		Min: 0,
+		Max: 1,
+	})
 
-    // Mapper function will take uint as an input and return bool as result.
-    mapper := func(n uint) bool {
-        return n == 1
-    }
+	// Mapper function will take uint as an input and return bool as result.
+	mapper := func(n uint) bool {
+		return n == 1
+	}
 
-    // Bool generator is defined using Map combinator
-    derived := source.Map(mapper)
+	// Bool generator is defined using Map combinator
+	derived := source.Map(mapper)
 
-    // Derived generator can now used by Check for generating bool values
-    check.Check(t, check.Property(
-        check.Inputs(derived),
-        check.Predicate(func(b bool) error {
-            return nil
-        }),
-    ))
+	// Derived generator can now used by Check for generating bool values
+	check.Check(t, property.Define(
+		property.Inputs(derived),
+		property.Predicate(func(b bool) error {
+			return nil
+		}),
+	))
 }
 ```
 
@@ -64,28 +64,28 @@ Map generator can be used to alter generated data. This feature is extremly help
 package main_test
 
 import (
-    "fmt"
-    "testing"
+	"fmt"
+	"testing"
 
-    "github.com/steffnova/go-check"
-    "github.com/steffnova/go-check/constraints"
-    "github.com/steffnova/go-check/generator"
+	"github.com/steffnova/go-check"
+	"github.com/steffnova/go-check/generator"
+	"github.com/steffnova/go-check/property"
 )
 
 func TestEvenInteger(t *testing.T) {
-    check.Check(t, check.Property(
-        check.Inputs(
-            generator.Int().Map(func(n int) int {
-                return n*2
-            })
-        ),
-        check.Predicate(func(n int) error {
-            if n%2 != 0 {
-                return fmt.Errorf("Not an even integer: %d", n)
-            }
-            return nil
-        }),
-    ))
+	check.Check(t, property.Define(
+		property.Inputs(
+			generator.Int().Map(func(n int) int {
+				return n * 2
+			}),
+		),
+		property.Predicate(func(n int) error {
+			if n%2 != 0 {
+				return fmt.Errorf("Not an even integer: %d", n)
+			}
+			return nil
+		}),
+	))
 }
 ```
 
@@ -96,27 +96,27 @@ Filter combinator filters generated data using predicate. Predicate is a functio
 package main_test
 
 import (
-    "fmt"
-    "testing"
+	"testing"
 
-    "github.com/steffnova/go-check"
-    "github.com/steffnova/go-check/generator"
+	"github.com/steffnova/go-check"
+	"github.com/steffnova/go-check/generator"
+	"github.com/steffnova/go-check/property"
 )
 
 func TestEvenInteger(t *testing.T) {
-    // Predicate will filter even integer numbers.
-    predicate := func(n uint) bool {
-        return n%2 == 0
-    }
+	// Predicate will filter even integer numbers.
+	predicate := func(n uint) bool {
+		return n%2 == 0
+	}
 
-    check.Check(t, check.Property(
-        check.Inputs(
-            generator.Int().Filter(predicate),
-        ),
-        check.Predicate(func(n int) error {
-            return nil
-        }),
-    ))
+	check.Check(t, property.Define(
+		property.Inputs(
+			generator.Int().Filter(predicate),
+		),
+		property.Predicate(func(n int) error {
+			return nil
+		}),
+	))
 }
 ```
 
@@ -126,49 +126,49 @@ func TestEvenInteger(t *testing.T) {
 package main_test
 
 import (
-    "fmt"
-    "testing"
+	"testing"
 
-    "github.com/steffnova/go-check"
-    "github.com/steffnova/go-check/constraints"
-    "github.com/steffnova/go-check/generator"
+	"github.com/steffnova/go-check"
+	"github.com/steffnova/go-check/constraints"
+	"github.com/steffnova/go-check/generator"
+	"github.com/steffnova/go-check/property"
 )
 
 func TestSlowGenerator(t *testing.T) {
-    check.Check(t, check.Property(
-        check.Inputs(
-            // Int64 generator can generate 2^64 values, and likelihood for generated
-            // value to satisfy a filter is slim. Generator will keep retrying until
-            // Filter's predicate is satisfied. Eventually it will generate it, but it
-            // will take a long time to do it, thus making this generator painfully slow.
-            generator.Int64().Filter(func(n int64) bool{
-                return 0 < n && n < 100
-            }),
-        )
-        check.Predicate(func(n int64) error {
-            return nil
-        }),
-    ))
+	check.Check(t, property.Define(
+		property.Inputs(
+			// Int64 generator can generate 2^64 values, and likelihood for generated
+			// value to satisfy a filter is slim. Generator will keep retrying until
+			// Filter's predicate is satisfied. Eventually it will generate it, but it
+			// will take a long time to do it, thus making this generator painfully slow.
+			generator.Int64().Filter(func(n int64) bool {
+				return 0 < n && n < 100
+			}),
+		),
+		property.Predicate(func(n int64) error {
+			return nil
+		}),
+	))
 }
 
 func TestInfiniteLoopGenerator(t *testing.T) {
-    check.Check(t, check.Property(
-        check.Inputs(
-            // Int generator will generate values in range [0, 10], thus never 
-            // satisfying Filter's predicate that expectes generated value to
-            // be greated than 10. Generator will enter in an endless retrying
-            // cycle.
-            generator.Int(constraints.Int{
-                Min: 0,
-                Max: 10,
-            }).Filter(func(n int64) bool{
-                return n > 10
-            }),
-        ),
-        check.Predicate(func(n int) error {
-            return nil
-        }),
-    ))
+	check.Check(t, property.Define(
+		property.Inputs(
+			// Int generator will generate values in range [0, 10], thus never
+			// satisfying Filter's predicate that expectes generated value to
+			// be greated than 10. Generator will enter in an endless retrying
+			// cycle.
+			generator.Int(constraints.Int{
+				Min: 0,
+				Max: 10,
+			}).Filter(func(n int64) bool {
+				return n > 10
+			}),
+		),
+		property.Predicate(func(n int) error {
+			return nil
+		}),
+	))
 }
 ```
 
@@ -180,37 +180,38 @@ Bind combinator allows binding two generators together using a binder. Binder is
 package main_test
 
 import (
-    "fmt"
-    "testing"
+	"fmt"
+	"testing"
 
-    "github.com/steffnova/go-check"
-    "github.com/steffnova/go-check/constraints"
-    "github.com/steffnova/go-check/generator"
+	"github.com/steffnova/go-check"
+	"github.com/steffnova/go-check/arbitrary"
+	"github.com/steffnova/go-check/generator"
+	"github.com/steffnova/go-check/property"
 )
 
 func TestDuplicate(t *testing.T) {
-    // Binder accepts integer n and feeds to array's elements generators.
-    binder := func(n int) generator.Generator {
-        // ArrayFrom generates array specified by the property ([2]int)
-        // Unlike Array, for each element in the array a generator is
-        // specified.
-        return generator.ArrayFrom(
-            // Constat generator always returns a value passed to it.
-            generator.Constant(n),
-            generator.Constant(n),
-        )
-    }
+	// Binder accepts integer n and feeds to array's elements generators.
+	binder := func(n int) arbitrary.Generator {
+		// ArrayFrom generates array specified by the property ([2]int)
+		// Unlike Array, for each element in the array a generator is
+		// specified.
+		return generator.ArrayFrom(
+			// Constat generator always returns a value passed to it.
+			generator.Constant(n),
+			generator.Constant(n),
+		)
+	}
 
-    check.Check(t, check.Property(
-        check.Inputs(
-            generator.Int().Bind(binder),
-        ),
-        check.Predicate(func(duplicates [2]int) error {
-            if duplicates[0] != duplicates[1] {
-                return fmt.Errorf("No duplicates: %v", duplicates)
-            }
-            return nil
-        }),
-    ))
+	check.Check(t, property.Define(
+		property.Inputs(
+			generator.Int().Bind(binder),
+		),
+		property.Predicate(func(duplicates [2]int) error {
+			if duplicates[0] != duplicates[1] {
+				return fmt.Errorf("No duplicates: %v", duplicates)
+			}
+			return nil
+		}),
+	))
 }
 ```
