@@ -24,20 +24,26 @@ type InputsGenerator func(targets []reflect.Type, bias constraints.Bias, random 
 // can affect the speed of the generator.
 func (generator InputsGenerator) Filter(predicate any) InputsGenerator {
 	return func(targets []reflect.Type, b constraints.Bias, r arbitrary.Random) (arbitrary.Arbitraries, inputShrinker, error) {
-		predicateVal := reflect.ValueOf(predicate)
-		switch {
-		case predicateVal.Type().NumIn() != len(targets):
-			return nil, nil, inputMissmatchError(targets, predicateVal.Type())
-		default:
-			for {
-				arbs, shrinker, err := generator(targets, b, r)
-				if err != nil {
-					return nil, nil, err
-				}
-				out := predicateVal.Call(arbitrary.Arbitraries(arbs).Values())
-				if out[0].Bool() {
-					return arbs, shrinker.Filter(predicate), nil
-				}
+		predicateType := reflect.TypeOf(predicate)
+		if predicateType.NumIn() != len(targets) {
+			return nil, nil, inputMissmatchError(targets, predicateType)
+		}
+
+		for index := range targets {
+			if predicateType.In(index) != targets[index] {
+				return nil, nil, inputMissmatchError(targets, predicateType)
+			}
+		}
+
+		for {
+			arbs, shrinker, err := generator(targets, b, r)
+			if err != nil {
+				return nil, nil, err
+			}
+			predicateVal := reflect.ValueOf(predicate)
+			out := predicateVal.Call(arbitrary.Arbitraries(arbs).Values())
+			if out[0].Bool() {
+				return arbs, shrinker.Filter(predicate), nil
 			}
 		}
 	}

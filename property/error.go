@@ -26,7 +26,7 @@ func inputMissmatchError(targets []reflect.Type, predicate reflect.Type) error {
 	return fmt.Errorf(
 		"%w. %s", ErrorInputs,
 		fmt.Sprint(
-			fmt.Sprintln("property.Generator.Filter: predicate inputs do not match property's predicate inputs"),
+			fmt.Sprintln("property.Generator.Filter: predicate inputs do not match generator's targets, predicate inputs"),
 			fmt.Sprintf("Property Predicate: (%s)\n", strings.Join(expected, ", ")),
 			fmt.Sprintf("Filter Predicate:   (%s)\n", strings.Join(got, ", ")),
 		),
