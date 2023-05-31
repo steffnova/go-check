@@ -14,11 +14,7 @@ func Ptr(original arbitrary.Arbitrary, limit constraints.Ptr) arbitrary.Shrinker
 	}
 
 	predicate := arbitrary.FilterPredicate(original.Value.Type(), func(v reflect.Value) bool {
-		if limit.NilFrequency != 0 {
-			return true
-		}
-
-		return !v.IsZero()
+		return limit.NilFrequency != 0 || !v.IsZero()
 	})
 
 	return Chain(
