@@ -60,7 +60,7 @@ func (generator InputsGenerator) Log() InputsGenerator {
 			fmt.Printf("<%s> %#v\n", val.Type().String(), val.Interface())
 		}
 
-		return arbs, shrinker, nil
+		return arbs, shrinker.Log(0), nil
 	}
 }
 

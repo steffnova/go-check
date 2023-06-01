@@ -49,6 +49,51 @@ func TestInputsShrinker(t *testing.T) {
 
 }
 
+func TestInputsShrinkerLog(t *testing.T) {
+	testCases := map[string]func(*testing.T){
+		"LogOnNilShrinker": func(t *testing.T) {
+			shrinker := shrinkers(arbitrary.Arbitrary{}).Log(0)
+			if shrinker != nil {
+				t.Errorf("Using Log on nil shrinker should return nil")
+			}
+		},
+		"ShrinkingError": func(t *testing.T) {
+			shrinkingError := fmt.Errorf("shrinking error")
+			shrinker := inputShrinker(nil).Fail(shrinkingError).Log(0)
+
+			_, _, err := shrinker(arbitrary.Arbitraries{{}}, true)
+			if !errors.Is(err, shrinkingError) {
+				t.Fatalf("Expected error: %s", shrinkingError)
+			}
+		},
+		"ShrunkValue": func(t *testing.T) {
+			shrinks := arbitrary.Arbitraries{
+				{Value: reflect.ValueOf(uint64(100))},
+				{Value: reflect.ValueOf(uint64(200))},
+			}
+
+			shrinker := inputShrinker(func(arbs arbitrary.Arbitraries, propertyFailed bool) (arbitrary.Arbitraries, inputShrinker, error) {
+				return shrinks, nil, nil
+			}).Log(0)
+
+			arbs, _, err := shrinker(arbitrary.Arbitraries{{}}, true)
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err)
+			}
+
+			for index := range arbs {
+				if !reflect.DeepEqual(arbs[index].Value.Interface(), shrinks[index].Value.Interface()) {
+					t.Fatalf("shrink at index %d doesn't match expected value", index)
+				}
+			}
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, testCase)
+	}
+}
+
 func TestInputsShrinkerFilter(t *testing.T) {
 	testCases := map[string]func(*testing.T){
 		"FilterOnNilShrinker": func(t *testing.T) {

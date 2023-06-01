@@ -3,6 +3,7 @@ package property
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/steffnova/go-check/arbitrary"
 )
@@ -12,6 +13,23 @@ type inputShrinker func(arbs arbitrary.Arbitraries, propertyFailed bool) (arbitr
 func (shrinker inputShrinker) Fail(err error) inputShrinker {
 	return func(arbs arbitrary.Arbitraries, propertyFailed bool) (arbitrary.Arbitraries, inputShrinker, error) {
 		return nil, nil, err
+	}
+}
+
+func (shrinker inputShrinker) Log(indent uint) inputShrinker {
+	if shrinker == nil {
+		return nil
+	}
+	return func(arbs arbitrary.Arbitraries, propertyFailed bool) (arbitrary.Arbitraries, inputShrinker, error) {
+		shrinks, shrinker, err := shrinker(arbs, propertyFailed)
+		if err != nil {
+			return nil, nil, err
+		}
+		for _, val := range shrinks.Values() {
+			fmt.Printf("%s<%s> %#v\n", strings.Repeat(" ", int(indent)), val.Type().String(), val.Interface())
+		}
+
+		return shrinks, shrinker.Log(indent + 1), nil
 	}
 }
 
