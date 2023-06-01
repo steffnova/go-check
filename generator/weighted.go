@@ -9,18 +9,6 @@ import (
 	"github.com/steffnova/go-check/constraints"
 )
 
-type weightedGenerator struct {
-	weight    uint64
-	generator arbitrary.Generator
-}
-
-// func Weighted2(weight uint64, generator arbitrary.Generator) weightedarbitrary.Generator {
-// 	return weightedarbitrary.Generator{
-// 		weight:    weight,
-// 		generator: generator,
-// 	}
-// }
-
 // Weighted returns one of the generators based on their weight. Weights and
 // generators are specified by "weights" and "generators" parameters respectively.
 // Number of weights and generators must be the same and greater than 0. Total sum
