@@ -93,7 +93,7 @@ func Inputs(generators ...arbitrary.Generator) InputsGenerator {
 			var err error
 			arbs[index], err = generators[index](targets[index], b, r)
 			if err != nil {
-				return nil, nil, fmt.Errorf("generator with index %d failed to generate arbitrary for target: %s. %w", index, targets[index], ErrorInputs)
+				return nil, nil, fmt.Errorf("generator with index %d failed to generate arbitrary for target %s: %s. %w", index, targets[index], err, ErrorInputs)
 			}
 		}
 
